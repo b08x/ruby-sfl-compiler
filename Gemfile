@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 # NLP & LLM
 gem "dspy", "~> 1.0"
+gem "dspy-openai", "~> 1.0"  # For OpenAI and OpenRouter
 gem "ruby-spacy", "~> 0.4"
 gem "pragmatic_segmenter", "~> 0.3"
 gem "pragmatic_tokenizer", "~> 3.0"
