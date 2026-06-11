@@ -1,0 +1,449 @@
+{
+  "metadata": {
+    "source_file": "/home/b08x/Workspace/Datasets/steve-oliver-2025-08-29@13h25m38s.jsonl",
+    "turn_count": 29,
+    "speakers": [
+      "Robert",
+      "Steve",
+      "Oliver"
+    ],
+    "analyzed_at": "2026-06-10T22:13:44-04:00"
+  },
+  "speaker_profiles": {
+    "Robert": {
+      "turn_count": 14,
+      "avg_tenor": 0.478,
+      "tenor_range": [
+        0.3,
+        0.5714285714285714
+      ],
+      "tenor_variance": 0.0056,
+      "avg_modality": 0.496,
+      "mood_distribution": {
+        "declarative": 0.929,
+        "imperative": 0.071
+      },
+      "dominant_processes": {
+        "material": 55,
+        "relational": 31,
+        "mental": 13,
+        "verbal": 2
+      }
+    },
+    "Steve": {
+      "turn_count": 14,
+      "avg_tenor": 0.493,
+      "tenor_range": [
+        0.4411764705882353,
+        0.5535714285714286
+      ],
+      "tenor_variance": 0.0015,
+      "avg_modality": 0.584,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 425,
+        "verbal": 14,
+        "relational": 65,
+        "mental": 28
+      }
+    },
+    "Oliver": {
+      "turn_count": 1,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.78,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 31,
+        "relational": 7,
+        "mental": 2
+      }
+    }
+  },
+  "tenor_timeline": [
+    {
+      "turn_id": 1,
+      "timestamp": "2025-08-29T11:19:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.36666666666666664,
+      "tenor_shift": null
+    },
+    {
+      "turn_id": 2,
+      "timestamp": "2025-08-29T11:20:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5375,
+      "tenor_shift": 0.17083333333333334
+    },
+    {
+      "turn_id": 3,
+      "timestamp": "2025-08-29T11:33:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5166666666666667,
+      "tenor_shift": -0.02083333333333326
+    },
+    {
+      "turn_id": 4,
+      "timestamp": "2025-08-29T11:33:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5342105263157895,
+      "tenor_shift": 0.01754385964912275
+    },
+    {
+      "turn_id": 5,
+      "timestamp": "2025-08-29T11:38:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.43333333333333335,
+      "tenor_shift": -0.10087719298245612
+    },
+    {
+      "turn_id": 6,
+      "timestamp": "2025-08-29T11:39:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.45714285714285713,
+      "tenor_shift": 0.02380952380952378
+    },
+    {
+      "turn_id": 7,
+      "timestamp": "2025-08-29T11:48:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.3,
+      "tenor_shift": -0.15714285714285714
+    },
+    {
+      "turn_id": 8,
+      "timestamp": "2025-08-29T11:48:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.4411764705882353,
+      "tenor_shift": 0.1411764705882353
+    },
+    {
+      "turn_id": 9,
+      "timestamp": "2025-08-29T11:56:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.05882352941176472
+    },
+    {
+      "turn_id": 10,
+      "timestamp": "2025-08-29T11:59:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.45217391304347826,
+      "tenor_shift": -0.04782608695652174
+    },
+    {
+      "turn_id": 11,
+      "timestamp": "2025-08-29T12:04:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.55,
+      "tenor_shift": 0.09782608695652178
+    },
+    {
+      "turn_id": 12,
+      "timestamp": "2025-08-29T12:04:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5461538461538461,
+      "tenor_shift": -0.0038461538461539435
+    },
+    {
+      "turn_id": 13,
+      "timestamp": "2025-08-29T12:13:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": -0.0461538461538461
+    },
+    {
+      "turn_id": 14,
+      "timestamp": "2025-08-29T12:16:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5196428571428571,
+      "tenor_shift": 0.019642857142857073
+    },
+    {
+      "turn_id": 15,
+      "timestamp": "2025-08-29T12:19:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.4444444444444444,
+      "tenor_shift": -0.07519841269841265
+    },
+    {
+      "turn_id": 16,
+      "timestamp": "2025-08-29T12:22:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5017543859649123,
+      "tenor_shift": 0.057309941520467866
+    },
+    {
+      "turn_id": 17,
+      "timestamp": "2025-08-29T12:26:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.4166666666666667,
+      "tenor_shift": -0.0850877192982456
+    },
+    {
+      "turn_id": 18,
+      "timestamp": "2025-08-29T12:26:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.4862068965517241,
+      "tenor_shift": 0.06954022988505743
+    },
+    {
+      "turn_id": 19,
+      "timestamp": "2025-08-29T12:38:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5714285714285714,
+      "tenor_shift": 0.08522167487684729
+    },
+    {
+      "turn_id": 20,
+      "timestamp": "2025-08-29T12:38:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.44729729729729734,
+      "tenor_shift": -0.12413127413127406
+    },
+    {
+      "turn_id": 21,
+      "timestamp": "2025-08-29T12:50:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5499999999999999,
+      "tenor_shift": 0.1027027027027026
+    },
+    {
+      "turn_id": 22,
+      "timestamp": "2025-08-29T12:55:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.45507246376811594,
+      "tenor_shift": -0.09492753623188399
+    },
+    {
+      "turn_id": 23,
+      "timestamp": "2025-08-29T13:02:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.48000000000000004,
+      "tenor_shift": 0.024927536231884095
+    },
+    {
+      "turn_id": 24,
+      "timestamp": "2025-08-29T13:04:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.46,
+      "tenor_shift": -0.020000000000000018
+    },
+    {
+      "turn_id": 25,
+      "timestamp": "2025-08-29T13:09:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.52,
+      "tenor_shift": 0.06
+    },
+    {
+      "turn_id": 26,
+      "timestamp": "2025-08-29T13:10:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.505,
+      "tenor_shift": -0.015000000000000013
+    },
+    {
+      "turn_id": 27,
+      "timestamp": "2025-08-29T13:15:00-04:00",
+      "speaker": "Robert",
+      "tenor": 0.5375,
+      "tenor_shift": 0.03249999999999997
+    },
+    {
+      "turn_id": 28,
+      "timestamp": "2025-08-29T13:28:00-04:00",
+      "speaker": "Steve",
+      "tenor": 0.5535714285714286,
+      "tenor_shift": 0.016071428571428625
+    },
+    {
+      "turn_id": 29,
+      "timestamp": "2025-08-29T13:28:00-04:00",
+      "speaker": "Oliver",
+      "tenor": 0.5,
+      "tenor_shift": -0.0535714285714286
+    }
+  ],
+  "field_evolution": [
+    {
+      "turn_id": 1,
+      "timestamp": "2025-08-29T11:19:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 2,
+      "timestamp": "2025-08-29T11:20:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 3,
+      "timestamp": "2025-08-29T11:33:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 4,
+      "timestamp": "2025-08-29T11:33:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 5,
+      "timestamp": "2025-08-29T11:38:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 6,
+      "timestamp": "2025-08-29T11:39:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 7,
+      "timestamp": "2025-08-29T11:48:00-04:00",
+      "dominant_process": "relational"
+    },
+    {
+      "turn_id": 8,
+      "timestamp": "2025-08-29T11:48:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 9,
+      "timestamp": "2025-08-29T11:56:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 10,
+      "timestamp": "2025-08-29T11:59:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 11,
+      "timestamp": "2025-08-29T12:04:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 12,
+      "timestamp": "2025-08-29T12:04:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 13,
+      "timestamp": "2025-08-29T12:13:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 14,
+      "timestamp": "2025-08-29T12:16:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 15,
+      "timestamp": "2025-08-29T12:19:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 16,
+      "timestamp": "2025-08-29T12:22:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 17,
+      "timestamp": "2025-08-29T12:26:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 18,
+      "timestamp": "2025-08-29T12:26:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 19,
+      "timestamp": "2025-08-29T12:38:00-04:00",
+      "dominant_process": "relational"
+    },
+    {
+      "turn_id": 20,
+      "timestamp": "2025-08-29T12:38:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 21,
+      "timestamp": "2025-08-29T12:50:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 22,
+      "timestamp": "2025-08-29T12:55:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 23,
+      "timestamp": "2025-08-29T13:02:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 24,
+      "timestamp": "2025-08-29T13:04:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 25,
+      "timestamp": "2025-08-29T13:09:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 26,
+      "timestamp": "2025-08-29T13:10:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 27,
+      "timestamp": "2025-08-29T13:15:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 28,
+      "timestamp": "2025-08-29T13:28:00-04:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 29,
+      "timestamp": "2025-08-29T13:28:00-04:00",
+      "dominant_process": "material"
+    }
+  ],
+  "correlations": {
+    "material": {
+      "count": 511,
+      "avg_tenor": 0.474,
+      "avg_modality": 0.582
+    },
+    "relational": {
+      "count": 103,
+      "avg_tenor": 0.539,
+      "avg_modality": 0.588
+    },
+    "mental": {
+      "count": 43,
+      "avg_tenor": 0.497,
+      "avg_modality": 0.499
+    },
+    "verbal": {
+      "count": 16,
+      "avg_tenor": 0.563,
+      "avg_modality": 0.472
+    }
+  },
+  "insights": [
+    "Conversation tenor increased by 13.3% (more formal/distant)",
+    "Robert contributed 14 of 29 turns"
+  ]
+}
