@@ -7,17 +7,25 @@
 Edit `.env` and add your API key:
 
 ```bash
-# For OpenAI (default)
+# For OpenRouter (recommended - one key, many models)
+OPENROUTER_API_KEY=sk-or-your-key-here
+DSPY_PROVIDER=openrouter/mistralai/mistral-7b-instruct
+# Other options:
+#   openrouter/mistralai/mixtral-8x7b-instruct (better)
+#   openrouter/google/gemini-2.0-flash-exp (FREE tier!)
+#   openrouter/meta-llama/llama-3.1-8b-instruct
+
+# OR for Google Gemini (free tier available)
+GOOGLE_API_KEY=your-key-here
+DSPY_PROVIDER=google/gemini-2.0-flash-exp
+
+# OR for OpenAI
 OPENAI_API_KEY=sk-your-key-here
 DSPY_PROVIDER=openai/gpt-4o-mini
 
 # OR for Anthropic
 ANTHROPIC_API_KEY=your-key-here
 DSPY_PROVIDER=anthropic/claude-3-5-sonnet-20241022
-
-# OR for OpenRouter
-OPENROUTER_API_KEY=your-key-here
-DSPY_PROVIDER=openrouter/anthropic/claude-3.5-sonnet
 ```
 
 ### 2. Run Conversation Analysis
