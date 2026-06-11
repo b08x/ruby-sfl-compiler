@@ -167,8 +167,8 @@ module SFL
 
         # CSV output
         csv_path = File.join(output_dir, "conversation_analysis.csv")
-        csv_formatter = Formatters::CSVFormatter.new
-        File.write(csv_path, csv_formatter.format(analysis_result))
+        csv_formatter = Formatters::CSVFormatter.new(analysis_result)
+        File.write(csv_path, csv_formatter.render)
         @logger.send_message(
           message: "csv_output_generated",
           priority: Journald::LOG_INFO,
@@ -177,8 +177,8 @@ module SFL
 
         # JSON output
         json_path = File.join(output_dir, "conversation_analysis.json")
-        json_formatter = Formatters::JSONFormatter.new
-        File.write(json_path, json_formatter.format(analysis_result))
+        json_formatter = Formatters::JSONFormatter.new(analysis_result)
+        File.write(json_path, json_formatter.render)
         @logger.send_message(
           message: "json_output_generated",
           priority: Journald::LOG_INFO,
@@ -187,8 +187,8 @@ module SFL
 
         # Markdown output
         markdown_path = File.join(output_dir, "conversation_analysis.md")
-        markdown_formatter = Formatters::MarkdownFormatter.new
-        File.write(markdown_path, markdown_formatter.format(analysis_result))
+        markdown_formatter = Formatters::MarkdownFormatter.new(analysis_result)
+        File.write(markdown_path, markdown_formatter.render)
         @logger.send_message(
           message: "markdown_output_generated",
           priority: Journald::LOG_INFO,
