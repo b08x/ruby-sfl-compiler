@@ -22,7 +22,7 @@ module SFL
       attr_reader :db, :pipeline, :logger
 
       def initialize(database_url: nil)
-        @database_url = database_url || ENV.fetch("DATABASE_URL", "postgres://localhost/sfl_compiler_dev")
+        @database_url = database_url || ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
         @logger = Journald::Logger.new("conversation-analyzer")
         setup_database
         @pipeline = SFL::Compiler::Pipeline.new(db: @db)
@@ -86,7 +86,8 @@ module SFL
           avg_modality: avg_modality,
           dominant_mood: dominant_mood,
           process_types: process_types,
-          participants: participants
+          participants: participants,
+          tenor_shift: nil
         )
       end
 
@@ -110,13 +111,24 @@ module SFL
         end
 
         # Run analysis modules
-        tenor_tracker = Analysis::TenorTracker.new
-        speaker_profiler = Analysis::SpeakerProfiler.new
-        correlation_analyzer = Analysis::CorrelationAnalyzer.new
+        tenor_tracker = Analysis::TenorTracker.new(conversation_turns)
+        tenor_tracker.calculate_shifts
 
-        tenor_timeline = tenor_tracker.track(conversation_turns)
-        speaker_profiles = speaker_profiler.profile_speakers(conversation_turns)
-        correlations = correlation_analyzer.analyze(conversation_turns)
+        speaker_profiles = Analysis::SpeakerProfiler.build_profiles(conversation_turns)
+
+        correlation_analyzer = Analysis::CorrelationAnalyzer.new(conversation_turns)
+        correlations = correlation_analyzer.correlate_process_tenor
+
+        # Tenor timeline (tenor values over time)
+        tenor_timeline = conversation_turns.map do |turn|
+          {
+            turn_id: turn.turn_id,
+            timestamp: turn.timestamp.iso8601,
+            speaker: turn.speaker,
+            tenor: turn.avg_tenor,
+            tenor_shift: turn.tenor_shift
+          }
+        end
 
         # Field evolution (process type progression)
         field_evolution = conversation_turns.map do |turn|
