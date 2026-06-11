@@ -12,7 +12,7 @@
 require "bundler/setup"
 require "json"
 require "time"
-require "logger"
+require "journald/logger"
 require_relative "../../../lib/sfl-compiler"
 
 module SFL
@@ -23,9 +23,7 @@ module SFL
 
       def initialize(database_url: nil)
         @database_url = database_url || ENV.fetch("DATABASE_URL", "postgres://localhost/sfl_compiler_dev")
-        @logger = Logger.new(STDOUT)
-        @logger.level = Logger::INFO
-        @logger.formatter = proc { |severity, datetime, progname, msg| "[#{severity}] #{msg}\n" }
+        @logger = Journald::Logger.new("conversation-analyzer")
         setup_database
         @pipeline = SFL::Compiler::Pipeline.new(db: @db)
       end
