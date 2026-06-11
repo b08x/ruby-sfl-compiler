@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-06-11T07:21:22.875664929-04:00",
-  "file_count": 149,
+  "updated_at": "2026-06-11T07:25:12.410385308-04:00",
+  "file_count": 150,
   "hubs": [
     "spec/spec_helper.rb",
     "lib/sfl/compiler.rb"
@@ -215,6 +215,24 @@
       "lines": 225,
       "delta": 1,
       "size_delta": 41
+    },
+    {
+      "time": "2026-06-11T07:21:53.12624267-04:00",
+      "op": "CREATE",
+      "path": "experiments/05_llm_theme_extractor.rb",
+      "lang": "ruby",
+      "lines": 225,
+      "size_delta": 7,
+      "dirty": true
+    },
+    {
+      "time": "2026-06-11T07:25:12.408593288-04:00",
+      "op": "CREATE",
+      "path": "experiments/06_dspy_theme_extractor.rb",
+      "lang": "ruby",
+      "lines": 198,
+      "delta": 198,
+      "size_delta": 6050
     }
   ],
   "working_set": {
@@ -258,9 +276,18 @@
       "experiments/05_llm_theme_extractor.rb": {
         "path": "experiments/05_llm_theme_extractor.rb",
         "first_touch": "2026-06-11T07:20:24.882494007-04:00",
-        "last_touch": "2026-06-11T07:21:22.875616363-04:00",
-        "edit_count": 2,
+        "last_touch": "2026-06-11T07:21:53.127769749-04:00",
+        "edit_count": 3,
         "net_delta": 225,
+        "is_hub": false,
+        "importers": 0
+      },
+      "experiments/06_dspy_theme_extractor.rb": {
+        "path": "experiments/06_dspy_theme_extractor.rb",
+        "first_touch": "2026-06-11T07:25:12.410343462-04:00",
+        "last_touch": "2026-06-11T07:25:12.410343462-04:00",
+        "edit_count": 1,
+        "net_delta": 198,
         "is_hub": false,
         "importers": 0
       },

@@ -130,8 +130,8 @@ def extract_with_llm(clause_text, spacy_analysis, mood)
     }
   PROMPT
 
-  # Use RubyLLM with OpenRouter Mistral
-  chat = RubyLLM.chat(model: "openrouter/mistralai/mistral-7b-instruct-v0.2")
+  # Use RubyLLM with OpenRouter (use working model from earlier)
+  chat = RubyLLM.chat(model: "openrouter/xiaomi/mimo-v2.5")
 
   response_text = chat.ask(prompt).content
 

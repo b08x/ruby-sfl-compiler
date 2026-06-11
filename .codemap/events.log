@@ -36,3 +36,5 @@
 2026-06-11 07:19:40 | CREATE | lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb |  209 |   +209 | 
 2026-06-11 07:20:24 | CREATE | experiments/05_llm_theme_extractor.rb    |  224 |   +224 | 
 2026-06-11 07:21:22 | CREATE | experiments/05_llm_theme_extractor.rb    |  225 |     +1 | 
+2026-06-11 07:21:53 | CREATE | experiments/05_llm_theme_extractor.rb    |  225 |        | dirty
+2026-06-11 07:25:12 | CREATE | experiments/06_dspy_theme_extractor.rb   |  198 |   +198 | 
