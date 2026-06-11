@@ -32,6 +32,9 @@ gem "dotenv", "~> 3.1"
 # Autoloading
 gem "zeitwerk", "~> 2.7"
 
+# Output Formats
+gem "csv", "~> 3.3"
+
 group :development, :test do
   gem "rake"
   gem "pry"
