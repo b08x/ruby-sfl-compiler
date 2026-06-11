@@ -14,6 +14,7 @@ require "dotenv/load"  # Load environment variables from .env
 require "json"
 require "time"
 require "journald/logger"
+require "dspy"  # Required for DSPy.configure
 require_relative "../../../lib/sfl-compiler"
 
 # Configure SFL Compiler from environment variables
