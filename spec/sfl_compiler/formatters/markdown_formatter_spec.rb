@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require "spec_helper"
+require "time"
 
 RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
   let(:alice_profile) do
@@ -9,8 +12,21 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       tenor_range: [0.22, 0.61],
       tenor_variance: 0.14,
       avg_modality: 0.42,
-      mood_distribution: { "declarative" => 0.72, "interrogative" => 0.28 },
-      dominant_processes: { "mental" => 10, "material" => 5 }
+      mood_distribution: { "declarative" => 0.72 },
+      dominant_processes: { "mental" => 10 }
+    )
+  end
+
+  let(:bob_profile) do
+    SFL::Compiler::Types::SpeakerProfile.new(
+      speaker_name: "Bob",
+      turn_count: 2,
+      avg_tenor: 0.71,
+      tenor_range: [0.55, 0.85],
+      tenor_variance: 0.09,
+      avg_modality: 0.78,
+      mood_distribution: { "declarative" => 1.0 },
+      dominant_processes: { "verbal" => 8 }
     )
   end
 
@@ -23,7 +39,7 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
         analyzed_at: Time.parse("2026-06-10 14:32:15")
       },
       turns: [],
-      speaker_profiles: { "Alice" => alice_profile },
+      speaker_profiles: { "Alice" => alice_profile, "Bob" => bob_profile },
       tenor_timeline: [],
       field_evolution: [],
       correlations: {
@@ -31,56 +47,119 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
         "verbal" => { avg_tenor: 0.71, avg_modality: 0.78, count: 8 }
       },
       insights: [
-        "Alice maintains casual tenor (0.38) throughout conversation",
-        "Mental processes correlate with casual tenor (0.34)"
+        "Alice maintains casual tenor across conversation",
+        "Mental processes correlate with low tenor"
       ]
     )
   end
 
-  describe "#render" do
-    it "generates markdown document" do
-      formatter = described_class.new(result)
-      md = formatter.render
+  subject(:output) { described_class.new(result).render }
 
-      expect(md).to include("# Conversation Analysis:")
-      expect(md).to include("## Summary")
-      expect(md).to include("## Speaker Profiles")
+  # Extract a section by its ## header, returning the content between
+  # this header and the next ## header. Tolerates different line endings.
+  def section(after_header)
+    parts = output.split(/^##\s+/)
+    found = parts.find { |p| p.start_with?(after_header) }
+    return "" unless found
+
+    found.split("\n", 2).last.to_s
+  end
+
+  describe "regression: \\\\n literal in table separators" do
+    it "speaker_profiles separator ends with a real newline, not a literal backslash-n" do
+      speaker_section = section("Speaker Profiles")
+      expect(speaker_section).to include("|---")
+      expect(speaker_section).not_to include("\\n")
     end
 
-    it "includes metadata in summary" do
-      formatter = described_class.new(result)
-      md = formatter.render
-
-      expect(md).to include("**Turns**: 5")
-      expect(md).to include("**Speakers**: Alice, Bob")
+    it "correlations separator ends with a real newline, not a literal backslash-n" do
+      corr_section = section("Tenor ↔ Field Correlations")
+      expect(corr_section).to include("|---")
+      expect(corr_section).not_to include("\\n")
     end
 
-    it "includes speaker profile table" do
-      formatter = described_class.new(result)
-      md = formatter.render
+    it "output contains no literal backslash-n anywhere" do
+      expect(output).not_to match(/\\n/)
+    end
+  end
 
-      expect(md).to include("| Alice")
-      expect(md).to include("0.38")
-      expect(md).to include("[0.22, 0.61]")
+  describe "rendered tables" do
+    it "renders speaker profiles as a valid markdown table with 2 data rows" do
+      speaker_section = section("Speaker Profiles")
+      lines = speaker_section.lines.map(&:chomp)
+
+      header_line = lines.find { |l| l.start_with?("| Speaker ") }
+      separator_line = lines.find { |l| l.start_with?("|---") }
+      data_lines = lines.select { |l| l.start_with?("| Alice") || l.start_with?("| Bob") }
+
+      expect(header_line).to eq("| Speaker | Avg Tenor | Range | Variance | Avg Modality |")
+      expect(separator_line).to eq("|---------|-----------|-------|----------|--------------|")
+      expect(data_lines.length).to eq(2)
+      expect(data_lines).to include(a_string_starting_with("| Alice |"))
+      expect(data_lines).to include(a_string_starting_with("| Bob |"))
     end
 
-    it "includes correlations table" do
-      formatter = described_class.new(result)
-      md = formatter.render
+    it "renders correlations as a valid markdown table with 2 data rows" do
+      corr_section = section("Tenor ↔ Field Correlations")
+      lines = corr_section.lines.map(&:chomp)
 
-      expect(md).to include("## Tenor ↔ Field Correlations")
-      expect(md).to include("| mental")
-      expect(md).to include("0.34")
-      expect(md).to include("0.41")
+      header_line = lines.find { |l| l.start_with?("| Process Type ") }
+      separator_line = lines.find { |l| l.start_with?("|---") }
+      data_lines = lines.select { |l| l.start_with?("| mental") || l.start_with?("| verbal") }
+
+      expect(header_line).to eq("| Process Type | Avg Tenor | Avg Modality | Count |")
+      expect(separator_line).to eq("|--------------|-----------|--------------|-------|")
+      expect(data_lines.length).to eq(2)
     end
 
-    it "includes insights section" do
-      formatter = described_class.new(result)
-      md = formatter.render
+    it "renders insights as a numbered list" do
+      expect(output).to include("1. Alice maintains casual tenor across conversation")
+      expect(output).to include("2. Mental processes correlate with low tenor")
+    end
+  end
 
-      expect(md).to include("## Generated Insights")
-      expect(md).to include("Alice maintains casual tenor")
-      expect(md).to include("Mental processes correlate")
+  describe "empty data fallbacks" do
+    let(:empty_result) do
+      SFL::Compiler::Types::AnalysisResult.new(
+        metadata: {
+          conversation_id: "empty-convo",
+          turn_count: 0,
+          speakers: [],
+          analyzed_at: Time.now
+        },
+        turns: [],
+        speaker_profiles: {},
+        tenor_timeline: [],
+        field_evolution: [],
+        correlations: {},
+        insights: []
+      )
+    end
+
+    it "renders speaker profiles fallback when empty" do
+      out = described_class.new(empty_result).render
+      expect(out).to include("## Speaker Profiles")
+      expect(out).to include("_No speaker profiles available_")
+    end
+
+    it "renders correlations fallback when empty" do
+      out = described_class.new(empty_result).render
+      expect(out).to include("## Tenor ↔ Field Correlations")
+      expect(out).to include("_No correlations available_")
+    end
+
+    it "renders insights fallback when empty" do
+      out = described_class.new(empty_result).render
+      expect(out).to include("## Generated Insights")
+      expect(out).to include("_No insights generated_")
+    end
+  end
+
+  describe "metadata header" do
+    it "includes conversation_id, generated timestamp, turn_count, and speakers" do
+      expect(output).to include("# Conversation Analysis: test-convo")
+      expect(output).to include("**Turns**: 5")
+      expect(output).to include("**Speakers**: Alice, Bob")
     end
   end
 end

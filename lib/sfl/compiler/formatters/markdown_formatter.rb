@@ -55,7 +55,7 @@ module SFL
           return "_No speaker profiles available_" if result.speaker_profiles.empty?
 
           header = "| Speaker | Avg Tenor | Range | Variance | Avg Modality |\n"
-          header += "|---------|-----------|-------|----------|--------------|\\n"
+          header += "|---------|-----------|-------|----------|--------------|\n"
 
           rows = result.speaker_profiles.map do |name, profile|
             "| #{name} | #{profile.avg_tenor} (#{tenor_label(profile.avg_tenor)}) | #{profile.tenor_range.inspect} | #{profile.tenor_variance} | #{profile.avg_modality} |"
@@ -68,7 +68,7 @@ module SFL
           return "_No correlations available_" if result.correlations.empty?
 
           header = "| Process Type | Avg Tenor | Avg Modality | Count |\n"
-          header += "|--------------|-----------|--------------|-------|\\n"
+          header += "|--------------|-----------|--------------|-------|\n"
 
           rows = result.correlations.map do |process_type, data|
             "| #{process_type} | #{data[:avg_tenor]} | #{data[:avg_modality]} | #{data[:count]} |"

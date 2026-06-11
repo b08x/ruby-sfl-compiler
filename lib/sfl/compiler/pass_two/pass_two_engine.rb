@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "circuit_breaker"
 require "dspy"
 require "dry/monads"
 require "journald/logger"
@@ -111,13 +112,12 @@ module SFL
           reasoning: result[:reasoning]
         )
       rescue CircuitBreaker::CircuitBrokenException
-        @logger.send_message(
-          message: "pass_two_circuit_open",
-          priority: Journald::LOG_WARNING,
-          correlation_id: correlation_id,
-          clause_id: clause.id
-        )
-        # Graceful degradation: return default interpersonal values
+        log_and_warn("pass_two_circuit_open", correlation_id, clause,
+          "Circuit breaker open — defaults applied")
+        default_interpersonal(clause.id)
+      rescue StandardError => e
+        log_and_warn("pass_two_llm_failed", correlation_id, clause,
+          "DSPy annotation failed: #{e.message}")
         default_interpersonal(clause.id)
       end
 
@@ -157,6 +157,16 @@ module SFL
           speaker_attitude: nil,
           reasoning: "Circuit breaker open — defaults applied"
         )
+      end
+
+      def log_and_warn(message, correlation_id, clause, human_message)
+        @logger.send_message(
+          message: message,
+          priority: Journald::LOG_WARNING,
+          correlation_id: correlation_id,
+          clause_id: clause.id
+        )
+        $stderr.puts "[WARN] Pass 2 (#{clause.id}): #{human_message}"
       end
     end
 
@@ -207,19 +217,6 @@ module SFL
           tenor: result.tenor,
           speaker_attitude: result.speaker_attitude,
           reasoning: result.reasoning
-        }
-      rescue StandardError => e
-        SFL::Compiler.logger.send_message(
-          message: "sfl_annotator_failed",
-          priority: Journald::LOG_WARNING,
-          error: e.message
-        )
-        {
-          mood: "declarative",
-          modality_weight: 0.5,
-          tenor: 0.5,
-          speaker_attitude: "neutral",
-          reasoning: "DSPy annotation failed: #{e.message}"
         }
       end
 
