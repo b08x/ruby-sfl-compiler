@@ -33,3 +33,6 @@
 2026-06-11 07:09:45 | CREATE | experiments/03_theme_rheme_extractor.rb  |  196 |        | 
 2026-06-11 07:09:57 | CREATE | experiments/03_theme_rheme_extractor.rb  |  196 |        | 
 2026-06-11 07:11:04 | CREATE | experiments/04_cohesion_correlation.rb   |  226 |   +226 | 
+2026-06-11 07:19:40 | CREATE | lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb |  209 |   +209 | 
+2026-06-11 07:20:24 | CREATE | experiments/05_llm_theme_extractor.rb    |  224 |   +224 | 
+2026-06-11 07:21:22 | CREATE | experiments/05_llm_theme_extractor.rb    |  225 |     +1 | 

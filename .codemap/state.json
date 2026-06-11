@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-06-11T07:11:04.488905722-04:00",
-  "file_count": 147,
+  "updated_at": "2026-06-11T07:21:22.875664929-04:00",
+  "file_count": 149,
   "hubs": [
     "spec/spec_helper.rb",
     "lib/sfl/compiler.rb"
@@ -188,6 +188,33 @@
       "lines": 226,
       "delta": 226,
       "size_delta": 7188
+    },
+    {
+      "time": "2026-06-11T07:19:40.54462137-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "lang": "ruby",
+      "lines": 209,
+      "delta": 209,
+      "size_delta": 7927
+    },
+    {
+      "time": "2026-06-11T07:20:24.880765003-04:00",
+      "op": "CREATE",
+      "path": "experiments/05_llm_theme_extractor.rb",
+      "lang": "ruby",
+      "lines": 224,
+      "delta": 224,
+      "size_delta": 6106
+    },
+    {
+      "time": "2026-06-11T07:21:22.874080323-04:00",
+      "op": "CREATE",
+      "path": "experiments/05_llm_theme_extractor.rb",
+      "lang": "ruby",
+      "lines": 225,
+      "delta": 1,
+      "size_delta": 41
     }
   ],
   "working_set": {
@@ -225,6 +252,24 @@
         "last_touch": "2026-06-11T07:11:04.48885636-04:00",
         "edit_count": 1,
         "net_delta": 226,
+        "is_hub": false,
+        "importers": 0
+      },
+      "experiments/05_llm_theme_extractor.rb": {
+        "path": "experiments/05_llm_theme_extractor.rb",
+        "first_touch": "2026-06-11T07:20:24.882494007-04:00",
+        "last_touch": "2026-06-11T07:21:22.875616363-04:00",
+        "edit_count": 2,
+        "net_delta": 225,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb": {
+        "path": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+        "first_touch": "2026-06-11T07:19:40.546296332-04:00",
+        "last_touch": "2026-06-11T07:19:40.546296332-04:00",
+        "edit_count": 1,
+        "net_delta": 209,
         "is_hub": false,
         "importers": 0
       }
