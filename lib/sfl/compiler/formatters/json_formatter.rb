@@ -25,9 +25,8 @@ module SFL
         end
 
         def format_metadata
-          result.metadata.merge(
-            analyzed_at: result.metadata[:analyzed_at]&.iso8601
-          )
+          # analyzed_at is already a string (ISO8601) from the script
+          result.metadata
         end
 
         def format_speaker_profiles

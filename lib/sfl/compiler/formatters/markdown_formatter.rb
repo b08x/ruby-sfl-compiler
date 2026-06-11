@@ -9,7 +9,7 @@ module SFL
           <<~MD
             # Conversation Analysis: #{result.metadata[:conversation_id]}
 
-            **Generated**: #{result.metadata[:analyzed_at]&.strftime("%Y-%m-%d %H:%M:%S")}
+            **Generated**: #{result.metadata[:analyzed_at]}
             **Turns**: #{result.metadata[:turn_count]} | **Speakers**: #{result.metadata[:speakers]&.join(", ")}
 
             ---
