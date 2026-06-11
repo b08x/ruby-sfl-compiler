@@ -39,14 +39,25 @@ else
 end
 
 if api_key && !api_key.empty?
-  DSPy.configure do |c|
-    c.lm = DSPy::LM.new(provider,
-      api_key: api_key,
-      structured_outputs: true)
+  puts "[INFO] Configuring DSPy..."
+  puts "[INFO] Provider: #{provider}"
+  puts "[INFO] API key: #{api_key[0..15]}..."
+
+  begin
+    DSPy.configure do |c|
+      c.lm = DSPy::LM.new(provider,
+        api_key: api_key,
+        structured_outputs: true)
+    end
+    puts "[SUCCESS] DSPy configured - Pass 2 will use LLM for tenor/modality annotation"
+  rescue => e
+    puts "[ERROR] Failed to configure DSPy: #{e.class}: #{e.message}"
+    puts "[ERROR] #{e.backtrace[0..2].join("\n")}"
+    puts "[WARN] Pass 2 will use circuit breaker defaults (all tenor=0.5, modality=0.5)"
   end
-  puts "[INFO] DSPy configured with provider: #{provider}"
 else
-  puts "[WARN] No API key found for #{provider} - Pass 2 will use circuit breaker defaults"
+  puts "[WARN] No API key found for #{provider}"
+  puts "[WARN] Pass 2 will use circuit breaker defaults (all tenor=0.5, modality=0.5)"
 end
 
 module SFL

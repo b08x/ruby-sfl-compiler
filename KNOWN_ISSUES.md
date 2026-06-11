@@ -26,12 +26,24 @@
 3. OpenRouter rate limiting or model compatibility issue
 4. DSPy-openai adapter needs different configuration for OpenRouter
 
+**Root Cause Found**:
+The `SFLAnnotator` class (lib/sfl/compiler/pass_two/pass_two_engine.rb:211-220) catches ALL StandardError exceptions from DSPy::ChainOfThought and silently returns defaults. The actual LLM errors are only logged to journald.
+
+**Check Actual Errors**:
+```bash
+# Watch logs while running analysis
+journalctl -f | grep sfl
+
+# Or check recent logs
+journalctl -n 100 | grep sfl_annotator_failed
+```
+
 **Next Steps to Debug**:
-1. Add verbose logging to PassTwoEngine to see actual LLM responses
+1. ✅ Check journald logs for actual DSPy errors: `journalctl -f | grep sfl`
 2. Test with simpler DSPy signature (fewer output fields)
 3. Try native OpenAI provider with gpt-4o-mini to isolate OpenRouter
-4. Check journald logs for Pass 2 errors: `journalctl -f | grep sfl-compiler`
-5. Add error logging before circuit breaker catches them
+4. Add STDOUT logging in addition to journald for easier debugging
+5. Verify OpenRouter model name format matches DSPy expectations
 
 **Workaround**:
 The framework is fully functional with Pass 1 only. You still get:
