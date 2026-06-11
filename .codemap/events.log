@@ -25,3 +25,4 @@
 2026-06-10 20:25:43 | CREATE | lib/sfl/compiler.rb                      |  103 |     +1 | dirty
 2026-06-10 20:40:19 | CREATE | lib/sfl/compiler/formatters/json_formatter.rb |   48 |     -1 | dirty
 2026-06-10 20:40:30 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |   97 |        | dirty
+2026-06-11 07:01:34 | CREATE | experiments/01_fca_proof_of_concept.rb   |  176 |   +176 | 
