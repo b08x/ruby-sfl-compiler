@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-06-11T07:03:12.65319789-04:00",
-  "file_count": 145,
+  "updated_at": "2026-06-11T07:11:04.488905722-04:00",
+  "file_count": 147,
   "hubs": [
     "spec/spec_helper.rb",
     "lib/sfl/compiler.rb"
@@ -155,6 +155,39 @@
       "lines": 163,
       "delta": 5,
       "size_delta": -66
+    },
+    {
+      "time": "2026-06-11T07:09:36.76818177-04:00",
+      "op": "CREATE",
+      "path": "experiments/03_theme_rheme_extractor.rb",
+      "lang": "ruby",
+      "lines": 196,
+      "delta": 196,
+      "size_delta": 6067
+    },
+    {
+      "time": "2026-06-11T07:09:45.058686578-04:00",
+      "op": "CREATE",
+      "path": "experiments/03_theme_rheme_extractor.rb",
+      "lang": "ruby",
+      "lines": 196
+    },
+    {
+      "time": "2026-06-11T07:09:57.898488875-04:00",
+      "op": "CREATE",
+      "path": "experiments/03_theme_rheme_extractor.rb",
+      "lang": "ruby",
+      "lines": 196,
+      "size_delta": 5
+    },
+    {
+      "time": "2026-06-11T07:11:04.486842457-04:00",
+      "op": "CREATE",
+      "path": "experiments/04_cohesion_correlation.rb",
+      "lang": "ruby",
+      "lines": 226,
+      "delta": 226,
+      "size_delta": 7188
     }
   ],
   "working_set": {
@@ -174,6 +207,24 @@
         "last_touch": "2026-06-11T07:03:12.653155496-04:00",
         "edit_count": 3,
         "net_delta": 163,
+        "is_hub": false,
+        "importers": 0
+      },
+      "experiments/03_theme_rheme_extractor.rb": {
+        "path": "experiments/03_theme_rheme_extractor.rb",
+        "first_touch": "2026-06-11T07:09:36.770012552-04:00",
+        "last_touch": "2026-06-11T07:09:57.900254584-04:00",
+        "edit_count": 3,
+        "net_delta": 196,
+        "is_hub": false,
+        "importers": 0
+      },
+      "experiments/04_cohesion_correlation.rb": {
+        "path": "experiments/04_cohesion_correlation.rb",
+        "first_touch": "2026-06-11T07:11:04.48885636-04:00",
+        "last_touch": "2026-06-11T07:11:04.48885636-04:00",
+        "edit_count": 1,
+        "net_delta": 226,
         "is_hub": false,
         "importers": 0
       }

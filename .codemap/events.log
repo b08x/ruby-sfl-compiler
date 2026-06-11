@@ -29,3 +29,7 @@
 2026-06-11 07:02:36 | CREATE | experiments/02_id3_feature_importance.rb |  159 |   +159 | 
 2026-06-11 07:02:47 | CREATE | experiments/02_id3_feature_importance.rb |  158 |     -1 | 
 2026-06-11 07:03:12 | CREATE | experiments/02_id3_feature_importance.rb |  163 |     +5 | 
+2026-06-11 07:09:36 | CREATE | experiments/03_theme_rheme_extractor.rb  |  196 |   +196 | 
+2026-06-11 07:09:45 | CREATE | experiments/03_theme_rheme_extractor.rb  |  196 |        | 
+2026-06-11 07:09:57 | CREATE | experiments/03_theme_rheme_extractor.rb  |  196 |        | 
+2026-06-11 07:11:04 | CREATE | experiments/04_cohesion_correlation.rb   |  226 |   +226 | 
