@@ -102,6 +102,46 @@ module SFL
         attribute :correlation_id, Types::String
         attribute :timestamp, Types::Time
       end
+
+      # Conversation analysis data structures
+
+      # A single turn in a conversation with SFL annotations
+      class ConversationTurn < Dry::Struct
+        attribute :turn_id, Types::Integer
+        attribute :speaker, Types::String
+        attribute :timestamp, Types::Time
+        attribute :message_text, Types::String
+        attribute :clauses, Types::Array.of(AnnotatedClause)
+        attribute :avg_tenor, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :avg_modality, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :dominant_mood, Types::MoodType
+        attribute :process_types, Types::Hash.default({}.freeze)
+        attribute :participants, Types::Array.of(Types::String).default([].freeze)
+        attribute :tenor_shift, Types::Float.optional
+      end
+
+      # Aggregated profile for a single speaker across conversation
+      class SpeakerProfile < Dry::Struct
+        attribute :speaker_name, Types::String
+        attribute :turn_count, Types::Integer
+        attribute :avg_tenor, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :tenor_range, Types::Array.of(Types::Float).constrained(size: 2)
+        attribute :tenor_variance, Types::Float.constrained(gteq: 0.0)
+        attribute :avg_modality, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :mood_distribution, Types::Hash.default({}.freeze)
+        attribute :dominant_processes, Types::Hash.default({}.freeze)
+      end
+
+      # Complete analysis result for a conversation
+      class AnalysisResult < Dry::Struct
+        attribute :metadata, Types::Hash
+        attribute :turns, Types::Array.of(ConversationTurn)
+        attribute :speaker_profiles, Types::Hash
+        attribute :tenor_timeline, Types::Array.of(Types::Hash)
+        attribute :field_evolution, Types::Array.of(Types::Hash)
+        attribute :correlations, Types::Hash
+        attribute :insights, Types::Array.of(Types::String)
+      end
     end
   end
 end

@@ -140,4 +140,74 @@ RSpec.describe SFL::Compiler::Types do
       expect(annotated.interpersonal.mood).to eq("declarative")
     end
   end
+
+  describe "ConversationTurn" do
+    it "creates a valid conversation turn" do
+      turn = SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 1,
+        speaker: "Alice",
+        timestamp: Time.now,
+        message_text: "Hello world",
+        clauses: [],
+        avg_tenor: 0.5,
+        avg_modality: 0.6,
+        dominant_mood: "declarative",
+        process_types: { "mental" => 2, "material" => 1 },
+        participants: ["Alice", "world"],
+        tenor_shift: 0.0
+      )
+
+      expect(turn.turn_id).to eq(1)
+      expect(turn.speaker).to eq("Alice")
+      expect(turn.avg_tenor).to eq(0.5)
+    end
+
+    it "requires all mandatory fields" do
+      expect {
+        SFL::Compiler::Types::ConversationTurn.new(turn_id: 1)
+      }.to raise_error(Dry::Struct::Error)
+    end
+  end
+
+  describe "SpeakerProfile" do
+    it "creates a valid speaker profile" do
+      profile = SFL::Compiler::Types::SpeakerProfile.new(
+        speaker_name: "Alice",
+        turn_count: 5,
+        avg_tenor: 0.45,
+        tenor_range: [0.2, 0.7],
+        tenor_variance: 0.12,
+        avg_modality: 0.52,
+        mood_distribution: { "declarative" => 0.8, "interrogative" => 0.2 },
+        dominant_processes: { "mental" => 10, "material" => 5 }
+      )
+
+      expect(profile.speaker_name).to eq("Alice")
+      expect(profile.turn_count).to eq(5)
+      expect(profile.tenor_range).to eq([0.2, 0.7])
+    end
+
+    it "requires all mandatory fields" do
+      expect {
+        SFL::Compiler::Types::SpeakerProfile.new(speaker_name: "Alice")
+      }.to raise_error(Dry::Struct::Error)
+    end
+  end
+
+  describe "AnalysisResult" do
+    it "creates a valid analysis result" do
+      result = SFL::Compiler::Types::AnalysisResult.new(
+        metadata: { conversation_id: "test", turn_count: 5 },
+        turns: [],
+        speaker_profiles: {},
+        tenor_timeline: [],
+        field_evolution: [],
+        correlations: {},
+        insights: ["Sample insight"]
+      )
+
+      expect(result.metadata[:conversation_id]).to eq("test")
+      expect(result.insights).to eq(["Sample insight"])
+    end
+  end
 end
