@@ -8,3 +8,20 @@
 2026-06-10 20:07:44 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   43 |     +2 | 
 2026-06-10 20:07:50 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   45 |     +2 | 
 2026-06-10 20:08:13 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   45 |        | 
+2026-06-10 20:13:19 | CREATE | lib/sfl/compiler/analysis/speaker_profiler.rb |   78 |    +78 | 
+2026-06-10 20:13:24 | CREATE | lib/sfl/compiler/analysis.rb             |   12 |     +1 | dirty
+2026-06-10 20:15:00 | CREATE | lib/sfl/compiler/analysis/correlation_analyzer.rb |   40 |    +40 | 
+2026-06-10 20:15:04 | CREATE | lib/sfl/compiler/analysis.rb             |   13 |     +1 | dirty
+2026-06-10 20:16:17 | CREATE | lib/sfl/compiler/formatters.rb           |   14 |    +14 | 
+2026-06-10 20:16:21 | CREATE | lib/sfl/compiler/formatters/base_formatter.rb |   28 |    +28 | 
+2026-06-10 20:16:36 | CREATE | spec/sfl_compiler/formatters/csv_formatter_spec.rb |   89 |    +89 | 
+2026-06-10 20:16:43 | CREATE | lib/sfl/compiler/formatters/csv_formatter.rb |   54 |    +54 | 
+2026-06-10 20:17:09 | CREATE | lib/sfl/compiler/formatters/json_formatter.rb |   49 |    +49 | 
+2026-06-10 20:17:30 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |   97 |    +97 | 
+2026-06-10 20:17:49 | CREATE | spec/sfl_compiler/formatters/json_formatter_spec.rb |   84 |    +84 | 
+2026-06-10 20:18:04 | CREATE | spec/sfl_compiler/formatters/markdown_formatter_spec.rb |   86 |    +86 | 
+2026-06-10 20:21:11 | CREATE | spec/integration/conversation_analysis_spec.rb |  138 |   +138 | 
+2026-06-10 20:25:25 | CREATE | spec/integration/real_conversation_spec.rb |   69 |    +69 | 
+2026-06-10 20:25:43 | CREATE | lib/sfl/compiler.rb                      |  103 |     +1 | dirty
+2026-06-10 20:40:19 | CREATE | lib/sfl/compiler/formatters/json_formatter.rb |   48 |     -1 | dirty
+2026-06-10 20:40:30 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |   97 |        | dirty

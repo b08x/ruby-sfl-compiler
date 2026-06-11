@@ -92,6 +92,33 @@ python -m spacy download en_core_web_sm
 # (extension must be available in your database)
 ```
 
+## Environment Configuration
+
+Create a `.env` file in the project root (copy from `.env.example`):
+
+```bash
+# Database
+DATABASE_URL=postgresql:///sfl_compiler_dev
+
+# LLM Provider for Pass 2 (interpersonal annotation)
+# Options: openai/gpt-4o-mini, openai/gpt-4o, anthropic/claude-3-5-sonnet-20241022
+DSPY_PROVIDER=openai/gpt-4o-mini
+
+# API Keys (set the one matching your DSPY_PROVIDER)
+OPENAI_API_KEY=sk-your-key-here
+ANTHROPIC_API_KEY=
+OPENROUTER_API_KEY=
+
+# spaCy Model
+SPACY_MODEL=en_core_web_sm
+```
+
+**Provider Options**:
+- `openai/gpt-4o-mini` (default, fast & cheap)
+- `openai/gpt-4o` (more capable, slower)
+- `anthropic/claude-3-5-sonnet-20241022` (excellent reasoning)
+- `openrouter/<model>` (any OpenRouter model)
+
 ## Configuration
 
 ```ruby

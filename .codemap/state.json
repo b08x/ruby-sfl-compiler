@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-06-10T20:08:13.434561116-04:00",
-  "file_count": 96,
+  "updated_at": "2026-06-10T20:40:30.237178043-04:00",
+  "file_count": 108,
   "hubs": [
-    "lib/sfl/compiler.rb",
-    "spec/spec_helper.rb"
+    "spec/spec_helper.rb",
+    "lib/sfl/compiler.rb"
   ],
   "importers": {
     "lib/sfl/compiler.rb": [
@@ -140,6 +140,165 @@
       "lang": "ruby",
       "lines": 45,
       "size_delta": 16
+    },
+    {
+      "time": "2026-06-10T20:13:19.046484074-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "lang": "ruby",
+      "lines": 78,
+      "delta": 78,
+      "size_delta": 2325
+    },
+    {
+      "time": "2026-06-10T20:13:24.838116468-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis.rb",
+      "lang": "ruby",
+      "lines": 12,
+      "delta": 1,
+      "size_delta": 45,
+      "dirty": true
+    },
+    {
+      "time": "2026-06-10T20:15:00.64096279-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "lang": "ruby",
+      "lines": 40,
+      "delta": 40,
+      "size_delta": 1097
+    },
+    {
+      "time": "2026-06-10T20:15:04.102771161-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis.rb",
+      "lang": "ruby",
+      "lines": 13,
+      "delta": 1,
+      "size_delta": 49,
+      "dirty": true
+    },
+    {
+      "time": "2026-06-10T20:16:17.348943816-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters.rb",
+      "lang": "ruby",
+      "lines": 14,
+      "delta": 14,
+      "size_delta": 331
+    },
+    {
+      "time": "2026-06-10T20:16:21.800055319-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "lang": "ruby",
+      "lines": 28,
+      "delta": 28,
+      "size_delta": 615
+    },
+    {
+      "time": "2026-06-10T20:16:36.364330072-04:00",
+      "op": "CREATE",
+      "path": "spec/sfl_compiler/formatters/csv_formatter_spec.rb",
+      "lang": "ruby",
+      "lines": 89,
+      "delta": 89,
+      "size_delta": 2577
+    },
+    {
+      "time": "2026-06-10T20:16:43.464919004-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "lang": "ruby",
+      "lines": 54,
+      "delta": 54,
+      "size_delta": 1419
+    },
+    {
+      "time": "2026-06-10T20:17:09.728543609-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "lang": "ruby",
+      "lines": 49,
+      "delta": 49,
+      "size_delta": 1323
+    },
+    {
+      "time": "2026-06-10T20:17:30.188784851-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "lang": "ruby",
+      "lines": 97,
+      "delta": 97,
+      "size_delta": 3038
+    },
+    {
+      "time": "2026-06-10T20:17:49.630864387-04:00",
+      "op": "CREATE",
+      "path": "spec/sfl_compiler/formatters/json_formatter_spec.rb",
+      "lang": "ruby",
+      "lines": 84,
+      "delta": 84,
+      "size_delta": 2675
+    },
+    {
+      "time": "2026-06-10T20:18:04.983371868-04:00",
+      "op": "CREATE",
+      "path": "spec/sfl_compiler/formatters/markdown_formatter_spec.rb",
+      "lang": "ruby",
+      "lines": 86,
+      "delta": 86,
+      "size_delta": 2551
+    },
+    {
+      "time": "2026-06-10T20:21:11.688860254-04:00",
+      "op": "CREATE",
+      "path": "spec/integration/conversation_analysis_spec.rb",
+      "lang": "ruby",
+      "lines": 138,
+      "delta": 138,
+      "size_delta": 4773
+    },
+    {
+      "time": "2026-06-10T20:25:25.013092694-04:00",
+      "op": "CREATE",
+      "path": "spec/integration/real_conversation_spec.rb",
+      "lang": "ruby",
+      "lines": 69,
+      "delta": 69,
+      "size_delta": 2282
+    },
+    {
+      "time": "2026-06-10T20:25:43.396548962-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler.rb",
+      "lang": "ruby",
+      "lines": 103,
+      "delta": 1,
+      "size_delta": 50,
+      "dirty": true,
+      "importers": 3,
+      "is_hub": true
+    },
+    {
+      "time": "2026-06-10T20:40:19.469197898-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "lang": "ruby",
+      "lines": 48,
+      "delta": -1,
+      "size_delta": -13,
+      "dirty": true
+    },
+    {
+      "time": "2026-06-10T20:40:30.234926886-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "lang": "ruby",
+      "lines": 97,
+      "size_delta": -31,
+      "dirty": true
     }
   ],
   "working_set": {
@@ -147,18 +306,36 @@
       "lib/sfl/compiler.rb": {
         "path": "lib/sfl/compiler.rb",
         "first_touch": "2026-06-10T20:07:00.168611041-04:00",
-        "last_touch": "2026-06-10T20:07:00.168611041-04:00",
-        "edit_count": 1,
-        "net_delta": 1,
+        "last_touch": "2026-06-10T20:25:43.3986948-04:00",
+        "edit_count": 2,
+        "net_delta": 2,
         "is_hub": true,
         "importers": 3
       },
       "lib/sfl/compiler/analysis.rb": {
         "path": "lib/sfl/compiler/analysis.rb",
         "first_touch": "2026-06-10T20:06:28.011602752-04:00",
-        "last_touch": "2026-06-10T20:07:08.56072264-04:00",
-        "edit_count": 2,
-        "net_delta": 11,
+        "last_touch": "2026-06-10T20:15:04.104970545-04:00",
+        "edit_count": 4,
+        "net_delta": 13,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/analysis/correlation_analyzer.rb": {
+        "path": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+        "first_touch": "2026-06-10T20:15:00.642830126-04:00",
+        "last_touch": "2026-06-10T20:15:00.642830126-04:00",
+        "edit_count": 1,
+        "net_delta": 40,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/analysis/speaker_profiler.rb": {
+        "path": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+        "first_touch": "2026-06-10T20:13:19.048858952-04:00",
+        "last_touch": "2026-06-10T20:13:19.048858952-04:00",
+        "edit_count": 1,
+        "net_delta": 78,
         "is_hub": false,
         "importers": 0
       },
@@ -171,6 +348,51 @@
         "is_hub": false,
         "importers": 0
       },
+      "lib/sfl/compiler/formatters.rb": {
+        "path": "lib/sfl/compiler/formatters.rb",
+        "first_touch": "2026-06-10T20:16:17.351378371-04:00",
+        "last_touch": "2026-06-10T20:16:17.351378371-04:00",
+        "edit_count": 1,
+        "net_delta": 14,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/formatters/base_formatter.rb": {
+        "path": "lib/sfl/compiler/formatters/base_formatter.rb",
+        "first_touch": "2026-06-10T20:16:21.802450883-04:00",
+        "last_touch": "2026-06-10T20:16:21.802450883-04:00",
+        "edit_count": 1,
+        "net_delta": 28,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/formatters/csv_formatter.rb": {
+        "path": "lib/sfl/compiler/formatters/csv_formatter.rb",
+        "first_touch": "2026-06-10T20:16:43.466771358-04:00",
+        "last_touch": "2026-06-10T20:16:43.466771358-04:00",
+        "edit_count": 1,
+        "net_delta": 54,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/formatters/json_formatter.rb": {
+        "path": "lib/sfl/compiler/formatters/json_formatter.rb",
+        "first_touch": "2026-06-10T20:17:09.730430701-04:00",
+        "last_touch": "2026-06-10T20:40:19.471801257-04:00",
+        "edit_count": 2,
+        "net_delta": 48,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/formatters/markdown_formatter.rb": {
+        "path": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+        "first_touch": "2026-06-10T20:17:30.190694763-04:00",
+        "last_touch": "2026-06-10T20:40:30.237115703-04:00",
+        "edit_count": 2,
+        "net_delta": 97,
+        "is_hub": false,
+        "importers": 0
+      },
       "lib/sfl/compiler/types.rb": {
         "path": "lib/sfl/compiler/types.rb",
         "first_touch": "2026-06-10T20:00:17.734980278-04:00",
@@ -180,12 +402,57 @@
         "is_hub": false,
         "importers": 0
       },
+      "spec/integration/conversation_analysis_spec.rb": {
+        "path": "spec/integration/conversation_analysis_spec.rb",
+        "first_touch": "2026-06-10T20:21:11.690628396-04:00",
+        "last_touch": "2026-06-10T20:21:11.690628396-04:00",
+        "edit_count": 1,
+        "net_delta": 138,
+        "is_hub": false,
+        "importers": 0
+      },
+      "spec/integration/real_conversation_spec.rb": {
+        "path": "spec/integration/real_conversation_spec.rb",
+        "first_touch": "2026-06-10T20:25:25.015459802-04:00",
+        "last_touch": "2026-06-10T20:25:25.015459802-04:00",
+        "edit_count": 1,
+        "net_delta": 69,
+        "is_hub": false,
+        "importers": 0
+      },
       "spec/sfl/compiler/types_spec.rb": {
         "path": "spec/sfl/compiler/types_spec.rb",
         "first_touch": "2026-06-10T19:49:41.534966857-04:00",
         "last_touch": "2026-06-10T20:03:19.717086199-04:00",
         "edit_count": 2,
         "net_delta": 70,
+        "is_hub": false,
+        "importers": 0
+      },
+      "spec/sfl_compiler/formatters/csv_formatter_spec.rb": {
+        "path": "spec/sfl_compiler/formatters/csv_formatter_spec.rb",
+        "first_touch": "2026-06-10T20:16:36.366302762-04:00",
+        "last_touch": "2026-06-10T20:16:36.366302762-04:00",
+        "edit_count": 1,
+        "net_delta": 89,
+        "is_hub": false,
+        "importers": 0
+      },
+      "spec/sfl_compiler/formatters/json_formatter_spec.rb": {
+        "path": "spec/sfl_compiler/formatters/json_formatter_spec.rb",
+        "first_touch": "2026-06-10T20:17:49.632732929-04:00",
+        "last_touch": "2026-06-10T20:17:49.632732929-04:00",
+        "edit_count": 1,
+        "net_delta": 84,
+        "is_hub": false,
+        "importers": 0
+      },
+      "spec/sfl_compiler/formatters/markdown_formatter_spec.rb": {
+        "path": "spec/sfl_compiler/formatters/markdown_formatter_spec.rb",
+        "first_touch": "2026-06-10T20:18:04.985105869-04:00",
+        "last_touch": "2026-06-10T20:18:04.985105869-04:00",
+        "edit_count": 1,
+        "net_delta": 86,
         "is_hub": false,
         "importers": 0
       }

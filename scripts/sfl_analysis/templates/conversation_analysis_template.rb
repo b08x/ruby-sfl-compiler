@@ -10,10 +10,18 @@
 #   ruby conversation_analysis_template.rb <input.jsonl> <output_dir>
 
 require "bundler/setup"
+require "dotenv/load"  # Load environment variables from .env
 require "json"
 require "time"
 require "journald/logger"
 require_relative "../../../lib/sfl-compiler"
+
+# Configure SFL Compiler from environment variables
+SFL::Compiler.configure do |c|
+  c.database_url = ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
+  c.spacy_model  = ENV.fetch("SPACY_MODEL", "en_core_web_sm")
+  c.dspy_provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
+end
 
 module SFL
   module Compiler
