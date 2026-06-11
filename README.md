@@ -161,6 +161,40 @@ results = retriever.retrieve(
 )
 ```
 
+### Conversation Analysis
+
+Analyze chat logs for tenor evolution, speaker patterns, and rhetorical correlations:
+
+```bash
+# Run conversation analysis script
+ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb conversation.jsonl ./output
+
+# Or use the Claude Code skill
+/sfl-analyze conversation conversation.jsonl
+```
+
+**Input Format** (JSONL):
+```jsonl
+{"name":"Alice","send_date":"June 10, 2026 2:30pm","mes":"Message text..."}
+{"name":"Bob","send_date":"June 10, 2026 2:31pm","mes":"Response text..."}
+```
+
+**Outputs**:
+- `conversation_analysis.csv` — Turn-by-turn data (speaker, tenor, modality, process types)
+- `conversation_analysis.json` — Structured analysis data
+- `conversation_analysis.md` — Human-readable report with insights
+
+**Analysis Features**:
+- **Tenor Tracking**: Detect formality shifts across conversation
+- **Speaker Profiling**: Aggregate tenor/modality/mood per speaker
+- **Process Correlation**: Link process types (mental/verbal/material) with rhetorical stance
+- **Insight Generation**: Automated observations about communication patterns
+
+**Example Insights**:
+- "Steve maintains 2.0x higher tenor (0.76) than Robert (0.38)"
+- "Mental processes correlate with casual tenor (0.34)"
+- "Largest tenor shift at turn #2: Δ = +0.46"
+
 ### Database Setup
 
 ```ruby
