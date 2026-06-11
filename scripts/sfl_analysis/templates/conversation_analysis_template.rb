@@ -23,6 +23,31 @@ SFL::Compiler.configure do |c|
   c.dspy_provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
 end
 
+# Configure DSPy.rb for Pass 2 (LLM annotation)
+provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
+api_key = if provider.start_with?("openrouter/")
+  ENV.fetch("OPENROUTER_API_KEY", nil)
+elsif provider.start_with?("google/")
+  ENV.fetch("GOOGLE_API_KEY", nil)
+elsif provider.start_with?("openai/")
+  ENV.fetch("OPENAI_API_KEY", nil)
+elsif provider.start_with?("anthropic/")
+  ENV.fetch("ANTHROPIC_API_KEY", nil)
+else
+  ENV.fetch("OPENROUTER_API_KEY", nil)  # Default to OpenRouter
+end
+
+if api_key && !api_key.empty?
+  DSPy.configure do |c|
+    c.lm = DSPy::LM.new(provider,
+      api_key: api_key,
+      structured_outputs: true)
+  end
+  puts "[INFO] DSPy configured with provider: #{provider}"
+else
+  puts "[WARN] No API key found for #{provider} - Pass 2 will use circuit breaker defaults"
+end
+
 module SFL
   module Compiler
     # Orchestrates conversation analysis from JSONL to formatted outputs
