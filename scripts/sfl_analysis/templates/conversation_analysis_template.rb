@@ -151,9 +151,29 @@ module SFL
         )
 
         # Compile each turn
+        puts "\n[INFO] Compiling #{raw_turns.size} conversation turns through SFL pipeline..."
+        puts "[INFO] Pass 1: spaCy (fast) + Pass 2: LLM annotation (slower)"
+        puts "[INFO] Progress:"
+
         conversation_turns = raw_turns.each_with_index.map do |turn_data, idx|
-          compile_turn(turn_data, idx + 1)
+          turn_id = idx + 1
+          speaker = turn_data[:name]
+
+          # Progress indicator
+          print "  Turn #{turn_id}/#{raw_turns.size} (#{speaker})... "
+          STDOUT.flush
+
+          start_time = Time.now
+          turn = compile_turn(turn_data, turn_id)
+          elapsed = (Time.now - start_time).round(2)
+
+          # Show tenor value to prove LLM is working
+          tenor_label = turn.avg_tenor == 0.5 ? "DEFAULT" : "✓"
+          puts "#{elapsed}s [tenor: #{turn.avg_tenor.round(2)} #{tenor_label}]"
+
+          turn
         end
+        puts ""
 
         # Run analysis modules
         tenor_tracker = Analysis::TenorTracker.new(conversation_turns)
