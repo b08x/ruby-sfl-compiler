@@ -98,4 +98,5 @@ loader.collapse("#{__dir__}/compiler/pass_one")
 loader.collapse("#{__dir__}/compiler/pass_two")
 loader.collapse("#{__dir__}/compiler/storage")
 loader.collapse("#{__dir__}/compiler/retrieval")
+loader.collapse("#{__dir__}/compiler/analysis")
 loader.setup

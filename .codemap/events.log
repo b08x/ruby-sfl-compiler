@@ -1,0 +1,10 @@
+2026-06-10 19:49:41 | CREATE | spec/sfl/compiler/types_spec.rb          |  207 |    +64 | dirty
+2026-06-10 20:00:17 | CREATE | lib/sfl/compiler/types.rb                |  147 |    +40 | dirty
+2026-06-10 20:03:19 | CREATE | spec/sfl/compiler/types_spec.rb          |  213 |     +6 | dirty
+2026-06-10 20:06:28 | CREATE | lib/sfl/compiler/analysis.rb             |    9 |     +9 | 
+2026-06-10 20:07:00 | CREATE | lib/sfl/compiler.rb                      |  102 |     +1 | dirty
+2026-06-10 20:07:05 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   41 |    +41 | 
+2026-06-10 20:07:08 | CREATE | lib/sfl/compiler/analysis.rb             |   11 |     +2 | 
+2026-06-10 20:07:44 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   43 |     +2 | 
+2026-06-10 20:07:50 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   45 |     +2 | 
+2026-06-10 20:08:13 | CREATE | lib/sfl/compiler/analysis/tenor_tracker.rb |   45 |        | 

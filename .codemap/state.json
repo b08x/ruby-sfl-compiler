@@ -1,0 +1,195 @@
+{
+  "updated_at": "2026-06-10T20:08:13.434561116-04:00",
+  "file_count": 96,
+  "hubs": [
+    "lib/sfl/compiler.rb",
+    "spec/spec_helper.rb"
+  ],
+  "importers": {
+    "lib/sfl/compiler.rb": [
+      "spec/spec_helper.rb",
+      "scripts/parse_metacognitive_coprocessor.rb",
+      "lib/sfl-compiler.rb"
+    ],
+    "lib/sfl/compiler/version.rb": [
+      "sfl-compiler.gemspec"
+    ],
+    "spec/spec_helper.rb": [
+      "spec/sfl/compiler/pass_one/ideational_extractor_spec.rb",
+      "spec/sfl/compiler/retrieval/hybrid_retriever_spec.rb",
+      "spec/sfl/compiler/types_spec.rb"
+    ]
+  },
+  "imports": {
+    "lib/sfl-compiler.rb": [
+      "lib/sfl/compiler.rb"
+    ],
+    "scripts/parse_metacognitive_coprocessor.rb": [
+      "lib/sfl/compiler.rb"
+    ],
+    "sfl-compiler.gemspec": [
+      "lib/sfl/compiler/version.rb"
+    ],
+    "spec/sfl/compiler/pass_one/ideational_extractor_spec.rb": [
+      "spec/spec_helper.rb"
+    ],
+    "spec/sfl/compiler/retrieval/hybrid_retriever_spec.rb": [
+      "spec/spec_helper.rb"
+    ],
+    "spec/sfl/compiler/types_spec.rb": [
+      "spec/spec_helper.rb"
+    ],
+    "spec/spec_helper.rb": [
+      "lib/sfl/compiler.rb"
+    ]
+  },
+  "recent_events": [
+    {
+      "time": "2026-06-10T19:49:41.53251194-04:00",
+      "op": "CREATE",
+      "path": "spec/sfl/compiler/types_spec.rb",
+      "lang": "ruby",
+      "lines": 207,
+      "delta": 64,
+      "size_delta": 1915,
+      "dirty": true,
+      "imports": 1
+    },
+    {
+      "time": "2026-06-10T20:00:17.732642583-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/types.rb",
+      "lang": "ruby",
+      "lines": 147,
+      "delta": 40,
+      "size_delta": 1957,
+      "dirty": true
+    },
+    {
+      "time": "2026-06-10T20:03:19.714973069-04:00",
+      "op": "CREATE",
+      "path": "spec/sfl/compiler/types_spec.rb",
+      "lang": "ruby",
+      "lines": 213,
+      "delta": 6,
+      "size_delta": 181,
+      "dirty": true,
+      "imports": 1
+    },
+    {
+      "time": "2026-06-10T20:06:28.009670073-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis.rb",
+      "lang": "ruby",
+      "lines": 9,
+      "delta": 9,
+      "size_delta": 160
+    },
+    {
+      "time": "2026-06-10T20:07:00.166362074-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler.rb",
+      "lang": "ruby",
+      "lines": 102,
+      "delta": 1,
+      "size_delta": 48,
+      "dirty": true,
+      "importers": 3,
+      "is_hub": true
+    },
+    {
+      "time": "2026-06-10T20:07:05.269842773-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "lang": "ruby",
+      "lines": 41,
+      "delta": 41,
+      "size_delta": 1316
+    },
+    {
+      "time": "2026-06-10T20:07:08.558982809-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis.rb",
+      "lang": "ruby",
+      "lines": 11,
+      "delta": 2,
+      "size_delta": 43
+    },
+    {
+      "time": "2026-06-10T20:07:44.383495586-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "lang": "ruby",
+      "lines": 43,
+      "delta": 2,
+      "size_delta": 113
+    },
+    {
+      "time": "2026-06-10T20:07:50.889166812-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "lang": "ruby",
+      "lines": 45,
+      "delta": 2,
+      "size_delta": 29
+    },
+    {
+      "time": "2026-06-10T20:08:13.432736184-04:00",
+      "op": "CREATE",
+      "path": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "lang": "ruby",
+      "lines": 45,
+      "size_delta": 16
+    }
+  ],
+  "working_set": {
+    "files": {
+      "lib/sfl/compiler.rb": {
+        "path": "lib/sfl/compiler.rb",
+        "first_touch": "2026-06-10T20:07:00.168611041-04:00",
+        "last_touch": "2026-06-10T20:07:00.168611041-04:00",
+        "edit_count": 1,
+        "net_delta": 1,
+        "is_hub": true,
+        "importers": 3
+      },
+      "lib/sfl/compiler/analysis.rb": {
+        "path": "lib/sfl/compiler/analysis.rb",
+        "first_touch": "2026-06-10T20:06:28.011602752-04:00",
+        "last_touch": "2026-06-10T20:07:08.56072264-04:00",
+        "edit_count": 2,
+        "net_delta": 11,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/analysis/tenor_tracker.rb": {
+        "path": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+        "first_touch": "2026-06-10T20:07:05.271942793-04:00",
+        "last_touch": "2026-06-10T20:08:13.434526508-04:00",
+        "edit_count": 4,
+        "net_delta": 45,
+        "is_hub": false,
+        "importers": 0
+      },
+      "lib/sfl/compiler/types.rb": {
+        "path": "lib/sfl/compiler/types.rb",
+        "first_touch": "2026-06-10T20:00:17.734980278-04:00",
+        "last_touch": "2026-06-10T20:00:17.734980278-04:00",
+        "edit_count": 1,
+        "net_delta": 40,
+        "is_hub": false,
+        "importers": 0
+      },
+      "spec/sfl/compiler/types_spec.rb": {
+        "path": "spec/sfl/compiler/types_spec.rb",
+        "first_touch": "2026-06-10T19:49:41.534966857-04:00",
+        "last_touch": "2026-06-10T20:03:19.717086199-04:00",
+        "edit_count": 2,
+        "net_delta": 70,
+        "is_hub": false,
+        "importers": 0
+      }
+    },
+    "started_at": "2026-06-10T19:21:24.121393733-04:00"
+  }
+}
