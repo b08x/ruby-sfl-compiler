@@ -94,7 +94,7 @@ module SFL
             Sequel[:clauses][:document_id],
             Sequel.lit("1 - (embedding <=> ?) AS similarity_score", query_embedding)
           )
-          .map_with_index { |row, idx|
+          .to_a.each_with_index.map { |row, idx|
             row.merge(semantic_rank: idx + 1)
           }
       rescue StandardError => e
@@ -126,7 +126,7 @@ module SFL
             Sequel[:clauses][:text],
             Sequel[:clauses][:document_id]
           )
-          .map_with_index { |row, idx|
+          .to_a.each_with_index.map { |row, idx|
             row.merge(keyword_rank: idx + 1)
           }
       rescue StandardError => e

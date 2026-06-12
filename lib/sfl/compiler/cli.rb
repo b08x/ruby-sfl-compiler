@@ -114,7 +114,9 @@ module SFL
 
       def run_documentation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
-        pipeline = Pipeline.new(db: ctx.db)
+        pipeline_args = { db: ctx.db }
+        pipeline_args[:embedder] = Embedder.new if options[:store]
+        pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline: pipeline,
           clause_repo: ClauseRepository.new(ctx.db),
@@ -135,17 +137,19 @@ module SFL
 
         result = synthesizer.synthesize(query, filters: options[:filters], limit: options[:limit])
 
-        if result.answer.nil?
+        if result.retrieved_count.zero?
           puts "No stored clauses matched. Ingest documents first:"
           puts "  sfl-analyze documentation <path> --store"
           return
         end
 
-        puts "## Answer (confidence: #{result.confidence})\n\n#{result.answer}\n\n"
-        puts "## Evidence (#{result.retrieved_count} retrieved, #{result.cited_clause_ids.size} cited)"
-        result.clauses.each_with_index do |clause, idx|
-          marker = result.cited_clause_ids.include?(clause[:clause_id]) ? "*" : " "
-          puts "#{marker} [#{idx + 1}] #{clause[:text]} (#{clause[:document_id]})"
+        if result.answer.nil?
+          puts "Synthesis failed — showing retrieved evidence only:"
+          print_evidence(result)
+        else
+          puts "## Answer (confidence: #{result.confidence})\n\n#{result.answer}\n\n"
+          puts "## Evidence (#{result.retrieved_count} retrieved, #{result.cited_clause_ids.size} cited)"
+          print_evidence(result)
         end
 
         if options[:output_dir]
@@ -155,6 +159,13 @@ module SFL
           path = File.join(options[:output_dir], "context_synthesis.json")
           File.write(path, JSON.pretty_generate(result.to_h))
           puts "\nWritten: #{path}"
+        end
+      end
+
+      def print_evidence(result)
+        result.clauses.each_with_index do |clause, idx|
+          marker = result.cited_clause_ids.include?(clause[:clause_id]) ? "*" : " "
+          puts "#{marker} [#{idx + 1}] #{clause[:text]} (#{clause[:document_id]})"
         end
       end
 
