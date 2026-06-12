@@ -56,6 +56,13 @@ module SFL
         end
 
         # === PASS 2: Semantic Annotation (DSPy.rb, batched) ===
+        # Sweep Pass 1's dead PyCall wrappers NOW, on this thread. If GC
+        # instead triggers on a Pass 2 worker, pycall_pyptr_free blocks on
+        # the Python GIL while holding the GVL — deadlocking the whole VM
+        # (observed live: gc_sweep → PyGILState_Ensure → take_gil, with the
+        # Timeout watchdog and HTTP reads frozen behind the GVL).
+        GC.start
+
         annotated = @pass_two.annotate_batch(syntactic_clauses.zip(ideational_payloads))
 
         # === Storage ===

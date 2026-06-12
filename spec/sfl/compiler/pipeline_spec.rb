@@ -115,6 +115,25 @@ RSpec.describe SFL::Compiler::Pipeline do
       end
     end
 
+    context "GVL/GIL deadlock guard" do
+      let(:pipeline) { build_pipeline }
+      before { allow(pass_one).to receive(:process).and_return([clause]) }
+
+      # GC must sweep dead PyCall wrappers on this (GIL-owning) thread
+      # BEFORE Pass 2 fans out to worker threads; a sweep on a worker
+      # deadlocks the GVL against the Python GIL. Order is the contract.
+      it "runs a full GC between Pass 1 and the threaded Pass 2" do
+        events = []
+        allow(GC).to receive(:start) { events << :gc }
+        allow(pass_two).to receive(:annotate_batch) { events << :pass_two; [annotated_clause] }
+
+        pipeline.compile("Hello world")
+
+        expect(events.first).to eq(:gc)
+        expect(events).to include(:pass_two)
+      end
+    end
+
     context "with store: false" do
       let(:pipeline) { build_pipeline }
       before { allow(pass_one).to receive(:process).and_return([clause]) }
