@@ -75,6 +75,26 @@ module SFL
         raise
       end
 
+      # Remove every clause (and its payload/embedding rows) previously
+      # stored for a document. Clause external_ids are fresh UUIDs on every
+      # compile, so re-ingesting without this silently duplicates content;
+      # callers delete-then-store to make ingestion idempotent per document.
+      #
+      # @param document_id [String]
+      # @return [Integer] number of clauses removed
+      def delete_by_document(document_id)
+        @db.transaction do
+          scoped = @db[:clauses].where(document_id: document_id)
+          clause_ids = scoped.select_map(:external_id)
+          break 0 if clause_ids.empty?
+
+          @db[:ideational_payloads].where(clause_id: clause_ids).delete
+          @db[:interpersonal_payloads].where(clause_id: clause_ids).delete
+          @db[:embeddings].where(clause_id: clause_ids).delete
+          scoped.delete
+        end
+      end
+
       # Retrieve an annotated clause by ID with all payloads.
       #
       # @param clause_id [String]
