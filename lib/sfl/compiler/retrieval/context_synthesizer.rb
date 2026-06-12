@@ -36,28 +36,46 @@ module SFL
         end
 
         enriched = rows.map { |row| row.merge(annotations: @clause_repo.find(row[:clause_id])) }
+
+        # Unlike Pass 2, a failed synthesis call propagates — there is no
+        # useful default "answer".
         output = @synthesizer.call(query, format_evidence(enriched))
 
         cited = Array(output[:cited_clause_numbers]).filter_map do |number|
           enriched[number - 1]&.fetch(:clause_id) if number.positive?
         end
 
-        Types::SynthesisResult.new(
-          query: query,
-          answer: output[:answer],
-          cited_clause_ids: cited.uniq,
-          clauses: enriched.map { |e| e.reject { |k, _| k == :annotations } },
-          retrieved_count: rows.size,
-          confidence: output[:confidence]
-        )
+        clauses = enriched.map { |e| e.reject { |k, _| k == :annotations } }
+
+        begin
+          Types::SynthesisResult.new(
+            query: query,
+            answer: output[:answer],
+            cited_clause_ids: cited.uniq,
+            clauses: clauses,
+            retrieved_count: rows.size,
+            confidence: output[:confidence]
+          )
+        rescue Dry::Struct::Error => e
+          $stderr.puts "[WARN] Context synthesis (#{query}): invalid synthesizer output: " \
+            "#{e.message} — returning evidence without an answer"
+          Types::SynthesisResult.new(
+            query: query,
+            answer: nil,
+            clauses: clauses,
+            retrieved_count: rows.size,
+            confidence: nil
+          )
+        end
       end
 
       private
 
       def format_evidence(enriched)
         enriched.each_with_index.map do |row, idx|
-          interpersonal = row.dig(:annotations, :interpersonal) || {}
-          ideational = row.dig(:annotations, :ideational) || {}
+          annotations_hash = row[:annotations] || {}
+          interpersonal = annotations_hash[:interpersonal] || {}
+          ideational = annotations_hash[:ideational] || {}
           annotations = [
             "mood=#{interpersonal[:mood]}",
             "tenor=#{interpersonal[:tenor]}",

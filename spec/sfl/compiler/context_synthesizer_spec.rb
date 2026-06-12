@@ -64,4 +64,32 @@ RSpec.describe SFL::Compiler::ContextSynthesizer do
     expect(result.confidence).to eq(0.9)
     expect(result.retrieved_count).to eq(2)
   end
+
+  it "tolerates clause ids the repository can no longer find" do
+    allow(retriever).to receive(:retrieve).and_return(rows)
+    allow(clause_repo).to receive(:find).and_return(nil)
+    synthesizer = ->(_q, evidence) {
+      expect(evidence).to include("[1] Tenor measures formality.")
+      { answer: "ok", cited_clause_numbers: [1], confidence: 0.5 }
+    }
+
+    result = described_class.new(retriever: retriever, clause_repo: clause_repo,
+      synthesizer: synthesizer).synthesize("q")
+    expect(result.answer).to eq("ok")
+  end
+
+  it "returns a degraded result when the synthesizer output violates the type contract" do
+    allow(retriever).to receive(:retrieve).and_return(rows)
+    synthesizer = ->(_q, _e) { { answer: 42, cited_clause_numbers: [], confidence: 0.5 } }
+
+    result = nil
+    expect {
+      result = described_class.new(retriever: retriever, clause_repo: clause_repo,
+        synthesizer: synthesizer).synthesize("q")
+    }.to output(/\[WARN\]/).to_stderr
+
+    expect(result.answer).to be_nil
+    expect(result.retrieved_count).to eq(2)
+    expect(result.clauses.size).to eq(2)
+  end
 end
