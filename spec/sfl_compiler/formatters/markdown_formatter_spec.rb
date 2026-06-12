@@ -232,4 +232,28 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       expect(output).to include("**Speakers**: Alice, Bob")
     end
   end
+
+  describe "parameterized labels" do
+    let(:doc_result) do
+      result.new(metadata: result.metadata.merge(
+        unit_label: "Section", actor_label: "Section"
+      ))
+    end
+
+    it "uses actor_label for profile table headers" do
+      out = described_class.new(doc_result).render
+      expect(out).to include("## Section Profiles")
+      expect(out).to include("| Section | Avg Tenor |")
+    end
+
+    it "uses unit_label in the header line" do
+      out = described_class.new(doc_result).render
+      expect(out).to include("**Sections**: 5")
+    end
+
+    it "defaults to Speaker/Turn labels when metadata has none" do
+      expect(output).to include("## Speaker Profiles")
+      expect(output).to include("**Turns**: 5")
+    end
+  end
 end

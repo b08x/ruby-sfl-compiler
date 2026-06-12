@@ -10,7 +10,7 @@ module SFL
             # Conversation Analysis: #{result.metadata[:conversation_id]}
 
             **Generated**: #{result.metadata[:analyzed_at]}
-            **Turns**: #{result.metadata[:turn_count]} | **Speakers**: #{result.metadata[:speakers]&.join(", ")}
+            **#{unit_label}s**: #{result.metadata[:turn_count]} | **Speakers**: #{result.metadata[:speakers]&.join(", ")}
             #{data_quality_warning}
             ---
 
@@ -20,7 +20,7 @@ module SFL
 
             ---
 
-            ## Speaker Profiles
+            ## #{actor_label} Profiles
 
             #{speaker_profiles_table}
 
@@ -78,11 +78,20 @@ module SFL
           warning + "\n"
         end
 
+        def actor_label
+          result.metadata[:actor_label] || "Speaker"
+        end
+
+        def unit_label
+          result.metadata[:unit_label] || "Turn"
+        end
+
         def speaker_profiles_table
           return "_No speaker profiles available_" if result.speaker_profiles.empty?
 
-          header = "| Speaker | Avg Tenor | Range | Variance | Avg Modality |\n"
-          header += "|---------|-----------|-------|----------|--------------|\n"
+          name_pad = [actor_label.length, 7].max
+          header = "| #{actor_label.ljust(name_pad)} | Avg Tenor | Range | Variance | Avg Modality |\n"
+          header += "|#{"-" * (name_pad + 2)}|-----------|-------|----------|--------------|\n"
 
           rows = result.speaker_profiles.map do |name, profile|
             "| #{name} | #{profile.avg_tenor} (#{tenor_label(profile.avg_tenor)}) | #{profile.tenor_range.inspect} | #{profile.tenor_variance} | #{profile.avg_modality} |"
