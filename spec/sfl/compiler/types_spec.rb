@@ -238,4 +238,27 @@ RSpec.describe SFL::Compiler::Types do
       expect(result.insights).to eq(["Sample insight"])
     end
   end
+
+  describe "SynthesisResult" do
+    it "creates a synthesis result" do
+      result = SFL::Compiler::Types::SynthesisResult.new(
+        query: "what is tenor?",
+        answer: "Tenor is the formality dimension.",
+        cited_clause_ids: ["c-1"],
+        clauses: [{ clause_id: "c-1", text: "..." }],
+        retrieved_count: 3,
+        confidence: 0.8
+      )
+      expect(result.answer).to include("formality")
+      expect(result.cited_clause_ids).to eq(["c-1"])
+    end
+
+    it "allows a nil answer for empty retrievals" do
+      result = SFL::Compiler::Types::SynthesisResult.new(
+        query: "anything", answer: nil, retrieved_count: 0, confidence: nil
+      )
+      expect(result.answer).to be_nil
+      expect(result.clauses).to eq([])
+    end
+  end
 end
