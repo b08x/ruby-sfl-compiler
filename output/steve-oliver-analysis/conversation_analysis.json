@@ -1,0 +1,388 @@
+{
+  "metadata": {
+    "source_file": "/home/b08x/Workspace/Datasets/steve-oliver-braingpt-GenAI-Education-Reframing-Branch #9 - 2026-01-13@16h48m14s.jsonl",
+    "turn_count": 19,
+    "speakers": [
+      "Hobbes",
+      "Ameila",
+      "Robert",
+      "brainGPT",
+      "Steve",
+      "Oliver"
+    ],
+    "analyzed_at": "2026-06-11T13:51:28-04:00"
+  },
+  "speaker_profiles": {
+    "Hobbes": {
+      "turn_count": 1,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 1
+      }
+    },
+    "Ameila": {
+      "turn_count": 1,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 1
+      }
+    },
+    "Robert": {
+      "turn_count": 6,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 134,
+        "relational": 25,
+        "mental": 6,
+        "verbal": 5
+      }
+    },
+    "brainGPT": {
+      "turn_count": 3,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 329,
+        "verbal": 9,
+        "relational": 26,
+        "mental": 15
+      }
+    },
+    "Steve": {
+      "turn_count": 6,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "material": 338,
+        "relational": 70,
+        "verbal": 14,
+        "mental": 33,
+        "behavioral": 1
+      }
+    },
+    "Oliver": {
+      "turn_count": 2,
+      "avg_tenor": 0.5,
+      "tenor_range": [
+        0.5,
+        0.5
+      ],
+      "tenor_variance": 0.0,
+      "avg_modality": 0.5,
+      "mood_distribution": {
+        "declarative": 1.0
+      },
+      "dominant_processes": {
+        "relational": 48,
+        "material": 193,
+        "mental": 9,
+        "verbal": 3
+      }
+    }
+  },
+  "tenor_timeline": [
+    {
+      "turn_id": 1,
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "speaker": "Hobbes",
+      "tenor": 0.5,
+      "tenor_shift": null
+    },
+    {
+      "turn_id": 2,
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "speaker": "Ameila",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 3,
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 4,
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "speaker": "brainGPT",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 5,
+      "timestamp": "2026-01-13T16:23:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 6,
+      "timestamp": "2026-01-13T16:32:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 7,
+      "timestamp": "2026-01-13T16:35:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 8,
+      "timestamp": "2026-01-13T16:37:00-05:00",
+      "speaker": "brainGPT",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 9,
+      "timestamp": "2026-01-13T16:42:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 10,
+      "timestamp": "2026-01-13T16:47:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 11,
+      "timestamp": "2026-01-13T16:50:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 12,
+      "timestamp": "2026-01-13T16:51:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 13,
+      "timestamp": "2026-01-13T17:03:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 14,
+      "timestamp": "2026-01-13T17:04:00-05:00",
+      "speaker": "Oliver",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 15,
+      "timestamp": "2026-01-13T17:14:00-05:00",
+      "speaker": "brainGPT",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 16,
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "speaker": "Robert",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 17,
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 18,
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "speaker": "Oliver",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    },
+    {
+      "turn_id": 19,
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "speaker": "Steve",
+      "tenor": 0.5,
+      "tenor_shift": 0.0
+    }
+  ],
+  "field_evolution": [
+    {
+      "turn_id": 1,
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 2,
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 3,
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 4,
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 5,
+      "timestamp": "2026-01-13T16:23:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 6,
+      "timestamp": "2026-01-13T16:32:00-05:00",
+      "dominant_process": "relational"
+    },
+    {
+      "turn_id": 7,
+      "timestamp": "2026-01-13T16:35:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 8,
+      "timestamp": "2026-01-13T16:37:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 9,
+      "timestamp": "2026-01-13T16:42:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 10,
+      "timestamp": "2026-01-13T16:47:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 11,
+      "timestamp": "2026-01-13T16:50:00-05:00",
+      "dominant_process": "mental"
+    },
+    {
+      "turn_id": 12,
+      "timestamp": "2026-01-13T16:51:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 13,
+      "timestamp": "2026-01-13T17:03:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 14,
+      "timestamp": "2026-01-13T17:04:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 15,
+      "timestamp": "2026-01-13T17:14:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 16,
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 17,
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 18,
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "dominant_process": "material"
+    },
+    {
+      "turn_id": 19,
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "dominant_process": "material"
+    }
+  ],
+  "correlations": {
+    "material": {
+      "count": 996,
+      "avg_tenor": 0.5,
+      "avg_modality": 0.5
+    },
+    "verbal": {
+      "count": 31,
+      "avg_tenor": 0.5,
+      "avg_modality": 0.5
+    },
+    "relational": {
+      "count": 169,
+      "avg_tenor": 0.5,
+      "avg_modality": 0.5
+    },
+    "mental": {
+      "count": 63,
+      "avg_tenor": 0.5,
+      "avg_modality": 0.5
+    },
+    "behavioral": {
+      "count": 1,
+      "avg_tenor": 0.5,
+      "avg_modality": 0.5
+    }
+  },
+  "insights": [
+    "Robert contributed 6 of 19 turns"
+  ]
+}

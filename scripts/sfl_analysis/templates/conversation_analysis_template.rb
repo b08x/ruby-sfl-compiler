@@ -118,7 +118,8 @@ module SFL
                 modality_weight: 0.5,
                 tenor: 0.5,
                 speaker_attitude: nil,
-                reasoning: nil
+                reasoning: "Pass 2 skipped (PASS=1) — placeholder values",
+                annotation_source: "stub"
               ),
               document_id: "turn-#{turn_id}",
               compiled_at: now
@@ -185,12 +186,20 @@ module SFL
           turn = compile_turn(turn_data, turn_id)
           elapsed = (Time.now - start_time).round(2)
 
-          label = turn.avg_tenor == 0.5 ? "DEFAULT" : "OK"
+          defaulted = turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+          label = defaulted.zero? ? "OK" : "#{defaulted}/#{turn.clauses.size} DEFAULTED"
           puts "#{elapsed}s [tenor: #{turn.avg_tenor.round(2)} #{label}]"
 
           turn
         end
         puts ""
+
+        all_clauses = conversation_turns.flat_map(&:clauses)
+        total_defaulted = all_clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+        if total_defaulted.positive?
+          pct = (total_defaulted * 100.0 / all_clauses.size).round(1)
+          puts "[WARN] #{total_defaulted}/#{all_clauses.size} clauses (#{pct}%) carry fallback/stub interpersonal values — tenor/modality aggregates are biased toward 0.5. See the Data Quality section in the report."
+        end
 
         tenor_tracker = Analysis::TenorTracker.new(conversation_turns)
         tenor_tracker.calculate_shifts
