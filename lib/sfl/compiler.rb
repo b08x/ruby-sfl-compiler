@@ -47,6 +47,7 @@ module SFL
     class PassOneError < Error; end
     class PassTwoError < Error; end
     class ConfigurationError < Error; end
+    class BootstrapError < Error; end
 
     def self.logger
       require "journald/logger"
