@@ -8,75 +8,74 @@
 #
 # Usage:
 #   ruby conversation_analysis_template.rb <input.jsonl> <output_dir>
+#
+# Environment:
+#   PASS=1   Skip Pass 2 (LLM annotation) — syntactic/ideational only, faster
 
 require "bundler/setup"
-require "dotenv/load"  # Load environment variables from .env
+require "dotenv/load"
 require "json"
 require "time"
 require "journald/logger"
-require "dspy"  # Required for DSPy.configure
+require "dspy"
 require_relative "../../../lib/sfl-compiler"
 
-# Configure SFL Compiler from environment variables
+PASS_ONE_ONLY = ENV["PASS"] == "1"
+
 SFL::Compiler.configure do |c|
   c.database_url = ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
   c.spacy_model  = ENV.fetch("SPACY_MODEL", "en_core_web_sm")
   c.dspy_provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
 end
 
-# Configure DSPy.rb for Pass 2 (LLM annotation)
-provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
-api_key = if provider.start_with?("openrouter/")
-  ENV.fetch("OPENROUTER_API_KEY", nil)
-elsif provider.start_with?("google/")
-  ENV.fetch("GOOGLE_API_KEY", nil)
-elsif provider.start_with?("openai/")
-  ENV.fetch("OPENAI_API_KEY", nil)
-elsif provider.start_with?("anthropic/")
-  ENV.fetch("ANTHROPIC_API_KEY", nil)
-else
-  ENV.fetch("OPENROUTER_API_KEY", nil)  # Default to OpenRouter
-end
+unless PASS_ONE_ONLY
+  provider = ENV.fetch("DSPY_PROVIDER", "openai/gpt-4o-mini")
+  api_key = if provider.start_with?("openrouter/")
+    ENV.fetch("OPENROUTER_API_KEY", nil)
+  elsif provider.start_with?("google/")
+    ENV.fetch("GOOGLE_API_KEY", nil)
+  elsif provider.start_with?("openai/")
+    ENV.fetch("OPENAI_API_KEY", nil)
+  elsif provider.start_with?("anthropic/")
+    ENV.fetch("ANTHROPIC_API_KEY", nil)
+  else
+    ENV.fetch("OPENROUTER_API_KEY", nil)
+  end
 
-if api_key && !api_key.empty?
-  puts "[INFO] Configuring DSPy..."
-  puts "[INFO] Provider: #{provider}"
-  puts "[INFO] API key: #{api_key[0..15]}..."
+  if api_key && !api_key.empty?
+    puts "[INFO] Configuring DSPy..."
+    puts "[INFO] Provider: #{provider}"
+    puts "[INFO] API key: #{api_key[0..15]}..."
 
-  begin
-    DSPy.configure do |c|
-      c.lm = DSPy::LM.new(provider,
-        api_key: api_key,
-        structured_outputs: true)
+    begin
+      DSPy.configure do |c|
+        c.lm = DSPy::LM.new(provider,
+          api_key: api_key,
+          structured_outputs: true)
+      end
+      puts "[SUCCESS] DSPy configured - Pass 2 will use LLM for tenor/modality annotation"
+    rescue => e
+      puts "[ERROR] Failed to configure DSPy: #{e.class}: #{e.message}"
+      puts "[WARN] Pass 2 will use circuit breaker defaults (all tenor=0.5, modality=0.5)"
     end
-    puts "[SUCCESS] DSPy configured - Pass 2 will use LLM for tenor/modality annotation"
-  rescue => e
-    puts "[ERROR] Failed to configure DSPy: #{e.class}: #{e.message}"
-    puts "[ERROR] #{e.backtrace[0..2].join("\n")}"
+  else
+    puts "[WARN] No API key found for #{provider}"
     puts "[WARN] Pass 2 will use circuit breaker defaults (all tenor=0.5, modality=0.5)"
   end
-else
-  puts "[WARN] No API key found for #{provider}"
-  puts "[WARN] Pass 2 will use circuit breaker defaults (all tenor=0.5, modality=0.5)"
 end
 
 module SFL
   module Compiler
-    # Orchestrates conversation analysis from JSONL to formatted outputs
     class ConversationAnalyzer
       attr_reader :db, :pipeline, :logger
 
       def initialize(database_url: nil)
         @database_url = database_url || ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
         @logger = Journald::Logger.new("conversation-analyzer")
-        setup_database
+        @db = setup_database
         @pipeline = SFL::Compiler::Pipeline.new(db: @db)
       end
 
-      # Load and parse JSONL conversation file
-      #
-      # @param jsonl_path [String] Path to JSONL file
-      # @return [Array<Hash>] Parsed conversation turns
       def load_jsonl(jsonl_path)
         turns = []
         File.readlines(jsonl_path).each_with_index do |line, idx|
@@ -94,25 +93,46 @@ module SFL
         turns
       end
 
-      # Compile a single conversation turn through SFL pipeline
-      #
-      # @param turn_data [Hash] Raw turn data from JSONL
-      # @param turn_id [Integer] Turn sequence number
-      # @return [Types::ConversationTurn]
       def compile_turn(turn_data, turn_id)
         message_text = turn_data[:mes]
         speaker = turn_data[:name]
         timestamp = parse_timestamp(turn_data[:send_date])
 
-        # Run through SFL compiler
-        clauses = @pipeline.compile(
-          message_text,
-          document_id: "turn-#{turn_id}",
-          store: false,  # Don't persist individual turns by default
-          embed: false   # Skip embedding for analysis template
-        )
+        if PASS_ONE_ONLY
+          # Pass 1 only: syntactic + ideational, skip LLM annotation
+          pass1_results = @pipeline.compile_pass_one(
+            message_text,
+            document_id: "turn-#{turn_id}"
+          )
 
-        # Aggregate metrics across clauses
+          clauses = pass1_results.map.with_index do |(syntactic, ideational), idx|
+            now = Time.now
+            Types::AnnotatedClause.new(
+              id: "turn-#{turn_id}-clause-#{idx + 1}",
+              text: syntactic.text,
+              syntactic: syntactic,
+              ideational: ideational,
+              interpersonal: Types::InterpersonalPayload.new(
+                clause_id: "turn-#{turn_id}-clause-#{idx + 1}",
+                mood: "declarative",
+                modality_weight: 0.5,
+                tenor: 0.5,
+                speaker_attitude: nil,
+                reasoning: nil
+              ),
+              document_id: "turn-#{turn_id}",
+              compiled_at: now
+            )
+          end
+        else
+          clauses = @pipeline.compile(
+            message_text,
+            document_id: "turn-#{turn_id}",
+            store: false,
+            embed: false
+          )
+        end
+
         avg_tenor = clauses.map { |c| c.interpersonal.tenor }.sum / clauses.size.to_f
         avg_modality = clauses.map { |c| c.interpersonal.modality_weight }.sum / clauses.size.to_f
         mood_counts = clauses.map { |c| c.interpersonal.mood }.tally
@@ -136,10 +156,6 @@ module SFL
         )
       end
 
-      # Analyze full conversation and generate AnalysisResult
-      #
-      # @param jsonl_path [String] Path to JSONL conversation file
-      # @return [Types::AnalysisResult]
       def analyze_conversation(jsonl_path)
         raw_turns = load_jsonl(jsonl_path)
 
@@ -150,32 +166,32 @@ module SFL
           source_file: jsonl_path
         )
 
-        # Compile each turn
         puts "\n[INFO] Compiling #{raw_turns.size} conversation turns through SFL pipeline..."
-        puts "[INFO] Pass 1: spaCy (fast) + Pass 2: LLM annotation (slower)"
+        if PASS_ONE_ONLY
+          puts "[INFO] Mode: PASS=1 — syntactic/ideational only (no LLM calls)"
+        else
+          puts "[INFO] Mode: Full pipeline — Pass 1 (spaCy) + Pass 2 (LLM annotation)"
+        end
         puts "[INFO] Progress:"
 
         conversation_turns = raw_turns.each_with_index.map do |turn_data, idx|
           turn_id = idx + 1
           speaker = turn_data[:name]
 
-          # Progress indicator
           print "  Turn #{turn_id}/#{raw_turns.size} (#{speaker})... "
-          STDOUT.flush
+          $stdout.flush
 
           start_time = Time.now
           turn = compile_turn(turn_data, turn_id)
           elapsed = (Time.now - start_time).round(2)
 
-          # Show tenor value to prove LLM is working
-          tenor_label = turn.avg_tenor == 0.5 ? "DEFAULT" : "✓"
-          puts "#{elapsed}s [tenor: #{turn.avg_tenor.round(2)} #{tenor_label}]"
+          label = turn.avg_tenor == 0.5 ? "DEFAULT" : "OK"
+          puts "#{elapsed}s [tenor: #{turn.avg_tenor.round(2)} #{label}]"
 
           turn
         end
         puts ""
 
-        # Run analysis modules
         tenor_tracker = Analysis::TenorTracker.new(conversation_turns)
         tenor_tracker.calculate_shifts
 
@@ -184,7 +200,6 @@ module SFL
         correlation_analyzer = Analysis::CorrelationAnalyzer.new(conversation_turns)
         correlations = correlation_analyzer.correlate_process_tenor
 
-        # Tenor timeline (tenor values over time)
         tenor_timeline = conversation_turns.map do |turn|
           {
             turn_id: turn.turn_id,
@@ -195,7 +210,6 @@ module SFL
           }
         end
 
-        # Field evolution (process type progression)
         field_evolution = conversation_turns.map do |turn|
           {
             turn_id: turn.turn_id,
@@ -204,7 +218,6 @@ module SFL
           }
         end
 
-        # Generate insights
         insights = generate_insights(conversation_turns, tenor_timeline, correlations)
 
         Types::AnalysisResult.new(
@@ -223,14 +236,9 @@ module SFL
         )
       end
 
-      # Generate outputs in all formats
-      #
-      # @param analysis_result [Types::AnalysisResult]
-      # @param output_dir [String] Directory to write output files
       def generate_outputs(analysis_result, output_dir)
         FileUtils.mkdir_p(output_dir)
 
-        # CSV output
         csv_path = File.join(output_dir, "conversation_analysis.csv")
         csv_formatter = Formatters::CSVFormatter.new(analysis_result)
         File.write(csv_path, csv_formatter.render)
@@ -240,7 +248,6 @@ module SFL
           path: csv_path
         )
 
-        # JSON output
         json_path = File.join(output_dir, "conversation_analysis.json")
         json_formatter = Formatters::JSONFormatter.new(analysis_result)
         File.write(json_path, json_formatter.render)
@@ -250,7 +257,6 @@ module SFL
           path: json_path
         )
 
-        # Markdown output
         markdown_path = File.join(output_dir, "conversation_analysis.md")
         markdown_formatter = Formatters::MarkdownFormatter.new(analysis_result)
         File.write(markdown_path, markdown_formatter.render)
@@ -270,12 +276,11 @@ module SFL
       private
 
       def setup_database
-        @db = Database.connect(@database_url)
-        Database.setup_extensions(@db)
-
-        # Run migrations if needed
-        migrator = Migrator.new(@db)
+        db = Database.connect(@database_url)
+        Database.setup_extensions(db)
+        migrator = Migrator.new(db)
         migrator.run_all
+        db
       rescue Sequel::DatabaseError => e
         @logger.send_message(
           message: "database_setup_failed",
@@ -294,7 +299,6 @@ module SFL
       def generate_insights(turns, tenor_timeline, correlations)
         insights = []
 
-        # Tenor insights
         tenor_values = tenor_timeline.map { |t| t[:tenor] }
         tenor_trend = tenor_values.last - tenor_values.first
         if tenor_trend > 0.1
@@ -303,14 +307,12 @@ module SFL
           insights << "Conversation tenor decreased by #{(tenor_trend.abs * 100).round(1)}% (more casual/close)"
         end
 
-        # Speaker dominance
         speaker_turn_counts = turns.map(&:speaker).tally
         if speaker_turn_counts.size > 1
           dominant_speaker = speaker_turn_counts.max_by { |_, count| count }.first
           insights << "#{dominant_speaker} contributed #{speaker_turn_counts[dominant_speaker]} of #{turns.size} turns"
         end
 
-        # Correlation insights
         if correlations[:modality_tenor_correlation]
           corr = correlations[:modality_tenor_correlation]
           if corr > 0.5
@@ -326,7 +328,6 @@ module SFL
   end
 end
 
-# CLI execution
 if __FILE__ == $PROGRAM_NAME
   if ARGV.size != 2
     puts "Usage: #{$PROGRAM_NAME} <input.jsonl> <output_dir>"
