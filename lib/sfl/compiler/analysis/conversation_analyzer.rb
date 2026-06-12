@@ -143,6 +143,8 @@ module SFL
         def generate_insights(turns, timeline, correlations)
           insights = []
 
+          return insights if turns.empty?
+
           tenors = timeline.map { |t| t[:tenor] }
           trend = tenors.last - tenors.first
           if trend > 0.1

@@ -118,5 +118,16 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
         expect(result.turns.size).to eq(2)
       end
     end
+
+    it "returns an empty result when no lines parse" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "empty.jsonl")
+        File.write(path, "not json\nalso not json\n")
+
+        result = described_class.new(pipeline: pipeline).analyze(path)
+        expect(result.turns).to eq([])
+        expect(result.insights).to eq([])
+      end
+    end
   end
 end
