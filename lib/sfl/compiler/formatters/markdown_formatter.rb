@@ -11,7 +11,7 @@ module SFL
 
             **Generated**: #{result.metadata[:analyzed_at]}
             **Turns**: #{result.metadata[:turn_count]} | **Speakers**: #{result.metadata[:speakers]&.join(", ")}
-
+            #{data_quality_warning}
             ---
 
             ## Summary
@@ -50,6 +50,33 @@ module SFL
         end
 
         private
+
+        # Clauses whose interpersonal values came from the Pass 2 fallback or
+        # a Pass-1-only stub all sit at the scale midpoint (0.5/0.5/declarative),
+        # which silently drags every aggregate toward "mixed". Surface that.
+        def data_quality_warning
+          clauses = result.turns.flat_map(&:clauses)
+          return "" if clauses.empty?
+
+          defaulted = clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+          return "" if defaulted.zero?
+
+          pct = (defaulted * 100.0 / clauses.size).round(1)
+          warning = <<~WARN.chomp
+
+            ---
+
+            ## ⚠️ Data Quality
+
+            **#{defaulted} of #{clauses.size} clauses (#{pct}%)** carry fallback/stub interpersonal values (tenor=0.5, modality=0.5, mood=declarative) instead of LLM annotations. Tenor and modality averages are biased toward 0.5.
+          WARN
+
+          if defaulted == clauses.size
+            warning += "\n\n**Pass 2 did not run for any clause — the interpersonal values in this report are placeholders, not findings.**"
+          end
+
+          warning + "\n"
+        end
 
         def speaker_profiles_table
           return "_No speaker profiles available_" if result.speaker_profiles.empty?

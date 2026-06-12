@@ -48,7 +48,10 @@ RSpec.describe SFL::Compiler::Pipeline do
   # Doubles for engines, repositories, embedder
   let(:pass_one) { instance_double("PassOneEngine", process: [clause]) }
   let(:ideational_extractor) { instance_double("IdeationalExtractor", extract: ideational) }
-  let(:pass_two) { instance_double("PassTwoEngine", annotate: annotated_clause) }
+  let(:pass_two) do
+    instance_double("PassTwoEngine", annotate: annotated_clause,
+      annotate_batch: [annotated_clause])
+  end
   let(:clause_repo) { instance_double("ClauseRepository", store: true) }
   let(:embedding_repo) { instance_double("EmbeddingRepository", store: true) }
   let(:embedder) { instance_double("Embedder", embed: [0.1, 0.2, 0.3]) }
@@ -93,10 +96,11 @@ RSpec.describe SFL::Compiler::Pipeline do
         expect(ideational_extractor).to have_received(:extract).with(clause).once
       end
 
-      it "annotates each clause with PassTwoEngine" do
+      it "annotates all clauses in one batched PassTwoEngine call" do
         pipeline.compile("Hello world", document_id: "doc-1")
-        expect(pass_two).to have_received(:annotate)
-          .with(clause, ideational).once
+        expect(pass_two).to have_received(:annotate_batch)
+          .with([[clause, ideational]]).once
+        expect(pass_two).not_to have_received(:annotate)
       end
 
       it "stores each annotated clause by default" do
@@ -156,7 +160,11 @@ RSpec.describe SFL::Compiler::Pipeline do
 
     context "when pass one produces no clauses" do
       let(:pipeline) { build_pipeline }
-      before { allow(pass_one).to receive(:process).and_return([]) }
+      before do
+        allow(pass_one).to receive(:process).and_return([])
+        # mirror the real engine: an empty batch annotates to an empty array
+        allow(pass_two).to receive(:annotate_batch).with([]).and_return([])
+      end
 
       it "returns an empty array" do
         result = pipeline.compile("...")
@@ -186,7 +194,7 @@ RSpec.describe SFL::Compiler::Pipeline do
       let(:pipeline) { build_pipeline }
       before do
         allow(pass_one).to receive(:process).and_return([clause])
-        allow(pass_two).to receive(:annotate)
+        allow(pass_two).to receive(:annotate_batch)
           .and_raise(SFL::Compiler::PassTwoError, "DSPy unavailable")
       end
 
@@ -225,10 +233,9 @@ RSpec.describe SFL::Compiler::Pipeline do
         allow(pass_one).to receive(:process).and_return([clause, clause_2])
         allow(ideational_extractor).to receive(:extract).with(clause).and_return(ideational)
         allow(ideational_extractor).to receive(:extract).with(clause_2).and_return(ideational_2)
-        allow(pass_two).to receive(:annotate)
-          .with(clause, ideational).and_return(annotated_clause)
-        allow(pass_two).to receive(:annotate)
-          .with(clause_2, ideational_2).and_return(annotated_clause_2)
+        allow(pass_two).to receive(:annotate_batch)
+          .with([[clause, ideational], [clause_2, ideational_2]])
+          .and_return([annotated_clause, annotated_clause_2])
       end
 
       it "processes all clauses in order" do
@@ -236,10 +243,10 @@ RSpec.describe SFL::Compiler::Pipeline do
         expect(result).to eq([annotated_clause, annotated_clause_2])
       end
 
-      it "pairs the right ideational payload with each clause" do
+      it "pairs the right ideational payload with each clause in the batch" do
         pipeline.compile("...")
-        expect(pass_two).to have_received(:annotate).with(clause, ideational).ordered
-        expect(pass_two).to have_received(:annotate).with(clause_2, ideational_2).ordered
+        expect(pass_two).to have_received(:annotate_batch)
+          .with([[clause, ideational], [clause_2, ideational_2]])
       end
     end
   end

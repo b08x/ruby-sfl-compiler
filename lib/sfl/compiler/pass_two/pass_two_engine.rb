@@ -18,10 +18,62 @@ module SFL
     class PassTwoEngine
       include Dry::Monads[:result]
 
-      def initialize(provider: nil, circuit_breaker: nil)
+      # Clauses per LLM call and concurrent in-flight calls. One call per
+      # clause measured ~10 clauses/min; batching cuts the call count ~12x
+      # and the thread pool overlaps the I/O-bound round-trips.
+      DEFAULT_BATCH_SIZE = ENV.fetch("SFL_BATCH_SIZE", 12).to_i
+      DEFAULT_CONCURRENCY = ENV.fetch("SFL_CONCURRENCY", 4).to_i
+
+      def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil)
         @provider = provider || SFL::Compiler.config.dspy_provider
         @circuit_breaker = circuit_breaker || default_circuit_breaker
+        @batch_annotator = batch_annotator || default_batch_annotator
         @logger = Journald::Logger.new("sfl-compiler-pass-two")
+      end
+
+      # Annotate many clauses with batched, concurrent LLM calls.
+      #
+      # @param pairs [Array<[Types::SyntacticClause, Types::IdeationalPayload]>]
+      # @param batch_size [Integer] clauses per LLM call
+      # @param concurrency [Integer] concurrent LLM calls
+      # @return [Array<Types::AnnotatedClause>] in input order; clauses the
+      #   LLM missed or returned invalid values for carry fallback defaults
+      def annotate_batch(pairs, batch_size: DEFAULT_BATCH_SIZE, concurrency: DEFAULT_CONCURRENCY)
+        return [] if pairs.empty?
+
+        start_time = Time.now
+        correlation_id = SecureRandom.uuid
+
+        indexed = pairs.each_with_index.map do |(clause, ideational), index|
+          { index: index, clause: clause, ideational: ideational }
+        end
+        chunks = indexed.each_slice([batch_size, 1].max).to_a
+
+        @logger.send_message(
+          message: "pass_two_batch_started",
+          priority: Journald::LOG_INFO,
+          correlation_id: correlation_id,
+          clause_count: pairs.size,
+          chunk_count: chunks.size,
+          concurrency: concurrency
+        )
+
+        annotated = parallel_map(chunks, concurrency) do |chunk|
+          annotate_chunk(chunk, correlation_id)
+        end.flatten
+
+        elapsed_ms = ((Time.now - start_time) * 1000).round(2)
+
+        @logger.send_message(
+          message: "pass_two_batch_completed",
+          priority: Journald::LOG_INFO,
+          correlation_id: correlation_id,
+          clause_count: annotated.size,
+          defaulted_count: annotated.count { |a| a.interpersonal.annotation_source != "llm" },
+          latency_ms: elapsed_ms
+        )
+
+        annotated
       end
 
       # Annotate a clause with SFL metafunctions.
@@ -93,6 +145,104 @@ module SFL
         lambda { |&block| block.call }
       end
 
+      # items: [{index:, context:}] → [{index:, mood:, modality_weight:, ...}]
+      def default_batch_annotator
+        lambda { |items| SFLBatchAnnotator.new(items).call }
+      end
+
+      # Run one chunk through the LLM. A failed call defaults the whole
+      # chunk; a missing or invalid annotation defaults only that clause.
+      def annotate_chunk(chunk, correlation_id)
+        items = chunk.map do |entry|
+          { index: entry[:index],
+            context: format_syntactic_context(entry[:clause], entry[:ideational]) }
+        end
+
+        # One retry for transient provider errors; an open circuit means the
+        # provider is known-bad, so don't hammer it again.
+        results = begin
+          @circuit_breaker.call { @batch_annotator.call(items) }
+        rescue CircuitBreaker::CircuitBrokenException
+          raise
+        rescue StandardError
+          @circuit_breaker.call { @batch_annotator.call(items) }
+        end
+        by_index = results.to_h { |r| [r[:index], r] }
+
+        chunk.map do |entry|
+          result = by_index[entry[:index]]
+          interpersonal = result && payload_from(entry[:clause], result, correlation_id)
+          if interpersonal.nil?
+            if result.nil?
+              log_and_warn("pass_two_missing_annotation", correlation_id, entry[:clause],
+                "No annotation returned for clause index #{entry[:index]} — defaults applied")
+            end
+            interpersonal = default_interpersonal(entry[:clause].id)
+          end
+          annotated_clause(entry, interpersonal)
+        end
+      rescue CircuitBreaker::CircuitBrokenException
+        log_and_warn("pass_two_circuit_open", correlation_id, chunk.first[:clause],
+          "Circuit breaker open — defaults applied to #{chunk.size} clauses")
+        chunk.map { |entry| annotated_clause(entry, default_interpersonal(entry[:clause].id)) }
+      rescue StandardError => e
+        log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
+          "Batch annotation failed: #{e.message} — defaults applied to #{chunk.size} clauses")
+        chunk.map { |entry| annotated_clause(entry, default_interpersonal(entry[:clause].id)) }
+      end
+
+      def payload_from(clause, result, correlation_id)
+        Types::InterpersonalPayload.new(
+          clause_id: clause.id,
+          mood: result[:mood] || "declarative",
+          modality_weight: result[:modality_weight] || 0.5,
+          tenor: result[:tenor] || 0.5,
+          speaker_attitude: result[:speaker_attitude],
+          reasoning: result[:reasoning],
+          annotation_source: "llm"
+        )
+      rescue Dry::Struct::Error => e
+        log_and_warn("pass_two_invalid_annotation", correlation_id, clause,
+          "Invalid annotation values: #{e.message} — defaults applied")
+        nil
+      end
+
+      def annotated_clause(entry, interpersonal)
+        Types::AnnotatedClause.new(
+          id: SecureRandom.uuid,
+          text: entry[:clause].text,
+          syntactic: entry[:clause],
+          ideational: entry[:ideational],
+          interpersonal: interpersonal,
+          document_id: entry[:clause].document_id,
+          compiled_at: Time.now
+        )
+      end
+
+      # Map chunks to results on a bounded thread pool, preserving order.
+      # Worker exceptions can't corrupt results: annotate_chunk rescues
+      # StandardError internally, so each slot is always filled.
+      def parallel_map(chunks, concurrency, &block)
+        workers = [concurrency, chunks.size].min
+        return chunks.map(&block) if workers <= 1
+
+        results = Array.new(chunks.size)
+        queue = Queue.new
+        chunks.each_with_index { |chunk, i| queue << [chunk, i] }
+        queue.close
+
+        Array.new(workers) do
+          Thread.new do
+            while (job = queue.pop)
+              chunk, i = job
+              results[i] = block.call(chunk)
+            end
+          end
+        end.each(&:join)
+
+        results
+      end
+
       def annotate_interpersonal(clause, ideational, correlation_id)
         # Build the syntactic context for the LLM
         syntactic_context = format_syntactic_context(clause, ideational)
@@ -109,7 +259,8 @@ module SFL
           modality_weight: result[:modality_weight] || 0.5,
           tenor: result[:tenor] || 0.5,
           speaker_attitude: result[:speaker_attitude],
-          reasoning: result[:reasoning]
+          reasoning: result[:reasoning],
+          annotation_source: "llm"
         )
       rescue CircuitBreaker::CircuitBrokenException
         log_and_warn("pass_two_circuit_open", correlation_id, clause,
@@ -155,7 +306,8 @@ module SFL
           modality_weight: 0.5,
           tenor: 0.5,
           speaker_attitude: nil,
-          reasoning: "Circuit breaker open — defaults applied"
+          reasoning: "Circuit breaker open — defaults applied",
+          annotation_source: "fallback"
         )
       end
 
@@ -246,6 +398,69 @@ module SFL
       def extract_field(lines, key)
         line = lines.find { |l| l[0]&.strip == key }
         line&.[](1)&.strip
+      end
+    end
+
+    # One annotation row in a batched Pass 2 response. `index` ties the
+    # annotation back to its input clause; order is not trusted.
+    class ClauseAnnotation < T::Struct
+      const :index, Integer
+      const :mood, String
+      const :modality_weight, Float
+      const :tenor, Float
+      const :speaker_attitude, T.nilable(String)
+      const :reasoning, T.nilable(String)
+    end
+
+    # Batched variant of SFLSignature: annotates many clauses per LLM call.
+    class SFLBatchSignature < DSPy::Signature
+      description "Analyze the interpersonal metafunction of EACH numbered clause " \
+                  "using Systemic Functional Linguistics (SFL). For every clause, " \
+                  "determine mood type (declarative, interrogative, imperative, or " \
+                  "exclamative), modality weight 0.0-1.0 (0=weak/hedged, 1=strong/certain), " \
+                  "tenor 0.0-1.0 (0=informal, 1=formal), and speaker attitude (neutral, " \
+                  "positive, negative, skeptical, assertive). Base your analysis on the " \
+                  "syntactic structure provided. Return exactly one annotation per clause, " \
+                  "carrying over the clause's index unchanged."
+
+      input do
+        const :clauses, String,
+          description: "Numbered clauses, each with text, root verb, process type, " \
+                       "participants, POS tags, and dependency relations"
+      end
+
+      output do
+        const :annotations, T::Array[ClauseAnnotation],
+          description: "Exactly one annotation per input clause, with matching index"
+      end
+    end
+
+    # DSPy annotator for batched clause annotation.
+    class SFLBatchAnnotator
+      # @param items [Array<Hash>] [{index: Integer, context: String}]
+      def initialize(items)
+        @items = items
+      end
+
+      # @return [Array<Hash>] one hash per annotation the LLM returned
+      def call
+        input_text = @items.map do |item|
+          "### Clause #{item[:index]}\n#{item[:context]}"
+        end.join("\n")
+
+        predictor = DSPy::ChainOfThought.new(SFLBatchSignature)
+        result = predictor.call(clauses: input_text)
+
+        result.annotations.map do |a|
+          {
+            index: a.index,
+            mood: a.mood,
+            modality_weight: a.modality_weight,
+            tenor: a.tenor,
+            speaker_attitude: a.speaker_attitude,
+            reasoning: a.reasoning
+          }
+        end
       end
     end
   end

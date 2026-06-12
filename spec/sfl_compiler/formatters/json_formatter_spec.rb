@@ -57,6 +57,50 @@ RSpec.describe SFL::Compiler::Formatters::JSONFormatter do
       expect(json["metadata"]["speakers"]).to eq(["Alice", "Bob"])
     end
 
+    it "includes annotation coverage computed from clause provenance" do
+      token = SFL::Compiler::Types::SyntacticToken.new(
+        text: "works", lemma: "work", pos: "VERB", tag: "VBZ",
+        dep: "ROOT", head_index: -1, morphology: {}, index: 0
+      )
+      syntactic = SFL::Compiler::Types::SyntacticClause.new(
+        id: "syn-1", text: "It works.", tokens: [token],
+        root_index: 0, sentence_index: 0, document_id: "doc-1"
+      )
+      ideational = SFL::Compiler::Types::IdeationalPayload.new(
+        clause_id: "syn-1", process_type: "material",
+        participants: [], circumstances: [], raw_transitivity: {}
+      )
+      clauses = %w[llm llm fallback stub].map do |source|
+        SFL::Compiler::Types::AnnotatedClause.new(
+          id: "ann-1", text: "It works.", syntactic: syntactic,
+          ideational: ideational,
+          interpersonal: SFL::Compiler::Types::InterpersonalPayload.new(
+            clause_id: "syn-1", mood: "declarative",
+            modality_weight: 0.5, tenor: 0.5,
+            speaker_attitude: nil, reasoning: nil,
+            annotation_source: source
+          ),
+          document_id: "doc-1", compiled_at: Time.now
+        )
+      end
+      turn = SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 1, speaker: "Alice", timestamp: Time.now,
+        message_text: "It works.", clauses: clauses,
+        avg_tenor: 0.5, avg_modality: 0.5, dominant_mood: "declarative",
+        process_types: {}, participants: [], tenor_shift: nil
+      )
+      with_turns = result.new(turns: [turn])
+
+      json = JSON.parse(described_class.new(with_turns).render)
+      coverage = json["metadata"]["annotation_coverage"]
+
+      expect(coverage["total_clauses"]).to eq(4)
+      expect(coverage["llm"]).to eq(2)
+      expect(coverage["fallback"]).to eq(1)
+      expect(coverage["stub"]).to eq(1)
+      expect(coverage["defaulted_pct"]).to eq(50.0)
+    end
+
     it "includes speaker profiles" do
       formatter = described_class.new(result)
       json = JSON.parse(formatter.render)

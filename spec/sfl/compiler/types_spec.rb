@@ -103,6 +103,34 @@ RSpec.describe SFL::Compiler::Types do
         )
       }.to raise_error(Dry::Struct::Error)
     end
+
+    describe "annotation_source provenance" do
+      def payload(**overrides)
+        SFL::Compiler::Types::InterpersonalPayload.new(
+          {
+            clause_id: "c-1",
+            mood: "declarative",
+            modality_weight: 0.5,
+            tenor: 0.5,
+            speaker_attitude: nil,
+            reasoning: nil
+          }.merge(overrides)
+        )
+      end
+
+      it "defaults annotation_source to llm" do
+        expect(payload.annotation_source).to eq("llm")
+      end
+
+      it "accepts fallback and stub sources" do
+        expect(payload(annotation_source: "fallback").annotation_source).to eq("fallback")
+        expect(payload(annotation_source: "stub").annotation_source).to eq("stub")
+      end
+
+      it "rejects unknown annotation sources" do
+        expect { payload(annotation_source: "guess") }.to raise_error(Dry::Struct::Error)
+      end
+    end
   end
 
   describe "AnnotatedClause" do

@@ -55,13 +55,8 @@ module SFL
           @ideational_extractor.extract(clause)
         end
 
-        # === PASS 2: Semantic Annotation (DSPy.rb) ===
-        annotated = []
-        syntactic_clauses.each_with_index do |clause, idx|
-          ideational = ideational_payloads[idx]
-          annotated_clause = @pass_two.annotate(clause, ideational)
-          annotated << annotated_clause
-        end
+        # === PASS 2: Semantic Annotation (DSPy.rb, batched) ===
+        annotated = @pass_two.annotate_batch(syntactic_clauses.zip(ideational_payloads))
 
         # === Storage ===
         if store

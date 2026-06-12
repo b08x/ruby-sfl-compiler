@@ -26,7 +26,23 @@ module SFL
 
         def format_metadata
           # analyzed_at is already a string (ISO8601) from the script
-          result.metadata
+          result.metadata.merge(annotation_coverage: annotation_coverage)
+        end
+
+        # Per-source clause counts so consumers can tell real LLM annotations
+        # from fallback/stub defaults (which all sit at 0.5 and bias averages).
+        def annotation_coverage
+          clauses = result.turns.flat_map(&:clauses)
+          sources = clauses.map { |c| c.interpersonal.annotation_source }.tally
+          defaulted = clauses.size - sources.fetch("llm", 0)
+
+          {
+            total_clauses: clauses.size,
+            llm: sources.fetch("llm", 0),
+            fallback: sources.fetch("fallback", 0),
+            stub: sources.fetch("stub", 0),
+            defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1)
+          }
         end
 
         def format_speaker_profiles

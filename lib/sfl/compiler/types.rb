@@ -20,6 +20,11 @@ module SFL
       # Mood types from SFL
       MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative")
 
+      # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
+      # "fallback" = Pass 2 failed and defaults were substituted,
+      # "stub" = Pass 2 was skipped entirely (e.g. PASS=1 runs)
+      AnnotationSource = String.default("llm").enum("llm", "fallback", "stub")
+
       # Transitivity process types (Ideational)
       ProcessType = String.enum("material", "mental", "relational", "verbal", "behavioral", "existential")
 
@@ -68,6 +73,7 @@ module SFL
         attribute :tenor, Types::TenorValue
         attribute :speaker_attitude, Types::String.optional
         attribute :reasoning, Types::String.optional  # DSPy ChainOfThought reasoning
+        attribute :annotation_source, Types::AnnotationSource
       end
 
       # Combined annotated clause — the full output of the two-pass compiler

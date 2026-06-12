@@ -155,6 +155,76 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
     end
   end
 
+  describe "data quality warning" do
+    def annotated_clause(source)
+      token = SFL::Compiler::Types::SyntacticToken.new(
+        text: "works", lemma: "work", pos: "VERB", tag: "VBZ",
+        dep: "ROOT", head_index: -1, morphology: {}, index: 0
+      )
+      syntactic = SFL::Compiler::Types::SyntacticClause.new(
+        id: "syn-1", text: "It works.", tokens: [token],
+        root_index: 0, sentence_index: 0, document_id: "doc-1"
+      )
+      ideational = SFL::Compiler::Types::IdeationalPayload.new(
+        clause_id: "syn-1", process_type: "material",
+        participants: [], circumstances: [], raw_transitivity: {}
+      )
+      interpersonal = SFL::Compiler::Types::InterpersonalPayload.new(
+        clause_id: "syn-1", mood: "declarative",
+        modality_weight: 0.5, tenor: 0.5,
+        speaker_attitude: nil, reasoning: nil,
+        annotation_source: source
+      )
+      SFL::Compiler::Types::AnnotatedClause.new(
+        id: "ann-1", text: "It works.", syntactic: syntactic,
+        ideational: ideational, interpersonal: interpersonal,
+        document_id: "doc-1", compiled_at: Time.now
+      )
+    end
+
+    def turn_with(clauses)
+      SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 1, speaker: "Alice", timestamp: Time.now,
+        message_text: "It works.", clauses: clauses,
+        avg_tenor: 0.5, avg_modality: 0.5, dominant_mood: "declarative",
+        process_types: {}, participants: [], tenor_shift: nil
+      )
+    end
+
+    def result_with_clauses(clauses)
+      SFL::Compiler::Types::AnalysisResult.new(
+        metadata: { conversation_id: "q", turn_count: 1, speakers: ["Alice"], analyzed_at: Time.now },
+        turns: [turn_with(clauses)],
+        speaker_profiles: {}, tenor_timeline: [], field_evolution: [],
+        correlations: {}, insights: []
+      )
+    end
+
+    it "renders no warning when all clauses are llm-annotated" do
+      out = described_class.new(result_with_clauses([annotated_clause("llm")])).render
+      expect(out).not_to include("Data Quality")
+    end
+
+    it "renders no warning when turns carry no clauses" do
+      expect(output).not_to include("Data Quality")
+    end
+
+    it "warns with counts when some clauses carry fallback or stub values" do
+      clauses = [annotated_clause("llm"), annotated_clause("llm"), annotated_clause("llm"), annotated_clause("fallback")]
+      out = described_class.new(result_with_clauses(clauses)).render
+      expect(out).to include("## ⚠️ Data Quality")
+      expect(out).to include("1 of 4 clauses (25.0%)")
+    end
+
+    it "states that Pass 2 did not run when every clause is defaulted" do
+      clauses = [annotated_clause("stub"), annotated_clause("stub")]
+      out = described_class.new(result_with_clauses(clauses)).render
+      expect(out).to include("2 of 2 clauses (100.0%)")
+      expect(out).to include("Pass 2 did not run")
+      expect(out).to include("placeholders, not findings")
+    end
+  end
+
   describe "metadata header" do
     it "includes conversation_id, generated timestamp, turn_count, and speakers" do
       expect(output).to include("# Conversation Analysis: test-convo")
