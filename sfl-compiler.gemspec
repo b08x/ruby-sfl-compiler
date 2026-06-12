@@ -28,16 +28,17 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "dspy", "~> 1.0"
-  spec.add_dependency "ruby-spacy", "~> 0.4"
-  spec.add_dependency "pragmatic_segmenter", "~> 0.3"
-  spec.add_dependency "ruby_llm", "~> 1.3"
-  spec.add_dependency "sequel", "~> 5.88"
-  spec.add_dependency "pgvector", "~> 0.3"
   spec.add_dependency "circuit_breaker", "~> 1.1"
-  spec.add_dependency "journald-logger", "~> 3.1"
+  spec.add_dependency "dotenv", "~> 3.1"
+  spec.add_dependency "dry-monads", "~> 1.6"
   spec.add_dependency "dry-struct", "~> 1.6"
   spec.add_dependency "dry-types", "~> 1.7"
-  spec.add_dependency "dry-monads", "~> 1.6"
+  spec.add_dependency "dspy", "~> 1.0"
+  spec.add_dependency "journald-logger", "~> 3.1"
+  spec.add_dependency "pgvector", "~> 0.3"
+  spec.add_dependency "pragmatic_segmenter", "~> 0.3"
+  spec.add_dependency "ruby-spacy", "~> 0.4"
+  spec.add_dependency "ruby_llm", "~> 1.3"
+  spec.add_dependency "sequel", "~> 5.88"
   spec.add_dependency "zeitwerk", "~> 2.7"
 end
