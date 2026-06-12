@@ -54,4 +54,15 @@ RSpec.describe SFL::Compiler::Bootstrap do
       expect(ctx.config.database_url).to eq("postgresql:///custom_db")
     end
   end
+
+  describe "database connection failure" do
+    it "wraps connection errors in BootstrapError" do
+      allow(SFL::Compiler::Database).to receive(:connect)
+        .and_raise(Sequel::DatabaseConnectionError, "connection refused")
+
+      expect {
+        call({ "DATABASE_URL" => "postgresql:///nope" }, require_db: true, require_llm: false)
+      }.to raise_error(SFL::Compiler::BootstrapError, /Database connection failed.*connection refused/m)
+    end
+  end
 end

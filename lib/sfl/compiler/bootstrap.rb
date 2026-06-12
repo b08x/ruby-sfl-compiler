@@ -65,6 +65,9 @@ module SFL
         Database.setup_extensions(db)
         Migrator.new(db).run_all
         db
+      rescue Sequel::Error => e
+        raise BootstrapError,
+          "Database connection failed for #{config.database_url}: #{e.message}"
       end
     end
   end
