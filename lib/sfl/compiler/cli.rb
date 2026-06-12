@@ -97,6 +97,11 @@ module SFL
       rescue BootstrapError, PassOneError, PassTwoError => e
         warn "[ERROR] #{e.message}"
         1
+      rescue DSPy::LM::AdapterError => e
+        # Provider-side failures (rate limits, empty responses) are routine
+        # operational errors, not bugs — no backtrace.
+        warn "[ERROR] LLM provider error: #{e.message}"
+        1
       end
 
       def run_conversation(input, options)
