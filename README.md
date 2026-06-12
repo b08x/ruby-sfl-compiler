@@ -1,7 +1,15 @@
 # Two-Pass SFL Compiler
 
-A Ruby gem for high-fidelity Retrieval-Augmented Generation (RAG) using
-Systemic Functional Linguistics (SFL).
+A Ruby gem that compiles natural language into structured Systemic Functional
+Linguistics (SFL) annotations for high-fidelity Retrieval-Augmented Generation
+(RAG). Where conventional RAG retrieves by topic alone, this compiler also
+indexes *rhetorical stance* — how certain the writer was (modality), how formal
+(tenor), and what kind of process each clause describes — so retrieval can
+filter on how something was said, not just what it said.
+
+It ships with `sfl-analyze`, a CLI that analyzes conversations and
+documentation, ingests clauses into PostgreSQL, and answers questions over the
+stored corpus with cited, stance-aware evidence.
 
 ## Architecture
 
@@ -20,7 +28,7 @@ Raw Text
 │         │                   │
 │         ▼                   │
 │  Ideational Extractor       │
-│  (rule-based)               │
+│  (rule-based, no LLM)       │
 │  - Process type             │
 │  - Participants (roles)     │
 │  - Circumstances            │
@@ -29,14 +37,20 @@ Raw Text
            ▼
 ┌─────────────────────────────┐
 │  PASS 2: PassTwoEngine      │
-│  (DSPy.rb + LLM)            │
+│  (DSPy.rb + LLM, batched)   │
 │                             │
 │  - Mood classification      │
 │  - Modality weight (0-1)    │
 │  - Tenor / formality (0-1)  │
 │  - Speaker attitude         │
 │                             │
-│  Circuit breaker protected  │
+│  ~12 clauses per LLM call,  │
+│  4 concurrent calls, retry  │
+│  on transient errors.       │
+│  Failed clauses fall back   │
+│  to defaults marked         │
+│  annotation_source:         │
+│  "fallback" — never silent  │
 └──────────┬──────────────────┘
            │ AnnotatedClause
            ▼
@@ -48,30 +62,35 @@ Raw Text
 │  interpersonal_payloads(P2) │
 │  embeddings           (vec) │
 │                             │
-│  Scalar indices:            │
-│    - mood                   │
-│    - modality_weight        │
-│    - tenor                  │
-│    - process_type           │
-│                             │
-│  Vector index:              │
-│    - ivfflat cosine         │
+│  Scalar indices: mood,      │
+│  modality_weight, tenor,    │
+│  process_type               │
+│  Vector index: ivfflat      │
 └──────────┬──────────────────┘
            │
            ▼
 ┌─────────────────────────────┐
 │  Hybrid Retriever (RRF)     │
-│                             │
-│  Semantic (vector)          │
-│       +                     │
-│  Keyword (full-text)        │
-│       │                     │
-│  Reciprocal Rank Fusion     │
-│       │                     │
-│  + Scalar metadata filters  │
-│    (mood, modality, tenor)  │
+│  semantic + keyword search, │
+│  scalar stance filters      │
+│         │                   │
+│         ▼                   │
+│  ContextSynthesizer         │
+│  LLM answer grounded in     │
+│  numbered, cited evidence   │
 └─────────────────────────────┘
+
+Analysis layer (UI-agnostic, used by the CLI):
+  Bootstrap → Pipeline → ConversationAnalyzer / DocumentationAnalyzer
+            → AnalysisResult → ReportWriter (CSV + JSON + Markdown)
 ```
+
+## Prerequisites
+
+- **Ruby** >= 3.3.0
+- **PostgreSQL** with the `vector` (pgvector) and `pg_trgm` extensions
+- **Python spaCy** with the `en_core_web_sm` model
+- An **LLM API key** for Pass 2 (OpenRouter, Google, OpenAI, or Anthropic)
 
 ## Installation
 
@@ -81,15 +100,11 @@ Add to your Gemfile:
 gem "sfl-compiler"
 ```
 
-Install dependencies:
+Install the Python side:
 
 ```bash
-# Python spaCy
 pip install spacy
 python -m spacy download en_core_web_sm
-
-# PostgreSQL with pgvector
-# (extension must be available in your database)
 ```
 
 ## Environment Configuration
@@ -100,76 +115,127 @@ Create a `.env` file in the project root (copy from `.env.example`):
 # Database
 DATABASE_URL=postgresql:///sfl_compiler_dev
 
-# LLM Provider for Pass 2 (interpersonal annotation)
-# Recommended: OpenRouter (one key, many models)
+# LLM provider for Pass 2 (interpersonal annotation)
 DSPY_PROVIDER=openrouter/mistralai/mistral-7b-instruct
 
-# API Keys (only set what you're using)
-OPENROUTER_API_KEY=sk-or-your-key-here
-# OR
-GOOGLE_API_KEY=your-key-here  # For google/gemini-2.0-flash-exp (FREE!)
-# OR
-OPENAI_API_KEY=sk-your-key-here
-# OR
-ANTHROPIC_API_KEY=your-key-here
+# API key matching the provider prefix (set exactly one)
+OPENROUTER_API_KEY=sk-or-your-key-here   # openrouter/...
+# GOOGLE_API_KEY=your-key-here           # google/...
+# OPENAI_API_KEY=sk-your-key-here        # openai/...
+# ANTHROPIC_API_KEY=your-key-here        # anthropic/...
 
-# spaCy Model
+# spaCy model
 SPACY_MODEL=en_core_web_sm
+
+# Optional Pass 2 tuning
+# SFL_BATCH_SIZE=12      # clauses per LLM call
+# SFL_CONCURRENCY=4      # concurrent LLM calls
 ```
 
-**Provider Options**:
-- `openrouter/mistralai/mistral-7b-instruct` (recommended: fast & cheap)
-- `openrouter/google/gemini-2.0-flash-exp` (FREE tier via OpenRouter!)
-- `google/gemini-2.0-flash-exp` (FREE tier, native Gemini)
-- `openrouter/mistralai/mixtral-8x7b-instruct` (better quality)
-- `openai/gpt-4o-mini` (if you have OpenAI key)
-- `anthropic/claude-3-5-sonnet-20241022` (if you have Anthropic key)
+The CLI resolves the API key from the provider prefix and fails fast with a
+clear error for unsupported prefixes or missing keys. Embeddings (used by
+semantic search and `context` queries) additionally require `OPENAI_API_KEY` —
+the embedder calls `text-embedding-ada-002`. Without it, ingestion degrades
+gracefully to clause-only storage and retrieval falls back to keyword search.
 
-## Configuration
+## The sfl-analyze CLI
 
-```ruby
-require "sfl/compiler"
+Three subcommands cover the analyze → ingest → query workflow.
 
-SFL::Compiler.configure do |c|
-  c.database_url = "postgresql://localhost:5432/myapp_dev"
-  c.spacy_model = "en_core_web_sm"
-  c.dspy_provider = "openai/gpt-4o-mini"
-  c.openai_api_key = ENV["OPENAI_API_KEY"]
-end
+### Analyze a conversation
 
-# Configure DSPy.rb
-DSPy.configure do |c|
-  c.lm = DSPy::LM.new("openai/gpt-4o-mini",
-    api_key: ENV["OPENAI_API_KEY"],
-    structured_outputs: true)
-end
+```bash
+bundle exec sfl-analyze conversation chat.jsonl --output-dir ./output
 ```
 
-## Usage
+Input is JSONL, one turn per line:
 
-### Full Pipeline
+```jsonl
+{"name":"Alice","send_date":"June 10, 2026 2:30pm","mes":"Message text..."}
+{"name":"Bob","send_date":"June 10, 2026 2:31pm","mes":"Response text..."}
+```
+
+Each turn compiles through both passes; the analysis tracks tenor evolution,
+builds per-speaker profiles (average tenor/modality, mood distribution,
+dominant process types), correlates process types with stance, and generates
+insights such as tenor trend across the conversation, the dominant speaker's
+share of turns, and modality↔tenor correlation strength.
+
+### Analyze (and optionally ingest) documentation
+
+```bash
+bundle exec sfl-analyze documentation docs/ --store --output-dir ./output
+```
+
+Accepts a markdown file or a directory (recursive). Sections are chunked by
+heading and profiled the way conversation turns are — the report shows
+per-section stance profiles and formality flow through the document. With
+`--store`, every clause and its embedding is persisted for later `context`
+queries; re-running on the same document replaces its previous clauses rather
+than duplicating them.
+
+### Query the stored corpus
+
+```bash
+bundle exec sfl-analyze context "what is scalar filtering used for?" \
+  --min-modality 0.7 --limit 5
+```
+
+Runs hybrid retrieval (semantic + keyword, merged with Reciprocal Rank
+Fusion), applies any stance filters (`--mood`, `--min/max-tenor`,
+`--min/max-modality`), and synthesizes an answer grounded in the retrieved
+clauses — printed with a confidence score and the evidence list, cited
+clauses marked with `*`. Add `--output-dir` to also write
+`context_synthesis.json`.
+
+### Report output
+
+`conversation` and `documentation` write three files to `--output-dir`
+(default `./sfl_output`):
+
+| File | Purpose |
+|------|---------|
+| `conversation_analysis.csv` | Turn-by-turn data for spreadsheets |
+| `conversation_analysis.json` | Structured data, including `annotation_coverage` metadata |
+| `conversation_analysis.md` | Human-readable report with profiles, correlations, insights |
+
+When any clauses carry fallback or placeholder interpersonal values (LLM
+failures, or `--pass1-only` runs), the markdown report opens with a
+**Data Quality** section stating exactly how many — averages biased toward
+0.5 are never presented silently as findings.
+
+Use `--pass1-only` on either analysis subcommand to skip the LLM entirely:
+process types and participants are still extracted, and all interpersonal
+values are explicitly marked as placeholders.
+
+## Library Usage
+
+The CLI is a thin layer; everything is available programmatically.
+
+### Full pipeline
 
 ```ruby
-db = SFL::Compiler::Database.connect
-SFL::Compiler::Database.setup_extensions(db)
+require "sfl-compiler"
 
-pipeline = SFL::Compiler::Pipeline.new(db: db)
+ctx = SFL::Compiler::Bootstrap.call   # .env → config, DSPy, database
+pipeline = SFL::Compiler::Pipeline.new(db: ctx.db)
+
 annotated = pipeline.compile(
   "The system processes user input and validates it against known patterns.",
   document_id: "doc-1"
 )
 
 annotated.each do |ac|
-  puts "Text: #{ac.text}"
-  puts "Process: #{ac.ideational.process_type}"
-  puts "Mood: #{ac.interpersonal.mood}"
-  puts "Modality: #{ac.interpersonal.modality_weight}"
-  puts "Tenor: #{ac.interpersonal.tenor}"
-  puts "---"
+  puts "#{ac.text} → #{ac.ideational.process_type}, " \
+       "mood=#{ac.interpersonal.mood}, tenor=#{ac.interpersonal.tenor} " \
+       "(#{ac.interpersonal.annotation_source})"
 end
 ```
 
-### Pass 1 Only (Batch Processing)
+`annotation_source` is `"llm"` for real annotations, `"fallback"` when Pass 2
+failed for that clause, `"stub"` when Pass 2 was skipped.
+
+### Pass 1 only (no LLM)
 
 ```ruby
 pairs = pipeline.compile_pass_one("Your text here")
@@ -178,66 +244,43 @@ pairs.each do |clause, ideational|
 end
 ```
 
-### Retrieval with Scalar Filters
+### Retrieval with stance filters
 
 ```ruby
-retriever = SFL::Compiler::HybridRetriever.new(db: db)
+retriever = SFL::Compiler::HybridRetriever.new(db: ctx.db)
 
-# Retrieve only high-modality, formal technical documentation
 results = retriever.retrieve(
   "input validation",
-  filters: {
-    min_modality: 0.7,
-    min_tenor: 0.5,
-    process_type: "material"
-  }
+  filters: { min_modality: 0.7, min_tenor: 0.5, process_type: "material" }
 )
 ```
 
-### Conversation Analysis
+### Analyzers and synthesis
 
-Analyze chat logs for tenor evolution, speaker patterns, and rhetorical correlations:
-
-```bash
-# Run via the sfl-analyze CLI
-bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output
-
-# Or use the Claude Code skill
-/sfl-analyze conversation conversation.jsonl
-```
-
-**Input Format** (JSONL):
-```jsonl
-{"name":"Alice","send_date":"June 10, 2026 2:30pm","mes":"Message text..."}
-{"name":"Bob","send_date":"June 10, 2026 2:31pm","mes":"Response text..."}
-```
-
-**Outputs**:
-- `conversation_analysis.csv` — Turn-by-turn data (speaker, tenor, modality, process types)
-- `conversation_analysis.json` — Structured analysis data
-- `conversation_analysis.md` — Human-readable report with insights
-
-**Analysis Features**:
-- **Tenor Tracking**: Detect formality shifts across conversation
-- **Speaker Profiling**: Aggregate tenor/modality/mood per speaker
-- **Process Correlation**: Link process types (mental/verbal/material) with rhetorical stance
-- **Insight Generation**: Automated observations about communication patterns
-
-**Example Insights**:
-- "Steve maintains 2.0x higher tenor (0.76) than Robert (0.38)"
-- "Mental processes correlate with casual tenor (0.34)"
-- "Largest tenor shift at turn #2: Δ = +0.46"
-
-### Database Setup
+The CLI's building blocks are plain objects with injected dependencies and an
+optional progress callback — designed to back other front ends (a TUI, a web
+UI) without modification:
 
 ```ruby
-db = SFL::Compiler::Database.connect
-SFL::Compiler::Migrator.new(db).run_all
+analyzer = SFL::Compiler::Analysis::ConversationAnalyzer.new(
+  pipeline: pipeline,
+  on_progress: ->(e) { puts "turn #{e[:turn_id]}/#{e[:total]}" }
+)
+result = analyzer.analyze("chat.jsonl")   # → Types::AnalysisResult
+
+SFL::Compiler::Formatters::ReportWriter.write(result, "./output")
+
+synthesizer = SFL::Compiler::ContextSynthesizer.new(
+  retriever: retriever,
+  clause_repo: SFL::Compiler::ClauseRepository.new(ctx.db)
+)
+answer = synthesizer.synthesize("what does the corpus say about X?")
 ```
 
 ## Payload Separation
 
-The system separates SFL metafunctions into distinct database tables:
+SFL metafunctions live in separate tables so they can be indexed and filtered
+independently:
 
 | Table | Source | Content |
 |-------|--------|---------|
@@ -248,13 +291,23 @@ The system separates SFL metafunctions into distinct database tables:
 
 ## Scalar Filtering
 
-The Interpersonal payload supports scalar metadata filtering:
+The interpersonal payload supports scalar metadata filtering:
 
-- **Modality Weight** (0.0-1.0): Strength of certainty
-  - "must" = 0.9, "should" = 0.7, "might" = 0.3
-- **Tenor** (0.0-1.0): Formality of register
-  - Technical documentation = 0.8, casual blog = 0.2
+- **Modality weight** (0.0–1.0): strength of certainty —
+  "must" ≈ 0.9, "should" ≈ 0.7, "might" ≈ 0.3
+- **Tenor** (0.0–1.0): formality of register —
+  technical documentation ≈ 0.8, casual chat ≈ 0.2
 - **Mood**: declarative, interrogative, imperative, exclamative
+
+## Development
+
+```bash
+bundle install
+bundle exec rspec spec/        # unit suite
+```
+
+See `USAGE.md` for the operator-focused guide and `CLAUDE.md` for the
+agent/contributor codebase map.
 
 ## License
 
