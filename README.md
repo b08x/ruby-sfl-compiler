@@ -199,8 +199,8 @@ results = retriever.retrieve(
 Analyze chat logs for tenor evolution, speaker patterns, and rhetorical correlations:
 
 ```bash
-# Run conversation analysis script
-ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb conversation.jsonl ./output
+# Run via the sfl-analyze CLI
+bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output
 
 # Or use the Claude Code skill
 /sfl-analyze conversation conversation.jsonl

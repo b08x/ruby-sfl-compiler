@@ -1,87 +1,47 @@
 ---
 name: sfl-analyze
-description: Generate SFL analysis scripts for conversations, documentation, and context extraction
+description: Run SFL analyses (conversations, documentation, context queries) via the sfl-analyze CLI
 ---
 
 # SFL Analysis Skill
 
-Generates custom analysis scripts using the SFL compiler framework.
-
-## Usage
-
-```bash
-# Analyze conversation (JSONL format)
-/sfl-analyze conversation <path> [options]
-
-# Future subcommands (not yet implemented):
-# /sfl-analyze documentation <path> [options]
-# /sfl-analyze context <query> [options]
-# /sfl-analyze generate-script "<description>"
-```
+Runs analyses through the gem's `sfl-analyze` executable. All logic lives in
+the library (`lib/sfl/compiler/analysis/`, `lib/sfl/compiler/retrieval/`);
+this skill only composes CLI invocations.
 
 ## Subcommands
 
-### `conversation`
-
-Analyzes chat logs, transcripts, or turn-based conversations.
-
-**Arguments**:
-- `<path>`: Path to JSONL file (required)
-
-**Options**:
-- `--output-dir <dir>`: Output directory [default: ./sfl_output]
-
-**Example**:
 ```bash
-/sfl-analyze conversation chat.jsonl
-/sfl-analyze conversation chat.jsonl --output-dir ./results
+# Conversation (JSONL: {name, send_date, mes} per line)
+bundle exec sfl-analyze conversation chat.jsonl [--output-dir DIR] [--pass1-only]
+
+# Documentation (markdown file or directory)
+bundle exec sfl-analyze documentation docs/ [--output-dir DIR] [--pass1-only] [--store]
+
+# Context query over stored clauses (requires a prior --store ingestion)
+bundle exec sfl-analyze context "how does X work?" \
+  [--mood declarative] [--min-tenor 0.5] [--max-tenor 1.0] \
+  [--min-modality 0.0] [--max-modality 1.0] [--limit 10] [--output-dir DIR]
 ```
 
-**What it does**:
-1. Loads JSONL conversation (format: `{name, send_date, mes}`)
-2. Compiles each turn through SFL pipeline (Pass 1 + Pass 2)
-3. Tracks tenor evolution (formality shifts)
-4. Builds speaker profiles (avg tenor, modality, mood distribution)
-5. Correlates process types with tenor/modality
-6. Generates insights
-7. Exports to CSV + JSON + Markdown
+## Outputs
 
-**Output Files**:
-- `conversation_analysis.csv` — Turn-by-turn data for spreadsheet analysis
-- `conversation_analysis.json` — Structured data for programmatic access
-- `conversation_analysis.md` — Human-readable report with insights
-
----
-
-## Script Location
-
-The skill runs the existing template script:
-- `scripts/sfl_analysis/templates/conversation_analysis_template.rb`
-
----
-
-## Examples
-
-**Example 1: Analyze support conversation**
-```bash
-/sfl-analyze conversation support_chat.jsonl
-```
-
-**Example 2: Custom output directory**
-```bash
-/sfl-analyze conversation meeting_transcript.jsonl --output-dir ./analysis_results
-```
-
----
+conversation/documentation write `conversation_analysis.{csv,json,md}` into
+`--output-dir` (default `./sfl_output`). Reports include a Data Quality
+section whenever clauses carry fallback/stub interpersonal values.
+`context` prints the synthesized answer + cited evidence; `--output-dir`
+additionally writes `context_synthesis.json`.
 
 ## Requirements
 
-- PostgreSQL database with pgvector extension
-- spaCy with `en_core_web_sm` model
-- OpenAI API key (for Pass 2 interpersonal annotation)
+`.env` with `DATABASE_URL`, `DSPY_PROVIDER`, and the matching API key
+(`OPENROUTER_API_KEY` / `GOOGLE_API_KEY` / `OPENAI_API_KEY` /
+`ANTHROPIC_API_KEY`). PostgreSQL needs the `vector` and `pg_trgm`
+extensions; Pass 1 needs spaCy with `en_core_web_sm`.
 
-Set via environment variables:
-```bash
-export DATABASE_URL="postgresql:///sfl_compiler_dev"
-export OPENAI_API_KEY="sk-..."
-```
+## Custom analyses
+
+For bespoke needs, compose the library directly instead of generating a
+script: `Bootstrap.call` → `Pipeline` → `Analysis::ConversationAnalyzer` /
+`Analysis::DocumentationAnalyzer` / `ContextSynthesizer` →
+`Formatters::ReportWriter`. See `lib/sfl/compiler/cli.rb` for the wiring.

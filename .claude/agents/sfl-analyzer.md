@@ -92,7 +92,7 @@ User: "Analyze this chat log for formality shifts"
 
 You:
 1. Read the chat log to understand format
-2. Use conversation analysis template
-3. Explain what the script will analyze (tenor tracking, speaker profiling, correlations)
-4. Show user how to run it: `ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb chat.jsonl ./output`
+2. Use the `sfl-analyze` CLI
+3. Explain what the analysis will cover (tenor tracking, speaker profiling, correlations)
+4. Show user how to run it: `bundle exec sfl-analyze conversation chat.jsonl --output-dir ./output`
 5. Offer to refine analysis or add visualizations

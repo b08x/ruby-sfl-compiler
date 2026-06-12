@@ -34,10 +34,8 @@ DSPY_PROVIDER=anthropic/claude-3-5-sonnet-20241022
 # Using the skill
 /sfl-analyze conversation /path/to/conversation.jsonl
 
-# Or directly
-ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb \
-  /path/to/conversation.jsonl \
-  ./output
+# Or directly via the CLI
+bundle exec sfl-analyze conversation /path/to/conversation.jsonl --output-dir ./output
 ```
 
 ### 3. Check Results
@@ -142,9 +140,9 @@ Process multiple conversations:
 
 ```bash
 for file in conversations/*.jsonl; do
-  ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb \
+  bundle exec sfl-analyze conversation \
     "$file" \
-    "./output/$(basename "$file" .jsonl)"
+    --output-dir "./output/$(basename "$file" .jsonl)"
 done
 ```
 
@@ -166,9 +164,8 @@ TOGETHER_API_KEY=your-key
 
 Skip Pass 2 to avoid LLM costs:
 
-```ruby
-# In conversation_analysis_template.rb
-pipeline = SFL::Compiler::Pipeline.new(db: @db, skip_pass_two: true)
+```bash
+bundle exec sfl-analyze conversation /path/to/conversation.jsonl --pass1-only
 ```
 
 This still extracts process types and participants but uses circuit breaker defaults for tenor/modality.

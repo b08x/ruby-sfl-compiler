@@ -38,8 +38,10 @@ DRY_RUN=1 bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
 # Single file
 FILE=lsd-brain-network-collapse.md bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
 
-# Analyze a conversation (via the skill/script)
-ruby scripts/sfl_analysis/templates/conversation_analysis_template.rb conversation.jsonl ./output
+# Analyze a conversation / documentation / query stored context
+bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output
+bundle exec sfl-analyze documentation docs/ --store
+bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
 ```
 
 ## Architecture
@@ -183,6 +185,6 @@ The `experiments/` directory contains throwaway scripts validating SFL theories.
 
 ## Claude Code / OpenCode Integration
 
-- **Skill**: `.claude/skills/sfl-analyze/SKILL.md` — generates conversation analysis scripts.
+- **Skill**: `.claude/skills/sfl-analyze/SKILL.md` — composes `sfl-analyze` CLI invocations for conversation/documentation/context analyses.
 - **Agent**: `.claude/agents/sfl-analyzer.md` — expert agent for SFL analysis tasks.
 - **OpenCode plugin**: `.opencode/plugins/graphify.js` — graph visualization plugin.
