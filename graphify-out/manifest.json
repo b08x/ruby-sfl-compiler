@@ -1,33 +1,33 @@
 {
-  "/home/b08x/WorkspaceV3/sfl-compiler/.claude/settings.local.json": {
-    "mtime": 1780942403.9593601,
-    "ast_hash": "744791f12f945c9dc3635263620ae982",
-    "semantic_hash": "744791f12f945c9dc3635263620ae982"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/01_fca_proof_of_concept.rb": {
+    "mtime": 1781175694.253987,
+    "ast_hash": "9c296e2875eedab76c50d8ca57bc94ba",
+    "semantic_hash": "9c296e2875eedab76c50d8ca57bc94ba"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/.opencode/opencode.json": {
-    "mtime": 1781008824.865332,
-    "ast_hash": "e5f74d14a81702b55bdf53b33ec991d7",
-    "semantic_hash": "e5f74d14a81702b55bdf53b33ec991d7"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/02_id3_feature_importance.rb": {
+    "mtime": 1781175792.6441753,
+    "ast_hash": "647365ed9feeac978a7aab589c6d94e7",
+    "semantic_hash": "647365ed9feeac978a7aab589c6d94e7"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/.opencode/package.json": {
-    "mtime": 1781008828.0047154,
-    "ast_hash": "c9442b1dfba4cd254e8dc712cf2d3da8",
-    "semantic_hash": "c9442b1dfba4cd254e8dc712cf2d3da8"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/03_theme_rheme_extractor.rb": {
+    "mtime": 1781176197.8904817,
+    "ast_hash": "b30ce43952fad2f6319cb136e0e287ff",
+    "semantic_hash": "b30ce43952fad2f6319cb136e0e287ff"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/.opencode/plugins/graphify.js": {
-    "mtime": 1781008816.2054942,
-    "ast_hash": "64ccd3c03dbfe0980b6095766f5c4e52",
-    "semantic_hash": "64ccd3c03dbfe0980b6095766f5c4e52"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/04_cohesion_correlation.rb": {
+    "mtime": 1781176264.4751506,
+    "ast_hash": "46072d0a929990a52e8995d050c4f4d0",
+    "semantic_hash": "46072d0a929990a52e8995d050c4f4d0"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/bin/rake": {
-    "mtime": 1780945454.056502,
-    "ast_hash": "1459b0968c5a0184d0ad0471af28cfd7",
-    "semantic_hash": "1459b0968c5a0184d0ad0471af28cfd7"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/05_llm_theme_extractor.rb": {
+    "mtime": 1781176913.1099296,
+    "ast_hash": "fed802ceae1b6d0591e4557ef61a3312",
+    "semantic_hash": "fed802ceae1b6d0591e4557ef61a3312"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/bin/rspec": {
-    "mtime": 1780944921.186966,
-    "ast_hash": "924e68579bd9bc3ee8c3e00eb655f443",
-    "semantic_hash": "924e68579bd9bc3ee8c3e00eb655f443"
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/06_dspy_theme_extractor.rb": {
+    "mtime": 1781177112.386941,
+    "ast_hash": "eda12bfc6756001962da6234a0b93cd6",
+    "semantic_hash": "eda12bfc6756001962da6234a0b93cd6"
   },
   "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl-compiler.rb": {
     "mtime": 1780941610.7798955,
@@ -35,9 +35,59 @@
     "semantic_hash": "527d09c4e47fd485e484861688478d23"
   },
   "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler.rb": {
-    "mtime": 1780949099.5139513,
-    "ast_hash": "41878867a35ec412abfa2452b26f68a6",
-    "semantic_hash": "41878867a35ec412abfa2452b26f68a6"
+    "mtime": 1781137543.3892543,
+    "ast_hash": "5243fefc255399ef40abaf754bf6d3b7",
+    "semantic_hash": "5243fefc255399ef40abaf754bf6d3b7"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/analysis.rb": {
+    "mtime": 1781136904.094775,
+    "ast_hash": "5cc590e7ffb385bdfa90e6477f75be36",
+    "semantic_hash": "5cc590e7ffb385bdfa90e6477f75be36"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/analysis/correlation_analyzer.rb": {
+    "mtime": 1781136900.6327887,
+    "ast_hash": "5e60d2b84b95331c1288c11157b31463",
+    "semantic_hash": "5e60d2b84b95331c1288c11157b31463"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/analysis/speaker_profiler.rb": {
+    "mtime": 1781136799.0371861,
+    "ast_hash": "e34c83126d8a7dbbcc71a314f01f705c",
+    "semantic_hash": "e34c83126d8a7dbbcc71a314f01f705c"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/analysis/tenor_tracker.rb": {
+    "mtime": 1781136493.4258485,
+    "ast_hash": "cc0ba84f4365fd97d11564608172f9e9",
+    "semantic_hash": "cc0ba84f4365fd97d11564608172f9e9"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/formatters.rb": {
+    "mtime": 1781136977.3404884,
+    "ast_hash": "5b3bbcea2238455ac05d4039f6619fcc",
+    "semantic_hash": "5b3bbcea2238455ac05d4039f6619fcc"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/formatters/base_formatter.rb": {
+    "mtime": 1781136981.7887278,
+    "ast_hash": "f8f844f3c2d979cbbfdab4fc3750f2a4",
+    "semantic_hash": "f8f844f3c2d979cbbfdab4fc3750f2a4"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/formatters/csv_formatter.rb": {
+    "mtime": 1781137003.4563863,
+    "ast_hash": "e83ed5a9cc356513d2af4fc92e4e10a4",
+    "semantic_hash": "e83ed5a9cc356513d2af4fc92e4e10a4"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/formatters/json_formatter.rb": {
+    "mtime": 1781138419.4377542,
+    "ast_hash": "b7ae2b06d18ab26f2f3376c4548e7557",
+    "semantic_hash": "b7ae2b06d18ab26f2f3376c4548e7557"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/formatters/markdown_formatter.rb": {
+    "mtime": 1781138430.2327101,
+    "ast_hash": "f7b4c7de8050e3a7fc72e88a6562b2c4",
+    "semantic_hash": "f7b4c7de8050e3a7fc72e88a6562b2c4"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb": {
+    "mtime": 1781176780.5295873,
+    "ast_hash": "081af69f91850e8ac580d203e619ef7f",
+    "semantic_hash": "081af69f91850e8ac580d203e619ef7f"
   },
   "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/markdown_loader.rb": {
     "mtime": 1780948889.6659143,
@@ -85,9 +135,9 @@
     "semantic_hash": "e7aff94ba7745a7e50db7d3745b6197e"
   },
   "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/types.rb": {
-    "mtime": 1780946075.4456353,
-    "ast_hash": "b6e5b26ecbbb0f34ec06ef992181349e",
-    "semantic_hash": "b6e5b26ecbbb0f34ec06ef992181349e"
+    "mtime": 1781136017.7179704,
+    "ast_hash": "95cfc6f99c76c4032de4a5b3297e8374",
+    "semantic_hash": "95cfc6f99c76c4032de4a5b3297e8374"
   },
   "/home/b08x/WorkspaceV3/sfl-compiler/lib/sfl/compiler/version.rb": {
     "mtime": 1780941192.0907555,
@@ -99,34 +149,44 @@
     "ast_hash": "e01e0c737556e4acf754c6541045c307",
     "semantic_hash": "e01e0c737556e4acf754c6541045c307"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/spec/sfl/compiler/pass_one/ideational_extractor_spec.rb": {
-    "mtime": 1780946222.3549638,
-    "ast_hash": "229b646ce146ca06260d267be04111c5",
-    "semantic_hash": "229b646ce146ca06260d267be04111c5"
+  "/home/b08x/WorkspaceV3/sfl-compiler/scripts/sfl_analysis/templates/conversation_analysis_template.rb": {
+    "mtime": 1781139780.848185,
+    "ast_hash": "5c90f6620eec80e70328a28735aae1ba",
+    "semantic_hash": "5c90f6620eec80e70328a28735aae1ba"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/spec/sfl/compiler/retrieval/hybrid_retriever_spec.rb": {
-    "mtime": 1780941707.981464,
-    "ast_hash": "4fdefaf349d57714574d4c8c586b9637",
-    "semantic_hash": "4fdefaf349d57714574d4c8c586b9637"
+  "/home/b08x/WorkspaceV3/sfl-compiler/KNOWN_ISSUES.md": {
+    "mtime": 1781139547.5383282,
+    "ast_hash": "ec0353f9eb8e6a3595f3cc4bdb3acef3",
+    "semantic_hash": "ec0353f9eb8e6a3595f3cc4bdb3acef3"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/spec/sfl/compiler/types_spec.rb": {
-    "mtime": 1780946203.8860483,
-    "ast_hash": "c0d916cdcf9d89af5ab990e8e20545d4",
-    "semantic_hash": "c0d916cdcf9d89af5ab990e8e20545d4"
+  "/home/b08x/WorkspaceV3/sfl-compiler/NOTEBOOK_ANALYSIS_PLAN.md": {
+    "mtime": 1781175069.636094,
+    "ast_hash": "d87b0b69a12b537b83db9d9d3e54241a",
+    "semantic_hash": "d87b0b69a12b537b83db9d9d3e54241a"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/spec/spec_helper.rb": {
-    "mtime": 1780941622.3358443,
-    "ast_hash": "cbb87e9c20993291ce9c1ebbde449bfd",
-    "semantic_hash": "cbb87e9c20993291ce9c1ebbde449bfd"
+  "/home/b08x/WorkspaceV3/sfl-compiler/QUICKSTART.md": {
+    "mtime": 1781138941.3916197,
+    "ast_hash": "ff028c7b5242062442e9ecd69ea90c51",
+    "semantic_hash": "ff028c7b5242062442e9ecd69ea90c51"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/README.md": {
-    "mtime": 1780945679.5134597,
-    "ast_hash": "ae99c3c89316470cc14f54e6c531de80",
-    "semantic_hash": "ae99c3c89316470cc14f54e6c531de80"
+  "/home/b08x/WorkspaceV3/sfl-compiler/RESEARCH_APPLICATION_PLAN.md": {
+    "mtime": 1781175554.6826813,
+    "ast_hash": "e7c434977bc9e8f814fbc1bb6f065862",
+    "semantic_hash": "e7c434977bc9e8f814fbc1bb6f065862"
   },
-  "/home/b08x/WorkspaceV3/sfl-compiler/docs/knowledge-base.md": {
-    "mtime": 1780960976.6861396,
-    "ast_hash": "df5cd4b710ab17f61870f489f51fc0fe",
-    "semantic_hash": "df5cd4b710ab17f61870f489f51fc0fe"
+  "/home/b08x/WorkspaceV3/sfl-compiler/SESSION_SUMMARY.md": {
+    "mtime": 1781177353.0407472,
+    "ast_hash": "a881eb6fa63fc80c717c703957ef26d9",
+    "semantic_hash": "a881eb6fa63fc80c717c703957ef26d9"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/USAGE.md": {
+    "mtime": 1781138888.9058342,
+    "ast_hash": "776cd5c5a991cc0f4e8c571ba2152552",
+    "semantic_hash": "776cd5c5a991cc0f4e8c571ba2152552"
+  },
+  "/home/b08x/WorkspaceV3/sfl-compiler/experiments/RESULTS.md": {
+    "mtime": 1781177294.2400389,
+    "ast_hash": "7a29cba7b7f0744b4afbb321114a8374",
+    "semantic_hash": "7a29cba7b7f0744b4afbb321114a8374"
   }
 }

@@ -4,165 +4,252 @@
   "graph": {
     "hyperedges": [
       {
-        "id": "pipeline_two_pass_flow",
-        "label": "Two-Pass Pipeline Flow",
+        "id": "SFL_Analysis_Pipeline",
+        "label": "SFL Analysis Pipeline",
         "nodes": [
-          "markdown_loader",
-          "compiler_pipeline",
-          "pass_one_engine",
-          "ideational_extractor",
-          "pass_two_engine"
+          "SESSION_Pass1_spaCy_syntactic_parsing",
+          "SESSION_Pass2_DSPy_LLM_interpersonal_annotation",
+          "USAGE_Tenor_Formality",
+          "USAGE_Modality_Certainty",
+          "USAGE_Process_Types"
         ],
         "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/knowledge-base.md"
+        "confidence": "INFERRED",
+        "confidence_score": 0.85,
+        "source_file": "SESSION_SUMMARY.md"
       },
       {
-        "id": "storage_layer",
-        "label": "Storage Layer",
+        "id": "Experimental_Validation_Framework",
+        "label": "Experimental Validation Framework",
         "nodes": [
-          "compiler_database",
-          "clause_repository",
-          "embedding_repository",
-          "compiler_types"
+          "EXPERIMENTS_FCA_Pattern_Discovery",
+          "EXPERIMENTS_ID3_Feature_Importance",
+          "EXPERIMENTS_Cohesion_Correlation",
+          "EXPERIMENTS_DSPy_Theme_Rheme_Extraction",
+          "EXPERIMENTS_Concept_Lattice",
+          "EXPERIMENTS_Attribute_Implications"
         ],
         "relation": "participate_in",
         "confidence": "EXTRACTED",
         "confidence_score": 1.0,
-        "source_file": "docs/knowledge-base.md"
+        "source_file": "experiments/RESULTS.md"
       },
       {
-        "id": "retrieval_subsystem",
-        "label": "Retrieval Subsystem",
+        "id": "Research_Implementation_Components",
+        "label": "Research Implementation Components",
         "nodes": [
-          "hybrid_retriever",
-          "clause_repository",
-          "embedding_repository"
+          "RESEARCH_TextualExtractor_class",
+          "RESEARCH_CohesionAnalyzer_class",
+          "RESEARCH_FCAAdapter_class",
+          "RESEARCH_SpeakerClassifier_class",
+          "RESEARCH_InsightGenerator_class"
         ],
-        "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/knowledge-base.md"
+        "relation": "implement",
+        "confidence": "INFERRED",
+        "confidence_score": 0.8,
+        "source_file": "RESEARCH_APPLICATION_PLAN.md"
       }
     ]
   },
   "nodes": [
     {
-      "label": "settings.local.json",
+      "label": "01_fca_proof_of_concept.rb",
       "file_type": "code",
-      "source_file": ".claude/settings.local.json",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
       "source_location": "L1",
-      "id": "claude_settings_local",
-      "community": 10,
-      "norm_label": "settings.local.json"
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept",
+      "community": 16,
+      "norm_label": "01_fca_proof_of_concept.rb"
     },
     {
-      "label": "enabledMcpjsonServers",
+      "label": "SimpleFCA",
       "file_type": "code",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L2",
-      "id": "claude_settings_local_enabledmcpjsonservers",
-      "community": 10,
-      "norm_label": "enabledmcpjsonservers"
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept_simplefca",
+      "community": 16,
+      "norm_label": "simplefca"
     },
     {
-      "label": "permissions",
+      "label": ".initialize()",
       "file_type": "code",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L5",
-      "id": "claude_settings_local_permissions",
-      "community": 10,
-      "norm_label": "permissions"
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept_simplefca_initialize",
+      "community": 16,
+      "norm_label": ".initialize()"
     },
     {
-      "label": "allow",
+      "label": ".find_concepts()",
       "file_type": "code",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L6",
-      "id": "claude_settings_local_permissions_allow",
-      "community": 10,
-      "norm_label": "allow"
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept_simplefca_find_concepts",
+      "community": 16,
+      "norm_label": ".find_concepts()"
     },
     {
-      "label": "opencode.json",
+      "label": ".find_implications()",
       "file_type": "code",
-      "source_file": ".opencode/opencode.json",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L47",
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept_simplefca_find_implications",
+      "community": 16,
+      "norm_label": ".find_implications()"
+    },
+    {
+      "label": "extract_attributes()",
+      "file_type": "code",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L84",
+      "_origin": "ast",
+      "id": "experiments_01_fca_proof_of_concept_extract_attributes",
+      "community": 16,
+      "norm_label": "extract_attributes()"
+    },
+    {
+      "label": "02_id3_feature_importance.rb",
+      "file_type": "code",
+      "source_file": "experiments/02_id3_feature_importance.rb",
       "source_location": "L1",
-      "id": "opencode_opencode",
+      "_origin": "ast",
+      "id": "experiments_02_id3_feature_importance",
+      "community": 24,
+      "norm_label": "02_id3_feature_importance.rb"
+    },
+    {
+      "label": "extract_features()",
+      "file_type": "code",
+      "source_file": "experiments/02_id3_feature_importance.rb",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "experiments_02_id3_feature_importance_extract_features",
+      "community": 24,
+      "norm_label": "extract_features()"
+    },
+    {
+      "label": "03_theme_rheme_extractor.rb",
+      "file_type": "code",
+      "source_file": "experiments/03_theme_rheme_extractor.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "experiments_03_theme_rheme_extractor",
+      "community": 25,
+      "norm_label": "03_theme_rheme_extractor.rb"
+    },
+    {
+      "label": "extract_theme()",
+      "file_type": "code",
+      "source_file": "experiments/03_theme_rheme_extractor.rb",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "experiments_03_theme_rheme_extractor_extract_theme",
+      "community": 25,
+      "norm_label": "extract_theme()"
+    },
+    {
+      "label": "04_cohesion_correlation.rb",
+      "file_type": "code",
+      "source_file": "experiments/04_cohesion_correlation.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "experiments_04_cohesion_correlation",
+      "community": 20,
+      "norm_label": "04_cohesion_correlation.rb"
+    },
+    {
+      "label": "calculate_cohesion()",
+      "file_type": "code",
+      "source_file": "experiments/04_cohesion_correlation.rb",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "experiments_04_cohesion_correlation_calculate_cohesion",
+      "community": 20,
+      "norm_label": "calculate_cohesion()"
+    },
+    {
+      "label": "correlation()",
+      "file_type": "code",
+      "source_file": "experiments/04_cohesion_correlation.rb",
+      "source_location": "L112",
+      "_origin": "ast",
+      "id": "experiments_04_cohesion_correlation_correlation",
+      "community": 20,
+      "norm_label": "correlation()"
+    },
+    {
+      "label": "05_llm_theme_extractor.rb",
+      "file_type": "code",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "experiments_05_llm_theme_extractor",
       "community": 11,
-      "norm_label": "opencode.json"
+      "norm_label": "05_llm_theme_extractor.rb"
     },
     {
-      "label": "$schema",
+      "label": "detect_mood()",
       "file_type": "code",
-      "source_file": ".opencode/opencode.json",
-      "source_location": "L2",
-      "id": "opencode_opencode_schema",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "experiments_05_llm_theme_extractor_detect_mood",
       "community": 11,
-      "norm_label": "$schema"
+      "norm_label": "detect_mood()"
     },
     {
-      "label": "plugin",
+      "label": "build_spacy_analysis()",
       "file_type": "code",
-      "source_file": ".opencode/opencode.json",
-      "source_location": "L3",
-      "id": "opencode_opencode_plugin",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "experiments_05_llm_theme_extractor_build_spacy_analysis",
       "community": 11,
-      "norm_label": "plugin"
+      "norm_label": "build_spacy_analysis()"
     },
     {
-      "label": "package.json",
+      "label": "extract_with_llm()",
       "file_type": "code",
-      "source_file": ".opencode/package.json",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L101",
+      "_origin": "ast",
+      "id": "experiments_05_llm_theme_extractor_extract_with_llm",
+      "community": 11,
+      "norm_label": "extract_with_llm()"
+    },
+    {
+      "label": "06_dspy_theme_extractor.rb",
+      "file_type": "code",
+      "source_file": "experiments/06_dspy_theme_extractor.rb",
       "source_location": "L1",
-      "id": "opencode_package",
-      "community": 12,
-      "norm_label": "package.json"
+      "_origin": "ast",
+      "id": "experiments_06_dspy_theme_extractor",
+      "community": 26,
+      "norm_label": "06_dspy_theme_extractor.rb"
     },
     {
-      "label": "dependencies",
+      "label": "ThemeRhemeSignature",
       "file_type": "code",
-      "source_file": ".opencode/package.json",
-      "source_location": "L2",
-      "id": "opencode_package_dependencies",
-      "community": 12,
-      "norm_label": "dependencies"
-    },
-    {
-      "label": "@opencode-ai/plugin",
-      "file_type": "code",
-      "source_file": ".opencode/package.json",
-      "source_location": "L3",
-      "id": "opencode_package_dependencies_opencode_ai_plugin",
-      "community": 12,
-      "norm_label": "@opencode-ai/plugin"
-    },
-    {
-      "label": "graphify.js",
-      "file_type": "code",
-      "source_file": ".opencode/plugins/graphify.js",
-      "source_location": "L1",
-      "id": "plugins_graphify",
-      "community": 15,
-      "norm_label": "graphify.js"
-    },
-    {
-      "label": "GraphifyPlugin()",
-      "file_type": "code",
-      "source_file": ".opencode/plugins/graphify.js",
-      "source_location": "L6",
-      "id": "plugins_graphify_graphifyplugin",
-      "community": 15,
-      "norm_label": "graphifyplugin()"
+      "source_file": "experiments/06_dspy_theme_extractor.rb",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "experiments_06_dspy_theme_extractor_themerhemesignature",
+      "community": 26,
+      "norm_label": "themerhemesignature"
     },
     {
       "label": "compiler.rb",
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "lib_sfl_compiler_rb_sfl_compiler",
-      "community": 0,
+      "community": 9,
       "norm_label": "compiler.rb"
     },
     {
@@ -170,8 +257,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L46",
+      "_origin": "ast",
       "id": "sfl_compiler_error",
-      "community": 0,
+      "community": 9,
       "norm_label": "error"
     },
     {
@@ -179,8 +267,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L47",
+      "_origin": "ast",
       "id": "sfl_compiler_passoneerror",
-      "community": 0,
+      "community": 9,
       "norm_label": "passoneerror"
     },
     {
@@ -188,8 +277,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L48",
+      "_origin": "ast",
       "id": "sfl_compiler_passtwoerror",
-      "community": 0,
+      "community": 9,
       "norm_label": "passtwoerror"
     },
     {
@@ -197,8 +287,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L49",
+      "_origin": "ast",
       "id": "sfl_compiler_configurationerror",
-      "community": 0,
+      "community": 9,
       "norm_label": "configurationerror"
     },
     {
@@ -206,8 +297,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L51",
+      "_origin": "ast",
       "id": "sfl_compiler_logger",
-      "community": 0,
+      "community": 2,
       "norm_label": "logger()"
     },
     {
@@ -215,8 +307,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L56",
+      "_origin": "ast",
       "id": "sfl_compiler_config",
-      "community": 0,
+      "community": 9,
       "norm_label": "config()"
     },
     {
@@ -224,8 +317,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L60",
+      "_origin": "ast",
       "id": "sfl_compiler_configure",
-      "community": 0,
+      "community": 9,
       "norm_label": "configure()"
     },
     {
@@ -233,8 +327,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L64",
+      "_origin": "ast",
       "id": "sfl_compiler_configuration",
-      "community": 0,
+      "community": 9,
       "norm_label": "configuration"
     },
     {
@@ -242,8 +337,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L68",
+      "_origin": "ast",
       "id": "sfl_compiler_configuration_initialize",
-      "community": 0,
+      "community": 9,
       "norm_label": ".initialize()"
     },
     {
@@ -251,17 +347,539 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler.rb",
       "source_location": "L77",
+      "_origin": "ast",
       "id": "sfl_compiler_configuration_validate",
-      "community": 0,
+      "community": 9,
       "norm_label": ".validate!()"
+    },
+    {
+      "label": "analysis.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "compiler_analysis",
+      "community": 28,
+      "norm_label": "analysis.rb"
+    },
+    {
+      "label": "correlation_analyzer.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "analysis_correlation_analyzer",
+      "community": 1,
+      "norm_label": "correlation_analyzer.rb"
+    },
+    {
+      "label": "CorrelationAnalyzer",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "analysis_correlation_analyzer_correlationanalyzer",
+      "community": 1,
+      "norm_label": "correlationanalyzer"
+    },
+    {
+      "label": ".initialize()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "analysis_correlation_analyzer_correlationanalyzer_initialize",
+      "community": 1,
+      "norm_label": ".initialize()"
+    },
+    {
+      "label": ".correlate_process_tenor()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "analysis_correlation_analyzer_correlationanalyzer_correlate_process_tenor",
+      "community": 1,
+      "norm_label": ".correlate_process_tenor()"
+    },
+    {
+      "label": ".mean()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "analysis_correlation_analyzer_correlationanalyzer_mean",
+      "community": 1,
+      "norm_label": ".mean()"
+    },
+    {
+      "label": "speaker_profiler.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler",
+      "community": 13,
+      "norm_label": "speaker_profiler.rb"
+    },
+    {
+      "label": "SpeakerProfiler",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler",
+      "community": 13,
+      "norm_label": "speakerprofiler"
+    },
+    {
+      "label": ".initialize()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_initialize",
+      "community": 13,
+      "norm_label": ".initialize()"
+    },
+    {
+      "label": ".build_profile()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_build_profile",
+      "community": 13,
+      "norm_label": ".build_profile()"
+    },
+    {
+      "label": ".build_profiles()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_build_profiles",
+      "community": 13,
+      "norm_label": ".build_profiles()"
+    },
+    {
+      "label": ".calculate_mood_distribution()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_calculate_mood_distribution",
+      "community": 13,
+      "norm_label": ".calculate_mood_distribution()"
+    },
+    {
+      "label": ".aggregate_process_types()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_aggregate_process_types",
+      "community": 13,
+      "norm_label": ".aggregate_process_types()"
+    },
+    {
+      "label": ".mean()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_mean",
+      "community": 13,
+      "norm_label": ".mean()"
+    },
+    {
+      "label": ".variance()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "analysis_speaker_profiler_speakerprofiler_variance",
+      "community": 13,
+      "norm_label": ".variance()"
+    },
+    {
+      "label": "tenor_tracker.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "analysis_tenor_tracker",
+      "community": 1,
+      "norm_label": "tenor_tracker.rb"
+    },
+    {
+      "label": "TenorTracker",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "analysis_tenor_tracker_tenortracker",
+      "community": 1,
+      "norm_label": "tenortracker"
+    },
+    {
+      "label": ".initialize()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "analysis_tenor_tracker_tenortracker_initialize",
+      "community": 1,
+      "norm_label": ".initialize()"
+    },
+    {
+      "label": ".calculate_shifts()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "analysis_tenor_tracker_tenortracker_calculate_shifts",
+      "community": 1,
+      "norm_label": ".calculate_shifts()"
+    },
+    {
+      "label": ".detect_significant_shifts()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "analysis_tenor_tracker_tenortracker_detect_significant_shifts",
+      "community": 1,
+      "norm_label": ".detect_significant_shifts()"
+    },
+    {
+      "label": "formatters.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "compiler_formatters",
+      "community": 29,
+      "norm_label": "formatters.rb"
+    },
+    {
+      "label": "base_formatter.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "formatters_base_formatter",
+      "community": 18,
+      "norm_label": "base_formatter.rb"
+    },
+    {
+      "label": "BaseFormatter",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "formatters_base_formatter_baseformatter",
+      "community": 18,
+      "norm_label": "baseformatter"
+    },
+    {
+      "label": ".initialize()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "formatters_base_formatter_baseformatter_initialize",
+      "community": 18,
+      "norm_label": ".initialize()"
+    },
+    {
+      "label": ".render()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "formatters_base_formatter_baseformatter_render",
+      "community": 18,
+      "norm_label": ".render()"
+    },
+    {
+      "label": ".write_to()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "formatters_base_formatter_baseformatter_write_to",
+      "community": 18,
+      "norm_label": ".write_to()"
+    },
+    {
+      "label": "csv_formatter.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter",
+      "community": 14,
+      "norm_label": "csv_formatter.rb"
+    },
+    {
+      "label": "CSVFormatter",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter",
+      "community": 14,
+      "norm_label": "csvformatter"
+    },
+    {
+      "label": ".render()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter_render",
+      "community": 14,
+      "norm_label": ".render()"
+    },
+    {
+      "label": ".headers()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter_headers",
+      "community": 14,
+      "norm_label": ".headers()"
+    },
+    {
+      "label": ".turn_to_row()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter_turn_to_row",
+      "community": 14,
+      "norm_label": ".turn_to_row()"
+    },
+    {
+      "label": ".truncate_message()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter_truncate_message",
+      "community": 14,
+      "norm_label": ".truncate_message()"
+    },
+    {
+      "label": ".format_process_counts()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "formatters_csv_formatter_csvformatter_format_process_counts",
+      "community": 14,
+      "norm_label": ".format_process_counts()"
+    },
+    {
+      "label": "json_formatter.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "formatters_json_formatter",
+      "community": 17,
+      "norm_label": "json_formatter.rb"
+    },
+    {
+      "label": "JSONFormatter",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "formatters_json_formatter_jsonformatter",
+      "community": 17,
+      "norm_label": "jsonformatter"
+    },
+    {
+      "label": ".render()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "formatters_json_formatter_jsonformatter_render",
+      "community": 17,
+      "norm_label": ".render()"
+    },
+    {
+      "label": ".build_hash()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "formatters_json_formatter_jsonformatter_build_hash",
+      "community": 17,
+      "norm_label": ".build_hash()"
+    },
+    {
+      "label": ".format_metadata()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "formatters_json_formatter_jsonformatter_format_metadata",
+      "community": 17,
+      "norm_label": ".format_metadata()"
+    },
+    {
+      "label": ".format_speaker_profiles()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "formatters_json_formatter_jsonformatter_format_speaker_profiles",
+      "community": 17,
+      "norm_label": ".format_speaker_profiles()"
+    },
+    {
+      "label": "markdown_formatter.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter",
+      "community": 15,
+      "norm_label": "markdown_formatter.rb"
+    },
+    {
+      "label": "MarkdownFormatter",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter",
+      "community": 15,
+      "norm_label": "markdownformatter"
+    },
+    {
+      "label": ".render()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter_render",
+      "community": 15,
+      "norm_label": ".render()"
+    },
+    {
+      "label": ".speaker_profiles_table()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L54",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter_speaker_profiles_table",
+      "community": 15,
+      "norm_label": ".speaker_profiles_table()"
+    },
+    {
+      "label": ".correlations_table()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L67",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter_correlations_table",
+      "community": 15,
+      "norm_label": ".correlations_table()"
+    },
+    {
+      "label": ".insights_list()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter_insights_list",
+      "community": 15,
+      "norm_label": ".insights_list()"
+    },
+    {
+      "label": ".tenor_label()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L86",
+      "_origin": "ast",
+      "id": "formatters_markdown_formatter_markdownformatter_tenor_label",
+      "community": 15,
+      "norm_label": ".tenor_label()"
+    },
+    {
+      "label": "theme_rheme_extractor.rb",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor",
+      "community": 2,
+      "norm_label": "theme_rheme_extractor.rb"
+    },
+    {
+      "label": "ThemeRhemeExtractor",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "community": 2,
+      "norm_label": "themerhemeextractor"
+    },
+    {
+      "label": ".execute()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute",
+      "community": 2,
+      "norm_label": ".execute()"
+    },
+    {
+      "label": ".build_sfl_prompt()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor_themerhemeextractor_build_sfl_prompt",
+      "community": 2,
+      "norm_label": ".build_sfl_prompt()"
+    },
+    {
+      "label": ".call_llm()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L139",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor_themerhemeextractor_call_llm",
+      "community": 2,
+      "norm_label": ".call_llm()"
+    },
+    {
+      "label": ".parse_theme_rheme_response()",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L170",
+      "_origin": "ast",
+      "id": "llm_tools_theme_rheme_extractor_themerhemeextractor_parse_theme_rheme_response",
+      "community": 2,
+      "norm_label": ".parse_theme_rheme_response()"
     },
     {
       "label": "markdown_loader.rb",
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "compiler_markdown_loader",
-      "community": 7,
+      "community": 12,
       "norm_label": "markdown_loader.rb"
     },
     {
@@ -269,8 +887,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L34",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader",
-      "community": 7,
+      "community": 12,
       "norm_label": "markdownloader"
     },
     {
@@ -278,8 +897,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L80",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_initialize",
-      "community": 7,
+      "community": 12,
       "norm_label": ".initialize()"
     },
     {
@@ -287,8 +907,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L90",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_each_section",
-      "community": 7,
+      "community": 12,
       "norm_label": ".each_section()"
     },
     {
@@ -296,8 +917,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L103",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_sections",
-      "community": 7,
+      "community": 12,
       "norm_label": ".sections()"
     },
     {
@@ -305,8 +927,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L111",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_load",
-      "community": 7,
+      "community": 12,
       "norm_label": ".load()"
     },
     {
@@ -314,8 +937,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L117",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_sections_from_source",
-      "community": 7,
+      "community": 12,
       "norm_label": ".sections_from_source()"
     },
     {
@@ -323,8 +947,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L158",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_extract_preamble",
-      "community": 7,
+      "community": 12,
       "norm_label": ".extract_preamble()"
     },
     {
@@ -332,8 +957,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L173",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_clean_text",
-      "community": 7,
+      "community": 12,
       "norm_label": ".clean_text()"
     },
     {
@@ -341,8 +967,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/markdown_loader.rb",
       "source_location": "L208",
+      "_origin": "ast",
       "id": "compiler_markdown_loader_markdownloader_normalise_paragraph",
-      "community": 7,
+      "community": 12,
       "norm_label": ".normalise_paragraph()"
     },
     {
@@ -350,8 +977,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor",
-      "community": 3,
+      "community": 5,
       "norm_label": "ideational_extractor.rb"
     },
     {
@@ -359,8 +987,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L16",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor",
-      "community": 3,
+      "community": 5,
       "norm_label": "ideationalextractor"
     },
     {
@@ -368,8 +997,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L46",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_initialize",
-      "community": 3,
+      "community": 5,
       "norm_label": ".initialize()"
     },
     {
@@ -377,8 +1007,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L54",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_extract",
-      "community": 3,
+      "community": 5,
       "norm_label": ".extract()"
     },
     {
@@ -386,8 +1017,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L73",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_classify_process",
-      "community": 3,
+      "community": 5,
       "norm_label": ".classify_process()"
     },
     {
@@ -395,8 +1027,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L97",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_mental_verb",
-      "community": 3,
+      "community": 5,
       "norm_label": ".mental_verb?()"
     },
     {
@@ -404,8 +1037,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L103",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_relational_verb",
-      "community": 3,
+      "community": 5,
       "norm_label": ".relational_verb?()"
     },
     {
@@ -413,8 +1047,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L108",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_verbal_verb",
-      "community": 3,
+      "community": 5,
       "norm_label": ".verbal_verb?()"
     },
     {
@@ -422,8 +1057,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L114",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_behavioral_verb",
-      "community": 3,
+      "community": 5,
       "norm_label": ".behavioral_verb?()"
     },
     {
@@ -431,8 +1067,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L119",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_existential",
-      "community": 3,
+      "community": 5,
       "norm_label": ".existential?()"
     },
     {
@@ -440,8 +1077,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L124",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_extract_participants",
-      "community": 3,
+      "community": 5,
       "norm_label": ".extract_participants()"
     },
     {
@@ -449,8 +1087,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L133",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_extract_circumstances",
-      "community": 3,
+      "community": 5,
       "norm_label": ".extract_circumstances()"
     },
     {
@@ -458,8 +1097,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L142",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_build_transitivity_hash",
-      "community": 3,
+      "community": 5,
       "norm_label": ".build_transitivity_hash()"
     },
     {
@@ -467,8 +1107,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
       "source_location": "L156",
+      "_origin": "ast",
       "id": "pass_one_ideational_extractor_ideationalextractor_empty_payload",
-      "community": 3,
+      "community": 5,
       "norm_label": ".empty_payload()"
     },
     {
@@ -476,8 +1117,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine",
-      "community": 6,
+      "community": 7,
       "norm_label": "pass_one_engine.rb"
     },
     {
@@ -485,8 +1127,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L20",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine_passoneengine",
-      "community": 6,
+      "community": 7,
       "norm_label": "passoneengine"
     },
     {
@@ -494,8 +1137,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L21",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine_passoneengine_initialize",
-      "community": 0,
+      "community": 9,
       "norm_label": ".initialize()"
     },
     {
@@ -503,8 +1147,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L33",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine_passoneengine_process",
-      "community": 6,
+      "community": 7,
       "norm_label": ".process()"
     },
     {
@@ -512,8 +1157,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L110",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine_passoneengine_extract_tokens_from_span",
-      "community": 6,
+      "community": 7,
       "norm_label": ".extract_tokens_from_span()"
     },
     {
@@ -521,8 +1167,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
       "source_location": "L149",
+      "_origin": "ast",
       "id": "pass_one_pass_one_engine_passoneengine_find_root_index",
-      "community": 6,
+      "community": 7,
       "norm_label": ".find_root_index()"
     },
     {
@@ -530,8 +1177,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine",
-      "community": 2,
+      "community": 4,
       "norm_label": "pass_two_engine.rb"
     },
     {
@@ -539,8 +1187,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L17",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine",
-      "community": 2,
+      "community": 4,
       "norm_label": "passtwoengine"
     },
     {
@@ -548,8 +1197,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L20",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_initialize",
-      "community": 0,
+      "community": 9,
       "norm_label": ".initialize()"
     },
     {
@@ -557,8 +1207,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L31",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_annotate",
-      "community": 6,
+      "community": 7,
       "norm_label": ".annotate()"
     },
     {
@@ -566,8 +1217,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L91",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_default_circuit_breaker",
-      "community": 2,
+      "community": 4,
       "norm_label": ".default_circuit_breaker()"
     },
     {
@@ -575,8 +1227,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L95",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_annotate_interpersonal",
-      "community": 2,
+      "community": 4,
       "norm_label": ".annotate_interpersonal()"
     },
     {
@@ -584,8 +1237,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L124",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_format_syntactic_context",
-      "community": 2,
+      "community": 4,
       "norm_label": ".format_syntactic_context()"
     },
     {
@@ -593,8 +1247,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L136",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_root_info",
-      "community": 2,
+      "community": 4,
       "norm_label": ".root_info()"
     },
     {
@@ -602,8 +1257,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L143",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_pos_sequence",
-      "community": 2,
+      "community": 4,
       "norm_label": ".pos_sequence()"
     },
     {
@@ -611,8 +1267,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L147",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_dep_sequence",
-      "community": 2,
+      "community": 4,
       "norm_label": ".dep_sequence()"
     },
     {
@@ -620,8 +1277,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L151",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_passtwoengine_default_interpersonal",
-      "community": 2,
+      "community": 4,
       "norm_label": ".default_interpersonal()"
     },
     {
@@ -629,8 +1287,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L166",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflsignature",
-      "community": 2,
+      "community": 4,
       "norm_label": "sflsignature"
     },
     {
@@ -638,8 +1297,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L192",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflannotator",
-      "community": 2,
+      "community": 4,
       "norm_label": "sflannotator"
     },
     {
@@ -647,8 +1307,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L193",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflannotator_initialize",
-      "community": 2,
+      "community": 4,
       "norm_label": ".initialize()"
     },
     {
@@ -656,8 +1317,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L197",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflannotator_call",
-      "community": 2,
+      "community": 4,
       "norm_label": ".call()"
     },
     {
@@ -665,8 +1327,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L228",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflannotator_parse_context",
-      "community": 2,
+      "community": 4,
       "norm_label": ".parse_context()"
     },
     {
@@ -674,8 +1337,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L249",
+      "_origin": "ast",
       "id": "pass_two_pass_two_engine_sflannotator_extract_field",
-      "community": 2,
+      "community": 4,
       "norm_label": ".extract_field()"
     },
     {
@@ -683,8 +1347,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "compiler_pipeline",
-      "community": 4,
+      "community": 7,
       "norm_label": "pipeline.rb"
     },
     {
@@ -692,8 +1357,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L17",
+      "_origin": "ast",
       "id": "compiler_pipeline_pipeline",
-      "community": 6,
+      "community": 7,
       "norm_label": "pipeline"
     },
     {
@@ -701,8 +1367,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L18",
+      "_origin": "ast",
       "id": "compiler_pipeline_pipeline_initialize",
-      "community": 6,
+      "community": 7,
       "norm_label": ".initialize()"
     },
     {
@@ -710,8 +1377,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L38",
+      "_origin": "ast",
       "id": "compiler_pipeline_pipeline_compile",
-      "community": 6,
+      "community": 7,
       "norm_label": ".compile()"
     },
     {
@@ -719,8 +1387,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L121",
+      "_origin": "ast",
       "id": "compiler_pipeline_pipeline_compile_pass_one",
-      "community": 6,
+      "community": 7,
       "norm_label": ".compile_pass_one()"
     },
     {
@@ -728,8 +1397,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/pipeline.rb",
       "source_location": "L134",
+      "_origin": "ast",
       "id": "compiler_pipeline_pipeline_compile_pass_two",
-      "community": 6,
+      "community": 7,
       "norm_label": ".compile_pass_two()"
     },
     {
@@ -737,8 +1407,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever",
-      "community": 5,
+      "community": 10,
       "norm_label": "hybrid_retriever.rb"
     },
     {
@@ -746,8 +1417,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L14",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever",
-      "community": 5,
+      "community": 10,
       "norm_label": "hybridretriever"
     },
     {
@@ -755,8 +1427,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L17",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_initialize",
-      "community": 5,
+      "community": 10,
       "norm_label": ".initialize()"
     },
     {
@@ -764,8 +1437,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L35",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_retrieve",
-      "community": 5,
+      "community": 10,
       "norm_label": ".retrieve()"
     },
     {
@@ -773,8 +1447,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L81",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_semantic_search",
-      "community": 5,
+      "community": 10,
       "norm_label": ".semantic_search()"
     },
     {
@@ -782,8 +1457,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L109",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_keyword_search",
-      "community": 5,
+      "community": 10,
       "norm_label": ".keyword_search()"
     },
     {
@@ -791,8 +1467,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L141",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_reciprocal_rank_fusion",
-      "community": 5,
+      "community": 10,
       "norm_label": ".reciprocal_rank_fusion()"
     },
     {
@@ -800,8 +1477,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L163",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_hybridretriever_apply_filters",
-      "community": 5,
+      "community": 10,
       "norm_label": ".apply_filters()"
     },
     {
@@ -809,8 +1487,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L215",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_embedder",
-      "community": 5,
+      "community": 10,
       "norm_label": "embedder"
     },
     {
@@ -818,8 +1497,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L218",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_embedder_initialize",
-      "community": 5,
+      "community": 10,
       "norm_label": ".initialize()"
     },
     {
@@ -827,8 +1507,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L227",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_embedder_embed",
-      "community": 5,
+      "community": 10,
       "norm_label": ".embed()"
     },
     {
@@ -836,8 +1517,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
       "source_location": "L248",
+      "_origin": "ast",
       "id": "retrieval_hybrid_retriever_embedder_call_ruby_llm",
-      "community": 5,
+      "community": 10,
       "norm_label": ".call_ruby_llm()"
     },
     {
@@ -845,8 +1527,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "storage_clause_repository",
-      "community": 8,
+      "community": 11,
       "norm_label": "clause_repository.rb"
     },
     {
@@ -854,8 +1537,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L11",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository",
-      "community": 8,
+      "community": 11,
       "norm_label": "clauserepository"
     },
     {
@@ -863,8 +1547,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L12",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository_initialize",
-      "community": 8,
+      "community": 11,
       "norm_label": ".initialize()"
     },
     {
@@ -872,8 +1557,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L21",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository_store",
-      "community": 8,
+      "community": 11,
       "norm_label": ".store()"
     },
     {
@@ -881,8 +1567,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L82",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository_find",
-      "community": 8,
+      "community": 11,
       "norm_label": ".find()"
     },
     {
@@ -890,8 +1577,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L107",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository_find_by_interpersonal",
-      "community": 8,
+      "community": 11,
       "norm_label": ".find_by_interpersonal()"
     },
     {
@@ -899,8 +1587,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
       "source_location": "L130",
+      "_origin": "ast",
       "id": "storage_clause_repository_clauserepository_find_by_process_type",
-      "community": 8,
+      "community": 11,
       "norm_label": ".find_by_process_type()"
     },
     {
@@ -908,8 +1597,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "storage_database",
-      "community": 0,
+      "community": 2,
       "norm_label": "database.rb"
     },
     {
@@ -917,8 +1607,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L11",
+      "_origin": "ast",
       "id": "storage_database_connect",
-      "community": 0,
+      "community": 2,
       "norm_label": "connect()"
     },
     {
@@ -926,8 +1617,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L21",
+      "_origin": "ast",
       "id": "storage_database_setup_extensions",
-      "community": 0,
+      "community": 2,
       "norm_label": "setup_extensions()"
     },
     {
@@ -935,8 +1627,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L34",
+      "_origin": "ast",
       "id": "storage_database_migrator",
-      "community": 0,
+      "community": 2,
       "norm_label": "migrator"
     },
     {
@@ -944,8 +1637,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L35",
+      "_origin": "ast",
       "id": "storage_database_migrator_initialize",
-      "community": 0,
+      "community": 2,
       "norm_label": ".initialize()"
     },
     {
@@ -953,8 +1647,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L40",
+      "_origin": "ast",
       "id": "storage_database_migrator_run_all",
-      "community": 0,
+      "community": 2,
       "norm_label": ".run_all()"
     },
     {
@@ -962,8 +1657,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L54",
+      "_origin": "ast",
       "id": "storage_database_migrator_create_clauses_table",
-      "community": 0,
+      "community": 2,
       "norm_label": ".create_clauses_table()"
     },
     {
@@ -971,8 +1667,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L72",
+      "_origin": "ast",
       "id": "storage_database_migrator_create_ideational_table",
-      "community": 0,
+      "community": 2,
       "norm_label": ".create_ideational_table()"
     },
     {
@@ -980,8 +1677,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L87",
+      "_origin": "ast",
       "id": "storage_database_migrator_create_interpersonal_table",
-      "community": 0,
+      "community": 2,
       "norm_label": ".create_interpersonal_table()"
     },
     {
@@ -989,8 +1687,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L105",
+      "_origin": "ast",
       "id": "storage_database_migrator_create_embeddings_table",
-      "community": 0,
+      "community": 2,
       "norm_label": ".create_embeddings_table()"
     },
     {
@@ -998,8 +1697,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/database.rb",
       "source_location": "L118",
+      "_origin": "ast",
       "id": "storage_database_migrator_create_indices",
-      "community": 0,
+      "community": 2,
       "norm_label": ".create_indices()"
     },
     {
@@ -1007,8 +1707,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "storage_embedding_repository",
-      "community": 9,
+      "community": 19,
       "norm_label": "embedding_repository.rb"
     },
     {
@@ -1016,8 +1717,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
       "source_location": "L9",
+      "_origin": "ast",
       "id": "storage_embedding_repository_embeddingrepository",
-      "community": 9,
+      "community": 19,
       "norm_label": "embeddingrepository"
     },
     {
@@ -1025,8 +1727,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
       "source_location": "L10",
+      "_origin": "ast",
       "id": "storage_embedding_repository_embeddingrepository_initialize",
-      "community": 9,
+      "community": 19,
       "norm_label": ".initialize()"
     },
     {
@@ -1034,8 +1737,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
       "source_location": "L20",
+      "_origin": "ast",
       "id": "storage_embedding_repository_embeddingrepository_store",
-      "community": 9,
+      "community": 19,
       "norm_label": ".store()"
     },
     {
@@ -1043,8 +1747,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
       "source_location": "L40",
+      "_origin": "ast",
       "id": "storage_embedding_repository_embeddingrepository_nearest_neighbors",
-      "community": 9,
+      "community": 19,
       "norm_label": ".nearest_neighbors()"
     },
     {
@@ -1052,8 +1757,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "compiler_types",
-      "community": 1,
+      "community": 8,
       "norm_label": "types.rb"
     },
     {
@@ -1061,8 +1767,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L27",
+      "_origin": "ast",
       "id": "compiler_types_participant",
-      "community": 1,
+      "community": 8,
       "norm_label": "participant"
     },
     {
@@ -1070,8 +1777,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L33",
+      "_origin": "ast",
       "id": "compiler_types_syntactictoken",
-      "community": 1,
+      "community": 8,
       "norm_label": "syntactictoken"
     },
     {
@@ -1079,8 +1787,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L45",
+      "_origin": "ast",
       "id": "compiler_types_syntacticclause",
-      "community": 1,
+      "community": 8,
       "norm_label": "syntacticclause"
     },
     {
@@ -1088,8 +1797,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L55",
+      "_origin": "ast",
       "id": "compiler_types_ideationalpayload",
-      "community": 1,
+      "community": 8,
       "norm_label": "ideationalpayload"
     },
     {
@@ -1097,8 +1807,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L64",
+      "_origin": "ast",
       "id": "compiler_types_interpersonalpayload",
-      "community": 1,
+      "community": 8,
       "norm_label": "interpersonalpayload"
     },
     {
@@ -1106,8 +1817,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L74",
+      "_origin": "ast",
       "id": "compiler_types_annotatedclause",
-      "community": 1,
+      "community": 8,
       "norm_label": "annotatedclause"
     },
     {
@@ -1115,8 +1827,9 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L85",
+      "_origin": "ast",
       "id": "compiler_types_dispatchdecision",
-      "community": 1,
+      "community": 8,
       "norm_label": "dispatchdecision"
     },
     {
@@ -1124,17 +1837,49 @@
       "file_type": "code",
       "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L96",
+      "_origin": "ast",
       "id": "compiler_types_taskresult",
-      "community": 1,
+      "community": 8,
       "norm_label": "taskresult"
+    },
+    {
+      "label": "ConversationTurn",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L109",
+      "_origin": "ast",
+      "id": "compiler_types_conversationturn",
+      "community": 8,
+      "norm_label": "conversationturn"
+    },
+    {
+      "label": "SpeakerProfile",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L124",
+      "_origin": "ast",
+      "id": "compiler_types_speakerprofile",
+      "community": 8,
+      "norm_label": "speakerprofile"
+    },
+    {
+      "label": "AnalysisResult",
+      "file_type": "code",
+      "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L136",
+      "_origin": "ast",
+      "id": "compiler_types_analysisresult",
+      "community": 8,
+      "norm_label": "analysisresult"
     },
     {
       "label": "version.rb",
       "file_type": "code",
       "source_file": "lib/sfl/compiler/version.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "compiler_version",
-      "community": 17,
+      "community": 30,
       "norm_label": "version.rb"
     },
     {
@@ -1142,8 +1887,9 @@
       "file_type": "code",
       "source_file": "scripts/parse_metacognitive_coprocessor.rb",
       "source_location": "L1",
+      "_origin": "ast",
       "id": "scripts_parse_metacognitive_coprocessor",
-      "community": 13,
+      "community": 21,
       "norm_label": "parse_metacognitive_coprocessor.rb"
     },
     {
@@ -1151,8 +1897,9 @@
       "file_type": "code",
       "source_file": "scripts/parse_metacognitive_coprocessor.rb",
       "source_location": "L71",
+      "_origin": "ast",
       "id": "scripts_parse_metacognitive_coprocessor_log",
-      "community": 13,
+      "community": 21,
       "norm_label": "log()"
     },
     {
@@ -1160,399 +1907,980 @@
       "file_type": "code",
       "source_file": "scripts/parse_metacognitive_coprocessor.rb",
       "source_location": "L81",
+      "_origin": "ast",
       "id": "scripts_parse_metacognitive_coprocessor_separator",
-      "community": 13,
+      "community": 21,
       "norm_label": "separator()"
     },
     {
-      "label": "ideational_extractor_spec.rb",
+      "label": "conversation_analysis_template.rb",
       "file_type": "code",
-      "source_file": "spec/sfl/compiler/pass_one/ideational_extractor_spec.rb",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
       "source_location": "L1",
-      "id": "pass_one_ideational_extractor_spec",
-      "community": 18,
-      "norm_label": "ideational_extractor_spec.rb"
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template",
+      "community": 1,
+      "norm_label": "conversation_analysis_template.rb"
     },
     {
-      "label": "hybrid_retriever_spec.rb",
+      "label": "ConversationAnalyzer",
       "file_type": "code",
-      "source_file": "spec/sfl/compiler/retrieval/hybrid_retriever_spec.rb",
-      "source_location": "L1",
-      "id": "retrieval_hybrid_retriever_spec",
-      "community": 19,
-      "norm_label": "hybrid_retriever_spec.rb"
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L66",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer",
+      "community": 1,
+      "norm_label": "conversationanalyzer"
     },
     {
-      "label": "types_spec.rb",
+      "label": ".initialize()",
       "file_type": "code",
-      "source_file": "spec/sfl/compiler/types_spec.rb",
-      "source_location": "L1",
-      "id": "compiler_types_spec",
-      "community": 16,
-      "norm_label": "types_spec.rb"
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_initialize",
+      "community": 1,
+      "norm_label": ".initialize()"
     },
     {
-      "label": "spec_helper.rb",
+      "label": ".load_jsonl()",
       "file_type": "code",
-      "source_file": "spec/spec_helper.rb",
-      "source_location": "L1",
-      "id": "spec_spec_helper",
-      "community": 20,
-      "norm_label": "spec_helper.rb"
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L80",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_load_jsonl",
+      "community": 1,
+      "norm_label": ".load_jsonl()"
     },
     {
-      "label": "Two-Pass SFL Compiler README",
+      "label": ".compile_turn()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L102",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_compile_turn",
+      "community": 1,
+      "norm_label": ".compile_turn()"
+    },
+    {
+      "label": ".analyze_conversation()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L143",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "community": 1,
+      "norm_label": ".analyze_conversation()"
+    },
+    {
+      "label": ".generate_outputs()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L230",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_generate_outputs",
+      "community": 1,
+      "norm_label": ".generate_outputs()"
+    },
+    {
+      "label": ".setup_database()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L272",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_setup_database",
+      "community": 2,
+      "norm_label": ".setup_database()"
+    },
+    {
+      "label": ".parse_timestamp()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L288",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_parse_timestamp",
+      "community": 1,
+      "norm_label": ".parse_timestamp()"
+    },
+    {
+      "label": ".generate_insights()",
+      "file_type": "code",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L294",
+      "_origin": "ast",
+      "id": "templates_conversation_analysis_template_conversationanalyzer_generate_insights",
+      "community": 1,
+      "norm_label": ".generate_insights()"
+    },
+    {
+      "label": "Pass 2 LLM Integration",
       "file_type": "document",
-      "source_file": "README.md",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "readme_two_pass_sfl_compiler",
-      "community": 14,
-      "norm_label": "two-pass sfl compiler readme"
+      "id": "KNOWN_ISSUES_Pass2_LLM_Integration",
+      "community": 3,
+      "norm_label": "pass 2 llm integration"
     },
     {
-      "label": "Framework Knowledge Base",
+      "label": "Circuit breaker",
       "file_type": "document",
-      "source_file": "docs/knowledge-base.md",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_knowledge_base",
-      "community": 14,
-      "norm_label": "framework knowledge base"
+      "id": "KNOWN_ISSUES_Circuit_breaker",
+      "community": 3,
+      "norm_label": "circuit breaker"
     },
     {
-      "label": "PassOneEngine",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/pass_one/pass_one_engine.rb",
-      "source_location": null,
+      "label": "SFLAnnotator class",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": "lib/sfl/compiler/pass_two/pass_two_engine.rb:211-220",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "pass_one_engine",
-      "community": 4,
-      "norm_label": "passoneengine"
+      "id": "KNOWN_ISSUES_SFLAnnotator_class",
+      "community": 6,
+      "norm_label": "sflannotator class"
     },
     {
-      "label": "IdeationalExtractor",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/pass_one/ideational_extractor.rb",
+      "label": "DSPy::ChainOfThought",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "ideational_extractor",
-      "community": 4,
-      "norm_label": "ideationalextractor"
+      "id": "KNOWN_ISSUES_DSPy_ChainOfThought",
+      "community": 6,
+      "norm_label": "dspy::chainofthought"
     },
     {
-      "label": "PassTwoEngine",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
+      "label": "OpenRouter",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "pass_two_engine",
-      "community": 4,
-      "norm_label": "passtwoengine"
+      "id": "KNOWN_ISSUES_OpenRouter",
+      "community": 6,
+      "norm_label": "openrouter"
     },
     {
-      "label": "Database",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/storage/database.rb",
+      "label": "spaCy en_core_web_sm",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "compiler_database",
-      "community": 1,
-      "norm_label": "database"
+      "id": "KNOWN_ISSUES_spaCy_en_core_web_sm",
+      "community": 3,
+      "norm_label": "spacy en_core_web_sm"
     },
     {
-      "label": "ClauseRepository",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/storage/clause_repository.rb",
+      "label": "dspy gem",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "clause_repository",
-      "community": 1,
-      "norm_label": "clauserepository"
+      "id": "KNOWN_ISSUES_dspy_gem",
+      "community": 6,
+      "norm_label": "dspy gem"
     },
     {
-      "label": "EmbeddingRepository",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
+      "label": "dspy-openai gem",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "embedding_repository",
-      "community": 1,
-      "norm_label": "embeddingrepository"
+      "id": "KNOWN_ISSUES_dspy_openai_gem",
+      "community": 6,
+      "norm_label": "dspy-openai gem"
     },
     {
-      "label": "HybridRetriever",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/retrieval/hybrid_retriever.rb",
+      "label": "ruby-spacy gem",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "hybrid_retriever",
-      "community": 1,
-      "norm_label": "hybridretriever"
+      "id": "KNOWN_ISSUES_ruby_spacy_gem",
+      "community": 3,
+      "norm_label": "ruby-spacy gem"
     },
     {
-      "label": "MarkdownLoader",
-      "file_type": "code",
-      "source_file": "lib/sfl/compiler/markdown_loader.rb",
+      "label": "pg, pgvector",
+      "file_type": "document",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "markdown_loader",
-      "community": 4,
-      "norm_label": "markdownloader"
+      "id": "KNOWN_ISSUES_pg_pgvector",
+      "community": 27,
+      "norm_label": "pg, pgvector"
     },
     {
-      "label": "Two-Pass Architecture",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "SFL Analysis of Notebook Collection",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_two_pass_architecture",
-      "community": 4,
-      "norm_label": "two-pass architecture"
+      "id": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "community": 3,
+      "norm_label": "sfl analysis of notebook collection"
     },
     {
-      "label": "Payload Separation",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "Reflective/Journal entries",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_payload_separation",
-      "community": 1,
-      "norm_label": "payload separation"
+      "id": "NOTEBOOK_ANALYSIS_Reflective_Journal_entries",
+      "community": 23,
+      "norm_label": "reflective/journal entries"
     },
     {
-      "label": "Scalar Filtering",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "Technical documentation",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_scalar_filtering",
-      "community": 1,
-      "norm_label": "scalar filtering"
+      "id": "NOTEBOOK_ANALYSIS_Technical_documentation",
+      "community": 23,
+      "norm_label": "technical documentation"
     },
     {
-      "label": "Circuit Breaker Pattern",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "AI/LLM explorations",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_circuit_breaker",
-      "community": 4,
-      "norm_label": "circuit breaker pattern"
+      "id": "NOTEBOOK_ANALYSIS_AI_LLM_explorations",
+      "community": 22,
+      "norm_label": "ai/llm explorations"
     },
     {
-      "label": "Hybrid Retrieval with RRF",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "Process documentation",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_hybrid_retrieval",
-      "community": 1,
-      "norm_label": "hybrid retrieval with rrf"
+      "id": "NOTEBOOK_ANALYSIS_Process_documentation",
+      "community": 22,
+      "norm_label": "process documentation"
     },
     {
-      "label": "Lemma-Based Classification",
-      "file_type": "rationale",
-      "source_file": "docs/knowledge-base.md",
+      "label": "InsightGenerator class",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_lemma_classification",
-      "community": 4,
-      "norm_label": "lemma-based classification"
+      "id": "NOTEBOOK_ANALYSIS_InsightGenerator_class",
+      "community": 3,
+      "norm_label": "insightgenerator class"
     },
     {
-      "label": "ruby-spacy via PyCall",
-      "file_type": "concept",
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "label": "markdown_to_jsonl converter",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": "scripts/markdown_to_jsonl.rb",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_ruby_spacy_pycall",
-      "community": 4,
-      "norm_label": "ruby-spacy via pycall"
+      "id": "NOTEBOOK_ANALYSIS_markdown_to_jsonl_converter",
+      "community": 6,
+      "norm_label": "markdown_to_jsonl converter"
     },
     {
-      "label": "DSPy ChainOfThought",
-      "file_type": "concept",
-      "source_file": "docs/knowledge-base.md",
+      "label": "batch_analyze_collection script",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_dspy_chain_of_thought",
-      "community": 4,
-      "norm_label": "dspy chainofthought"
+      "id": "NOTEBOOK_ANALYSIS_batch_analyze_collection_script",
+      "community": 3,
+      "norm_label": "batch_analyze_collection script"
     },
     {
-      "label": "SFL Metafunctions",
-      "file_type": "concept",
-      "source_file": "docs/knowledge-base.md",
+      "label": "temporal_analysis script",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_sfl_metafunctions",
-      "community": 4,
-      "norm_label": "sfl metafunctions"
+      "id": "NOTEBOOK_ANALYSIS_temporal_analysis_script",
+      "community": 3,
+      "norm_label": "temporal_analysis script"
     },
     {
-      "label": "SFLSignature (typed DSPy signature)",
-      "file_type": "concept",
-      "source_file": "docs/knowledge-base.md",
+      "label": "topic_clustering script",
+      "file_type": "document",
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_sfl_signature",
-      "community": 4,
-      "norm_label": "sflsignature (typed dspy signature)"
+      "id": "NOTEBOOK_ANALYSIS_topic_clustering_script",
+      "community": 0,
+      "norm_label": "topic_clustering script"
     },
     {
-      "label": "pgvector",
-      "file_type": "concept",
-      "source_file": "docs/knowledge-base.md",
+      "label": "OpenRouter (Recommended)",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "concept_pgvector",
-      "community": 1,
-      "norm_label": "pgvector"
+      "id": "QUICKSTART_OpenRouter_Recommended",
+      "community": 6,
+      "norm_label": "openrouter (recommended)"
+    },
+    {
+      "label": "Google Gemini (Native)",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "QUICKSTART_Google_Gemini_Native",
+      "community": 6,
+      "norm_label": "google gemini (native)"
+    },
+    {
+      "label": "Local Models (Ollama)",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "QUICKSTART_Local_Models_Ollama",
+      "community": 6,
+      "norm_label": "local models (ollama)"
+    },
+    {
+      "label": "DSPY_PROVIDER",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "QUICKSTART_DSPY_PROVIDER",
+      "community": 6,
+      "norm_label": "dspy_provider"
+    },
+    {
+      "label": "conversation.jsonl",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "QUICKSTART_conversation_jsonl",
+      "community": 6,
+      "norm_label": "conversation.jsonl"
+    },
+    {
+      "label": "sfl_output",
+      "file_type": "document",
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "QUICKSTART_sfl_output",
+      "community": 6,
+      "norm_label": "sfl_output"
+    },
+    {
+      "label": "SFL + FCA + ID3 Integration",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_SFL_FCA_ID3_Integration",
+      "community": 0,
+      "norm_label": "sfl + fca + id3 integration"
+    },
+    {
+      "label": "SFL as LLM Compiler",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_SFL_as_LLM_Compiler",
+      "community": 0,
+      "norm_label": "sfl as llm compiler"
+    },
+    {
+      "label": "Register Analysis (Field, Tenor, Mode)",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_Register_Analysis",
+      "community": 3,
+      "norm_label": "register analysis (field, tenor, mode)"
+    },
+    {
+      "label": "TextualExtractor class",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_TextualExtractor_class",
+      "community": 0,
+      "norm_label": "textualextractor class"
+    },
+    {
+      "label": "CohesionAnalyzer class",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_CohesionAnalyzer_class",
+      "community": 0,
+      "norm_label": "cohesionanalyzer class"
+    },
+    {
+      "label": "FCAAdapter class",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_FCAAdapter_class",
+      "community": 0,
+      "norm_label": "fcaadapter class"
+    },
+    {
+      "label": "SpeakerClassifier class",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_SpeakerClassifier_class",
+      "community": 0,
+      "norm_label": "speakerclassifier class"
+    },
+    {
+      "label": "InsightGenerator class",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_InsightGenerator_class",
+      "community": 3,
+      "norm_label": "insightgenerator class"
+    },
+    {
+      "label": "rubyfca gem",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_rubyfca_gem",
+      "community": 0,
+      "norm_label": "rubyfca gem"
+    },
+    {
+      "label": "decisiontree gem",
+      "file_type": "document",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "RESEARCH_decisiontree_gem",
+      "community": 0,
+      "norm_label": "decisiontree gem"
+    },
+    {
+      "label": "Pass 1: spaCy syntactic parsing",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_Pass1_spaCy_syntactic_parsing",
+      "community": 3,
+      "norm_label": "pass 1: spacy syntactic parsing"
+    },
+    {
+      "label": "Pass 2: DSPy LLM interpersonal annotation",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation",
+      "community": 3,
+      "norm_label": "pass 2: dspy llm interpersonal annotation"
+    },
+    {
+      "label": "Experimental Validation Suite",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_Experimental_Validation_Suite",
+      "community": 0,
+      "norm_label": "experimental validation suite"
+    },
+    {
+      "label": "Cohesion Metrics",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_Cohesion_Metrics",
+      "community": 0,
+      "norm_label": "cohesion metrics"
+    },
+    {
+      "label": "Enhanced Formatters",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_Enhanced_Formatters",
+      "community": 3,
+      "norm_label": "enhanced formatters"
+    },
+    {
+      "label": "FCA Integration",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_FCA_Integration",
+      "community": 0,
+      "norm_label": "fca integration"
+    },
+    {
+      "label": "ID3 Classification",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_ID3_Classification",
+      "community": 0,
+      "norm_label": "id3 classification"
+    },
+    {
+      "label": "DSPy Theme/Rheme",
+      "file_type": "document",
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "SESSION_DSPy_Theme_Rheme",
+      "community": 0,
+      "norm_label": "dspy theme/rheme"
+    },
+    {
+      "label": "Tenor (Formality)",
+      "file_type": "document",
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "USAGE_Tenor_Formality",
+      "community": 3,
+      "norm_label": "tenor (formality)"
+    },
+    {
+      "label": "Modality (Certainty)",
+      "file_type": "document",
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "USAGE_Modality_Certainty",
+      "community": 3,
+      "norm_label": "modality (certainty)"
+    },
+    {
+      "label": "Process Types",
+      "file_type": "document",
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "USAGE_Process_Types",
+      "community": 3,
+      "norm_label": "process types"
+    },
+    {
+      "label": "Circuit Breaker Defaults",
+      "file_type": "document",
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "USAGE_Circuit_Breaker_Defaults",
+      "community": 3,
+      "norm_label": "circuit breaker defaults"
+    },
+    {
+      "label": "JSONL format",
+      "file_type": "document",
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "USAGE_JSONL_format",
+      "community": 6,
+      "norm_label": "jsonl format"
+    },
+    {
+      "label": "FCA Pattern Discovery",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_FCA_Pattern_Discovery",
+      "community": 0,
+      "norm_label": "fca pattern discovery"
+    },
+    {
+      "label": "ID3 Feature Importance",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_ID3_Feature_Importance",
+      "community": 0,
+      "norm_label": "id3 feature importance"
+    },
+    {
+      "label": "Theme/Rheme Extraction (spaCy)",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_Theme_Rheme_Extraction_spaCy",
+      "community": 0,
+      "norm_label": "theme/rheme extraction (spacy)"
+    },
+    {
+      "label": "Cohesion Correlation",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_Cohesion_Correlation",
+      "community": 0,
+      "norm_label": "cohesion correlation"
+    },
+    {
+      "label": "DSPy Theme/Rheme Extraction",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_DSPy_Theme_Rheme_Extraction",
+      "community": 0,
+      "norm_label": "dspy theme/rheme extraction"
+    },
+    {
+      "label": "Concept Lattice",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_Concept_Lattice",
+      "community": 0,
+      "norm_label": "concept lattice"
+    },
+    {
+      "label": "Attribute Implications",
+      "file_type": "document",
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "EXPERIMENTS_Attribute_Implications",
+      "community": 0,
+      "norm_label": "attribute implications"
     }
   ],
   "links": [
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L2",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L84",
       "weight": 1.0,
-      "source": "claude_settings_local",
-      "target": "claude_settings_local_enabledmcpjsonservers",
+      "source": "experiments_01_fca_proof_of_concept",
+      "target": "experiments_01_fca_proof_of_concept_extract_attributes",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L5",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L10",
       "weight": 1.0,
-      "source": "claude_settings_local",
-      "target": "claude_settings_local_permissions",
+      "source": "experiments_01_fca_proof_of_concept",
+      "target": "experiments_01_fca_proof_of_concept_simplefca",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "experiments_01_fca_proof_of_concept_simplefca",
+      "target": "experiments_01_fca_proof_of_concept_simplefca_find_concepts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "experiments_01_fca_proof_of_concept_simplefca",
+      "target": "experiments_01_fca_proof_of_concept_simplefca_find_implications",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "experiments/01_fca_proof_of_concept.rb",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "experiments_01_fca_proof_of_concept_simplefca",
+      "target": "experiments_01_fca_proof_of_concept_simplefca_initialize",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".claude/settings.local.json",
-      "source_location": "L6",
+      "source_file": "experiments/02_id3_feature_importance.rb",
+      "source_location": "L19",
       "weight": 1.0,
-      "source": "claude_settings_local_permissions",
-      "target": "claude_settings_local_permissions_allow",
+      "source": "experiments_02_id3_feature_importance",
+      "target": "experiments_02_id3_feature_importance_extract_features",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".opencode/opencode.json",
-      "source_location": "L3",
+      "source_file": "experiments/03_theme_rheme_extractor.rb",
+      "source_location": "L59",
       "weight": 1.0,
-      "source": "opencode_opencode",
-      "target": "opencode_opencode_plugin",
+      "source": "experiments_03_theme_rheme_extractor",
+      "target": "experiments_03_theme_rheme_extractor_extract_theme",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".opencode/opencode.json",
-      "source_location": "L2",
+      "source_file": "experiments/04_cohesion_correlation.rb",
+      "source_location": "L42",
       "weight": 1.0,
-      "source": "opencode_opencode",
-      "target": "opencode_opencode_schema",
+      "source": "experiments_04_cohesion_correlation",
+      "target": "experiments_04_cohesion_correlation_calculate_cohesion",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".opencode/package.json",
-      "source_location": "L2",
+      "source_file": "experiments/04_cohesion_correlation.rb",
+      "source_location": "L112",
       "weight": 1.0,
-      "source": "opencode_package",
-      "target": "opencode_package_dependencies",
+      "source": "experiments_04_cohesion_correlation",
+      "target": "experiments_04_cohesion_correlation_correlation",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".opencode/package.json",
-      "source_location": "L3",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L74",
       "weight": 1.0,
-      "source": "opencode_package_dependencies",
-      "target": "opencode_package_dependencies_opencode_ai_plugin",
+      "source": "experiments_05_llm_theme_extractor",
+      "target": "experiments_05_llm_theme_extractor_build_spacy_analysis",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": ".opencode/plugins/graphify.js",
-      "source_location": "L6",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L56",
       "weight": 1.0,
-      "source": "plugins_graphify",
-      "target": "plugins_graphify_graphifyplugin",
+      "source": "experiments_05_llm_theme_extractor",
+      "target": "experiments_05_llm_theme_extractor_detect_mood",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "experiments_05_llm_theme_extractor",
+      "target": "experiments_05_llm_theme_extractor_extract_with_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "experiments/05_llm_theme_extractor.rb",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "experiments_05_llm_theme_extractor_build_spacy_analysis",
+      "target": "storage_clause_repository_clauserepository_find"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "experiments/06_dspy_theme_extractor.rb",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "experiments_06_dspy_theme_extractor",
+      "target": "experiments_06_dspy_theme_extractor_themerhemesignature",
       "confidence_score": 1.0
     },
     {
@@ -1640,6 +2968,28 @@
       "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor_call_llm",
+      "target": "sfl_compiler_logger"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor_parse_theme_rheme_response",
+      "target": "sfl_compiler_logger"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "lib/sfl/compiler/pass_two/pass_two_engine.rb",
       "source_location": "L212",
       "weight": 1.0,
@@ -1709,6 +3059,613 @@
       "source": "sfl_compiler_configuration",
       "target": "sfl_compiler_configuration_validate",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "analysis_correlation_analyzer",
+      "target": "analysis_correlation_analyzer_correlationanalyzer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "analysis_correlation_analyzer_correlationanalyzer",
+      "target": "analysis_correlation_analyzer_correlationanalyzer_correlate_process_tenor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "analysis_correlation_analyzer_correlationanalyzer",
+      "target": "analysis_correlation_analyzer_correlationanalyzer_initialize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "analysis_correlation_analyzer_correlationanalyzer",
+      "target": "analysis_correlation_analyzer_correlationanalyzer_mean",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/correlation_analyzer.rb",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "analysis_correlation_analyzer_correlationanalyzer_correlate_process_tenor",
+      "target": "analysis_correlation_analyzer_correlationanalyzer_mean",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L185",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "analysis_correlation_analyzer_correlationanalyzer_correlate_process_tenor"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler",
+      "target": "analysis_speaker_profiler_speakerprofiler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_aggregate_process_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_build_profile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_build_profiles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_calculate_mood_distribution",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_initialize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_mean",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler",
+      "target": "analysis_speaker_profiler_speakerprofiler_variance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler_build_profile",
+      "target": "analysis_speaker_profiler_speakerprofiler_mean",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler_build_profile",
+      "target": "analysis_speaker_profiler_speakerprofiler_variance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler_build_profiles",
+      "target": "analysis_speaker_profiler_speakerprofiler_build_profile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L182",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "analysis_speaker_profiler_speakerprofiler_build_profiles"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/speaker_profiler.rb",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "analysis_speaker_profiler_speakerprofiler_variance",
+      "target": "analysis_speaker_profiler_speakerprofiler_mean",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "analysis_tenor_tracker",
+      "target": "analysis_tenor_tracker_tenortracker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "analysis_tenor_tracker_tenortracker",
+      "target": "analysis_tenor_tracker_tenortracker_calculate_shifts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "analysis_tenor_tracker_tenortracker",
+      "target": "analysis_tenor_tracker_tenortracker_detect_significant_shifts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/analysis/tenor_tracker.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "analysis_tenor_tracker_tenortracker",
+      "target": "analysis_tenor_tracker_tenortracker_initialize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L180",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "analysis_tenor_tracker_tenortracker_calculate_shifts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "formatters_base_formatter",
+      "target": "formatters_base_formatter_baseformatter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "formatters_base_formatter_baseformatter",
+      "target": "formatters_base_formatter_baseformatter_initialize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "formatters_base_formatter_baseformatter",
+      "target": "formatters_base_formatter_baseformatter_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/base_formatter.rb",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "formatters_base_formatter_baseformatter",
+      "target": "formatters_base_formatter_baseformatter_write_to",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter",
+      "target": "formatters_csv_formatter_csvformatter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter",
+      "target": "formatters_csv_formatter_csvformatter_format_process_counts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter",
+      "target": "formatters_csv_formatter_csvformatter_headers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter",
+      "target": "formatters_csv_formatter_csvformatter_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter",
+      "target": "formatters_csv_formatter_csvformatter_truncate_message",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter",
+      "target": "formatters_csv_formatter_csvformatter_turn_to_row",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter_render",
+      "target": "formatters_csv_formatter_csvformatter_turn_to_row",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter_turn_to_row",
+      "target": "formatters_csv_formatter_csvformatter_format_process_counts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/csv_formatter.rb",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "formatters_csv_formatter_csvformatter_turn_to_row",
+      "target": "formatters_csv_formatter_csvformatter_truncate_message",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "formatters_json_formatter",
+      "target": "formatters_json_formatter_jsonformatter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "formatters_json_formatter_jsonformatter",
+      "target": "formatters_json_formatter_jsonformatter_build_hash",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "formatters_json_formatter_jsonformatter",
+      "target": "formatters_json_formatter_jsonformatter_format_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "formatters_json_formatter_jsonformatter",
+      "target": "formatters_json_formatter_jsonformatter_format_speaker_profiles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/json_formatter.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "formatters_json_formatter_jsonformatter",
+      "target": "formatters_json_formatter_jsonformatter_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter",
+      "target": "formatters_markdown_formatter_markdownformatter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter",
+      "target": "formatters_markdown_formatter_markdownformatter_correlations_table",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter",
+      "target": "formatters_markdown_formatter_markdownformatter_insights_list",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter",
+      "target": "formatters_markdown_formatter_markdownformatter_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter",
+      "target": "formatters_markdown_formatter_markdownformatter_speaker_profiles_table",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter",
+      "target": "formatters_markdown_formatter_markdownformatter_tenor_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/formatters/markdown_formatter.rb",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "formatters_markdown_formatter_markdownformatter_speaker_profiles_table",
+      "target": "formatters_markdown_formatter_markdownformatter_tenor_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_build_sfl_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L139",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_call_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_parse_theme_rheme_response",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_build_sfl_prompt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_call_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/llm_tools/theme_rheme_extractor.rb",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_parse_theme_rheme_response",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "lib/sfl/compiler/storage/database.rb",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "storage_database_migrator_create_indices",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "lib/sfl/compiler/storage/database.rb",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "storage_database_setup_extensions",
+      "target": "llm_tools_theme_rheme_extractor_themerhemeextractor_execute"
     },
     {
       "relation": "contains",
@@ -2514,36 +4471,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_pipeline",
-      "target": "markdown_loader"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_pipeline",
-      "target": "pass_one_engine"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_pipeline",
-      "target": "pass_two_engine"
-    },
-    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "lib/sfl/compiler/pipeline.rb",
@@ -2593,6 +4520,17 @@
       "weight": 1.0,
       "source": "compiler_pipeline_pipeline_compile",
       "target": "retrieval_hybrid_retriever_embedder_embed"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_compile_turn",
+      "target": "compiler_pipeline_pipeline_compile"
     },
     {
       "relation": "contains",
@@ -2861,6 +4799,28 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L273",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_setup_database",
+      "target": "storage_database_connect"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L274",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_setup_database",
+      "target": "storage_database_setup_extensions"
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "lib/sfl/compiler/storage/database.rb",
@@ -2931,6 +4891,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L278",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer_setup_database",
+      "target": "storage_database_migrator_run_all"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/sfl/compiler/storage/embedding_repository.rb",
@@ -2971,14 +4942,14 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L136",
       "weight": 1.0,
       "source": "compiler_types",
-      "target": "clause_repository"
+      "target": "compiler_types_analysisresult",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -2988,6 +4959,16 @@
       "weight": 1.0,
       "source": "compiler_types",
       "target": "compiler_types_annotatedclause",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "compiler_types",
+      "target": "compiler_types_conversationturn",
       "confidence_score": 1.0
     },
     {
@@ -3034,6 +5015,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/sfl/compiler/types.rb",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "compiler_types",
+      "target": "compiler_types_speakerprofile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sfl/compiler/types.rb",
       "source_location": "L45",
       "weight": 1.0,
       "source": "compiler_types",
@@ -3061,56 +5052,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_types",
-      "target": "embedding_repository"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_types",
-      "target": "hybrid_retriever"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_types",
-      "target": "ideational_extractor"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_types",
-      "target": "pass_one_engine"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_types",
-      "target": "pass_two_engine"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/parse_metacognitive_coprocessor.rb",
@@ -3131,288 +5072,837 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "references",
+      "relation": "contains",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "README.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L66",
       "weight": 1.0,
-      "source": "readme_two_pass_sfl_compiler",
-      "target": "docs_knowledge_base"
+      "source": "templates_conversation_analysis_template",
+      "target": "templates_conversation_analysis_template_conversationanalyzer",
+      "confidence_score": 1.0
     },
     {
-      "relation": "rationale_for",
+      "relation": "method",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L143",
       "weight": 1.0,
-      "source": "concept_two_pass_architecture",
-      "target": "pass_one_engine"
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "confidence_score": 1.0
     },
     {
-      "relation": "references",
+      "relation": "method",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L102",
       "weight": 1.0,
-      "source": "pass_one_engine",
-      "target": "concept_ruby_spacy_pycall"
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_compile_turn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L294",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_generate_insights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_generate_outputs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_initialize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_load_jsonl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L288",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_parse_timestamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L272",
+      "weight": 1.0,
+      "source": "templates_conversation_analysis_template_conversationanalyzer",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_setup_database",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L144",
       "weight": 1.0,
-      "source": "pass_one_engine",
-      "target": "ideational_extractor"
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_load_jsonl",
+      "confidence_score": 1.0
     },
     {
-      "relation": "shares_data_with",
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L167",
       "weight": 1.0,
-      "source": "pass_one_engine",
-      "target": "pass_two_engine"
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_compile_turn",
+      "confidence_score": 1.0
     },
     {
-      "relation": "references",
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L105",
       "weight": 1.0,
-      "source": "ideational_extractor",
-      "target": "concept_lemma_classification"
+      "source": "templates_conversation_analysis_template_conversationanalyzer_compile_turn",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_parse_timestamp",
+      "confidence_score": 1.0
     },
     {
-      "relation": "references",
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
+      "source_file": "scripts/sfl_analysis/templates/conversation_analysis_template.rb",
+      "source_location": "L208",
       "weight": 1.0,
-      "source": "ideational_extractor",
-      "target": "concept_sfl_metafunctions"
+      "source": "templates_conversation_analysis_template_conversationanalyzer_analyze_conversation",
+      "target": "templates_conversation_analysis_template_conversationanalyzer_generate_insights",
+      "confidence_score": 1.0
     },
     {
-      "relation": "semantically_similar_to",
+      "relation": "affected_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "KNOWN_ISSUES_Pass2_LLM_Integration",
+      "target": "KNOWN_ISSUES_Circuit_breaker"
+    },
+    {
+      "relation": "describes_issue_in",
       "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "docs/knowledge-base.md",
+      "confidence_score": 0.9,
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "ideational_extractor",
-      "target": "pass_two_engine"
+      "source": "KNOWN_ISSUES_Pass2_LLM_Integration",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
+    },
+    {
+      "relation": "describes",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "USAGE_Circuit_Breaker_Defaults",
+      "target": "KNOWN_ISSUES_Circuit_breaker"
+    },
+    {
+      "relation": "catches_exceptions_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": "lib/sfl/compiler/pass_two/pass_two_engine.rb:211-220",
+      "weight": 1.0,
+      "source": "KNOWN_ISSUES_SFLAnnotator_class",
+      "target": "KNOWN_ISSUES_DSPy_ChainOfThought"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "EXPERIMENTS_DSPy_Theme_Rheme_Extraction",
+      "target": "KNOWN_ISSUES_DSPy_ChainOfThought"
+    },
+    {
+      "relation": "provides_API_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "KNOWN_ISSUES_OpenRouter",
+      "target": "KNOWN_ISSUES_DSPy_ChainOfThought"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "KNOWN_ISSUES_dspy_gem",
+      "target": "KNOWN_ISSUES_DSPy_ChainOfThought"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation",
+      "target": "KNOWN_ISSUES_DSPy_ChainOfThought"
+    },
+    {
+      "relation": "adapter_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "KNOWN_ISSUES.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "KNOWN_ISSUES_dspy_openai_gem",
+      "target": "KNOWN_ISSUES_OpenRouter"
     },
     {
       "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "QUICKSTART.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "pass_two_engine",
-      "target": "concept_circuit_breaker"
+      "source": "QUICKSTART_OpenRouter_Recommended",
+      "target": "KNOWN_ISSUES_OpenRouter"
     },
     {
-      "relation": "rationale_for",
+      "relation": "wraps",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "source_file": "KNOWN_ISSUES.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "concept_two_pass_architecture",
-      "target": "pass_two_engine"
+      "source": "KNOWN_ISSUES_ruby_spacy_gem",
+      "target": "KNOWN_ISSUES_spaCy_en_core_web_sm"
     },
     {
-      "relation": "shares_data_with",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Pass1_spaCy_syntactic_parsing",
+      "target": "KNOWN_ISSUES_spaCy_en_core_web_sm"
+    },
+    {
+      "relation": "generates_insights_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "NOTEBOOK_ANALYSIS_InsightGenerator_class"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "NOTEBOOK_ANALYSIS_batch_analyze_collection_script"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "NOTEBOOK_ANALYSIS_markdown_to_jsonl_converter"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "NOTEBOOK_ANALYSIS_temporal_analysis_script"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "NOTEBOOK_ANALYSIS_topic_clustering_script"
+    },
+    {
+      "relation": "relies_on",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "SESSION_Pass1_spaCy_syntactic_parsing"
+    },
+    {
+      "relation": "relies_on",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_SFL_Analysis_of_Notebook_Collection",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
+    },
+    {
+      "relation": "contrasts_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_Reflective_Journal_entries",
+      "target": "NOTEBOOK_ANALYSIS_Technical_documentation"
+    },
+    {
+      "relation": "related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "NOTEBOOK_ANALYSIS_AI_LLM_explorations",
+      "target": "NOTEBOOK_ANALYSIS_Process_documentation"
+    },
+    {
+      "relation": "same_concept_as",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
-      "source_file": "docs/knowledge-base.md",
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "pass_two_engine",
-      "target": "clause_repository"
+      "source": "RESEARCH_InsightGenerator_class",
+      "target": "NOTEBOOK_ANALYSIS_InsightGenerator_class"
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "pass_two_engine",
-      "target": "concept_dspy_chain_of_thought"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "pass_two_engine",
-      "target": "concept_sfl_signature"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_database",
-      "target": "clause_repository"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_database",
-      "target": "concept_pgvector"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "compiler_database",
-      "target": "embedding_repository"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "clause_repository",
-      "target": "concept_scalar_filtering"
-    },
-    {
-      "relation": "semantically_similar_to",
+      "relation": "includes",
       "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "docs/knowledge-base.md",
+      "confidence_score": 0.8,
+      "source_file": "SESSION_SUMMARY.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "clause_repository",
-      "target": "embedding_repository"
+      "source": "SESSION_Enhanced_Formatters",
+      "target": "NOTEBOOK_ANALYSIS_InsightGenerator_class"
     },
     {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "relation": "converts_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "concept_payload_separation",
-      "target": "clause_repository"
+      "source": "NOTEBOOK_ANALYSIS_markdown_to_jsonl_converter",
+      "target": "USAGE_JSONL_format"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "hybrid_retriever",
-      "target": "clause_repository"
+      "source": "NOTEBOOK_ANALYSIS_batch_analyze_collection_script",
+      "target": "SESSION_Pass1_spaCy_syntactic_parsing"
     },
     {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "concept_payload_separation",
-      "target": "embedding_repository"
+      "source": "NOTEBOOK_ANALYSIS_batch_analyze_collection_script",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "relation": "analyzes",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "hybrid_retriever",
-      "target": "embedding_repository"
+      "source": "NOTEBOOK_ANALYSIS_temporal_analysis_script",
+      "target": "USAGE_Tenor_Formality"
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "relation": "related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "NOTEBOOK_ANALYSIS_PLAN.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "hybrid_retriever",
-      "target": "concept_hybrid_retrieval"
+      "source": "NOTEBOOK_ANALYSIS_topic_clustering_script",
+      "target": "EXPERIMENTS_FCA_Pattern_Discovery"
     },
     {
-      "relation": "rationale_for",
+      "relation": "configures",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md",
+      "source_file": "QUICKSTART.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "concept_scalar_filtering",
-      "target": "hybrid_retriever"
+      "source": "QUICKSTART_OpenRouter_Recommended",
+      "target": "QUICKSTART_DSPY_PROVIDER"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "QUICKSTART_Google_Gemini_Native",
+      "target": "QUICKSTART_DSPY_PROVIDER"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "QUICKSTART_Local_Models_Ollama",
+      "target": "QUICKSTART_DSPY_PROVIDER"
+    },
+    {
+      "relation": "processes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "QUICKSTART_DSPY_PROVIDER",
+      "target": "QUICKSTART_conversation_jsonl"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "QUICKSTART.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "QUICKSTART_conversation_jsonl",
+      "target": "QUICKSTART_sfl_output"
+    },
+    {
+      "relation": "defines_format_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "USAGE_JSONL_format",
+      "target": "QUICKSTART_conversation_jsonl"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_FCA_ID3_Integration",
+      "target": "RESEARCH_FCAAdapter_class"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_FCA_ID3_Integration",
+      "target": "RESEARCH_SpeakerClassifier_class"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_FCA_ID3_Integration",
+      "target": "RESEARCH_decisiontree_gem"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_FCA_ID3_Integration",
+      "target": "RESEARCH_rubyfca_gem"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_as_LLM_Compiler",
+      "target": "RESEARCH_CohesionAnalyzer_class"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SFL_as_LLM_Compiler",
+      "target": "RESEARCH_TextualExtractor_class"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_Register_Analysis",
+      "target": "USAGE_Modality_Certainty"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_Register_Analysis",
+      "target": "USAGE_Process_Types"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_Register_Analysis",
+      "target": "USAGE_Tenor_Formality"
+    },
+    {
+      "relation": "implemented_via",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_TextualExtractor_class",
+      "target": "EXPERIMENTS_DSPy_Theme_Rheme_Extraction"
+    },
+    {
+      "relation": "failed_to_implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_TextualExtractor_class",
+      "target": "EXPERIMENTS_Theme_Rheme_Extraction_spaCy"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_CohesionAnalyzer_class",
+      "target": "EXPERIMENTS_Cohesion_Correlation"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_FCAAdapter_class",
+      "target": "EXPERIMENTS_FCA_Pattern_Discovery"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "RESEARCH_SpeakerClassifier_class",
+      "target": "EXPERIMENTS_ID3_Feature_Importance"
+    },
+    {
+      "relation": "feeds_into",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Pass1_spaCy_syntactic_parsing",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
+    },
+    {
+      "relation": "extracted_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "USAGE_Process_Types",
+      "target": "SESSION_Pass1_spaCy_syntactic_parsing"
+    },
+    {
+      "relation": "annotated_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "USAGE_Modality_Certainty",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
+    },
+    {
+      "relation": "annotated_by",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "USAGE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "USAGE_Tenor_Formality",
+      "target": "SESSION_Pass2_DSPy_LLM_interpersonal_annotation"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Experimental_Validation_Suite",
+      "target": "EXPERIMENTS_Cohesion_Correlation"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Experimental_Validation_Suite",
+      "target": "EXPERIMENTS_DSPy_Theme_Rheme_Extraction"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Experimental_Validation_Suite",
+      "target": "EXPERIMENTS_FCA_Pattern_Discovery"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Experimental_Validation_Suite",
+      "target": "EXPERIMENTS_ID3_Feature_Importance"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Experimental_Validation_Suite",
+      "target": "EXPERIMENTS_Theme_Rheme_Extraction_spaCy"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_Cohesion_Metrics",
+      "target": "EXPERIMENTS_Cohesion_Correlation"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_FCA_Integration",
+      "target": "EXPERIMENTS_FCA_Pattern_Discovery"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_ID3_Classification",
+      "target": "EXPERIMENTS_ID3_Feature_Importance"
+    },
+    {
+      "relation": "validated_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "SESSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "SESSION_DSPy_Theme_Rheme",
+      "target": "EXPERIMENTS_DSPy_Theme_Rheme_Extraction"
+    },
+    {
+      "relation": "correlates_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "EXPERIMENTS_Cohesion_Correlation",
+      "target": "USAGE_Tenor_Formality"
+    },
+    {
+      "relation": "correlates_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "EXPERIMENTS_Cohesion_Correlation",
+      "target": "USAGE_Modality_Certainty"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "EXPERIMENTS_FCA_Pattern_Discovery",
+      "target": "EXPERIMENTS_Attribute_Implications"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "experiments/RESULTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "EXPERIMENTS_FCA_Pattern_Discovery",
+      "target": "EXPERIMENTS_Concept_Lattice"
     }
   ],
   "hyperedges": [
     {
-      "id": "pipeline_two_pass_flow",
-      "label": "Two-Pass Pipeline Flow",
+      "id": "SFL_Analysis_Pipeline",
+      "label": "SFL Analysis Pipeline",
       "nodes": [
-        "markdown_loader",
-        "compiler_pipeline",
-        "pass_one_engine",
-        "ideational_extractor",
-        "pass_two_engine"
+        "SESSION_Pass1_spaCy_syntactic_parsing",
+        "SESSION_Pass2_DSPy_LLM_interpersonal_annotation",
+        "USAGE_Tenor_Formality",
+        "USAGE_Modality_Certainty",
+        "USAGE_Process_Types"
       ],
       "relation": "participate_in",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md"
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "SESSION_SUMMARY.md"
     },
     {
-      "id": "storage_layer",
-      "label": "Storage Layer",
+      "id": "Experimental_Validation_Framework",
+      "label": "Experimental Validation Framework",
       "nodes": [
-        "compiler_database",
-        "clause_repository",
-        "embedding_repository",
-        "compiler_types"
+        "EXPERIMENTS_FCA_Pattern_Discovery",
+        "EXPERIMENTS_ID3_Feature_Importance",
+        "EXPERIMENTS_Cohesion_Correlation",
+        "EXPERIMENTS_DSPy_Theme_Rheme_Extraction",
+        "EXPERIMENTS_Concept_Lattice",
+        "EXPERIMENTS_Attribute_Implications"
       ],
       "relation": "participate_in",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md"
+      "source_file": "experiments/RESULTS.md"
     },
     {
-      "id": "retrieval_subsystem",
-      "label": "Retrieval Subsystem",
+      "id": "Research_Implementation_Components",
+      "label": "Research Implementation Components",
       "nodes": [
-        "hybrid_retriever",
-        "clause_repository",
-        "embedding_repository"
+        "RESEARCH_TextualExtractor_class",
+        "RESEARCH_CohesionAnalyzer_class",
+        "RESEARCH_FCAAdapter_class",
+        "RESEARCH_SpeakerClassifier_class",
+        "RESEARCH_InsightGenerator_class"
       ],
-      "relation": "participate_in",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/knowledge-base.md"
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "RESEARCH_APPLICATION_PLAN.md"
     }
-  ]
+  ],
+  "built_at_commit": "cb7556b1fd60ee2c941503f014df02d1388aaf17"
 }

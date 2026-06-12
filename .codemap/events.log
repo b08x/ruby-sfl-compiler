@@ -38,3 +38,57 @@
 2026-06-11 07:21:22 | CREATE | experiments/05_llm_theme_extractor.rb    |  225 |     +1 | 
 2026-06-11 07:21:53 | CREATE | experiments/05_llm_theme_extractor.rb    |  225 |        | dirty
 2026-06-11 07:25:12 | CREATE | experiments/06_dspy_theme_extractor.rb   |  198 |   +198 | 
+2026-06-12 06:40:10 | CREATE | spec/sfl/compiler/types_spec.rb          |  241 |    +28 | dirty
+2026-06-12 06:40:32 | CREATE | lib/sfl/compiler/types.rb                |  152 |     +5 | dirty
+2026-06-12 06:40:34 | CREATE | lib/sfl/compiler/types.rb                |  153 |     +1 | dirty
+2026-06-12 06:40:54 | CREATE | lib/sfl/compiler/types.rb                |  153 |        | dirty
+2026-06-12 06:40:55 | CREATE | lib/sfl/compiler/types.rb                |  153 |        | dirty
+2026-06-12 06:41:26 | CREATE | spec/sfl/compiler/pass_two_engine_spec.rb |   58 |    +58 | 
+2026-06-12 06:41:42 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  253 |     +1 | dirty
+2026-06-12 06:41:44 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  254 |     +1 | dirty
+2026-06-12 06:42:15 | CREATE | spec/sfl_compiler/formatters/markdown_formatter_spec.rb |  235 |    +70 | dirty
+2026-06-12 06:42:34 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |   97 |        | dirty
+2026-06-12 06:42:39 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |  124 |    +27 | dirty
+2026-06-12 06:43:27 | CREATE | spec/sfl_compiler/formatters/json_formatter_spec.rb |  130 |    +46 | dirty
+2026-06-12 06:43:52 | CREATE | spec/sfl_compiler/formatters/json_formatter_spec.rb |  128 |     -2 | dirty
+2026-06-12 06:44:09 | CREATE | lib/sfl/compiler/formatters/json_formatter.rb |   64 |    +16 | dirty
+2026-06-12 06:44:28 | CREATE | scripts/sfl_analysis/templates/conversation_analysis_template.rb |  355 |     +1 | dirty
+2026-06-12 06:44:32 | CREATE | scripts/sfl_analysis/templates/conversation_analysis_template.rb |  363 |     +8 | dirty
+2026-06-12 06:45:50 | REMOVE | lib/sfl/compiler/formatters/json_formatter.rb |    0 |    -48 | 
+2026-06-12 06:45:50 | CREATE | lib/sfl/compiler/formatters/json_formatter.rb |   64 |    +64 | dirty
+2026-06-12 06:45:50 | WRITE  | lib/sfl/compiler/formatters/json_formatter.rb |   64 |        | dirty
+2026-06-12 06:45:50 | REMOVE | lib/sfl/compiler/formatters/markdown_formatter.rb |    0 |    -97 | 
+2026-06-12 06:45:50 | CREATE | lib/sfl/compiler/formatters/markdown_formatter.rb |  124 |   +124 | dirty
+2026-06-12 06:45:50 | WRITE  | lib/sfl/compiler/formatters/markdown_formatter.rb |  124 |        | dirty
+2026-06-12 06:45:50 | REMOVE | lib/sfl/compiler/pass_two/pass_two_engine.rb |    0 |   -252 | 
+2026-06-12 06:45:50 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  254 |   +254 | dirty
+2026-06-12 06:45:50 | WRITE  | lib/sfl/compiler/pass_two/pass_two_engine.rb |  254 |        | dirty
+2026-06-12 06:45:50 | REMOVE | lib/sfl/compiler/types.rb                |    0 |   -147 | 
+2026-06-12 06:45:50 | CREATE | lib/sfl/compiler/types.rb                |  153 |   +153 | dirty
+2026-06-12 06:45:50 | WRITE  | lib/sfl/compiler/types.rb                |  153 |        | dirty
+2026-06-12 06:45:50 | REMOVE | scripts/sfl_analysis/templates/conversation_analysis_template.rb |    0 |   -354 | 
+2026-06-12 06:45:50 | CREATE | scripts/sfl_analysis/templates/conversation_analysis_template.rb |  363 |   +363 | dirty
+2026-06-12 06:45:50 | WRITE  | scripts/sfl_analysis/templates/conversation_analysis_template.rb |  363 |        | dirty
+2026-06-12 06:45:50 | REMOVE | spec/sfl/compiler/types_spec.rb          |    0 |   -213 | 
+2026-06-12 06:45:50 | CREATE | spec/sfl/compiler/types_spec.rb          |  241 |   +241 | dirty
+2026-06-12 06:45:50 | WRITE  | spec/sfl/compiler/types_spec.rb          |  241 |        | dirty
+2026-06-12 06:45:50 | REMOVE | spec/sfl_compiler/formatters/json_formatter_spec.rb |    0 |    -84 | 
+2026-06-12 06:45:50 | CREATE | spec/sfl_compiler/formatters/json_formatter_spec.rb |  128 |   +128 | dirty
+2026-06-12 06:45:50 | WRITE  | spec/sfl_compiler/formatters/json_formatter_spec.rb |  128 |        | dirty
+2026-06-12 06:45:50 | REMOVE | spec/sfl_compiler/formatters/markdown_formatter_spec.rb |    0 |   -165 | 
+2026-06-12 06:45:50 | CREATE | spec/sfl_compiler/formatters/markdown_formatter_spec.rb |  235 |   +235 | dirty
+2026-06-12 06:45:50 | WRITE  | spec/sfl_compiler/formatters/markdown_formatter_spec.rb |  235 |        | dirty
+2026-06-12 07:07:39 | CREATE | spec/sfl/compiler/pass_two_engine_spec.rb |  169 |   +111 | 
+2026-06-12 07:08:54 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  306 |    +52 | dirty
+2026-06-12 07:09:13 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  396 |    +90 | dirty
+2026-06-12 07:09:31 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  459 |    +63 | dirty
+2026-06-12 07:09:54 | CREATE | spec/sfl/compiler/pass_two_engine_spec.rb |  169 |        | 
+2026-06-12 07:11:05 | CREATE | spec/sfl/compiler/pipeline_spec.rb       |  292 |     +3 | dirty
+2026-06-12 07:11:07 | CREATE | spec/sfl/compiler/pipeline_spec.rb       |  293 |     +1 | dirty
+2026-06-12 07:11:10 | CREATE | spec/sfl/compiler/pipeline_spec.rb       |  293 |        | dirty
+2026-06-12 07:11:16 | CREATE | spec/sfl/compiler/pipeline_spec.rb       |  292 |     -1 | dirty
+2026-06-12 07:11:34 | CREATE | lib/sfl/compiler/pipeline.rb             |  134 |     -5 | dirty
+2026-06-12 07:12:02 | CREATE | spec/sfl/compiler/pipeline_spec.rb       |  296 |     +4 | dirty
+2026-06-12 07:15:33 | CREATE | spec/sfl/compiler/pass_two_engine_spec.rb |  185 |    +16 | 
+2026-06-12 07:15:55 | CREATE | lib/sfl/compiler/pass_two/pass_two_engine.rb |  467 |     +8 | dirty
+2026-06-12 07:16:21 | CREATE | spec/sfl/compiler/pass_two_engine_spec.rb |  182 |     -3 | 

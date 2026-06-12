@@ -2,15 +2,51 @@
 
 ## Pass 2 LLM Integration
 
-**Status**: Circuit breaker activating silently
+**Status**: 🔴 **WAS: Circuit breaker activating silently** → ✅ **FIXED: Visual error signal added**
 
-**Symptoms**:
+**Original Symptoms** (pre-fix):
 - All tenor values = 0.5
 - All modality values = 0.5  
 - Mood always "declarative"
 - Analysis completes quickly (~10 seconds instead of expected 1-2 minutes)
+- No visible indication of failure on CLI
 
-**Confirmed Working**:
+**What Was Fixed** (2026-06-11):
+
+**Root Cause**: The `SFLAnnotator#call` method caught ALL `StandardError` exceptions from `DSPy::ChainOfThought` and silently returned default values. The actual LLM errors were only logged to journald (`journalctl`), invisible on CLI.
+
+**Changes** (`lib/sfl/compiler/pass_two/pass_two_engine.rb`):
+1. Removed the `rescue StandardError` from `SFLAnnotator#call` — DSPy errors now propagate up normally
+2. Added a `rescue StandardError => e` in `annotate_interpersonal` (the caller) that:
+   - Logs to `$stderr` with a visible `[WARN]` message
+   - Logs to journald (preserved)
+   - Returns default interpersonal values (graceful degradation preserved)
+3. Added `log_and_warn` helper to eliminate code duplication
+4. Added `require "circuit_breaker"` (missing dependency)
+
+**What Pass 2 Still Does If LLM Fails**:
+- Returns `AnnotatedClause` with Pass 1 data intact (syntactic + ideational)
+- Sets defaults for interpersonal: modality=0.5, tenor=0.5, mood=declarative
+- Writes a visible warning to STDERR: `[WARN] Pass 2 (clause-xxx): DSPy annotation failed: <message>`
+- Logs error details to journald for post-mortem
+
+**To Debug Pass 2 Now**:
+```bash
+# Run analysis — errors visible directly in terminal output
+bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
+
+# Or for detailed journald logs
+journalctl -f | grep sfl_annotator
+
+# Test with a simple LLM call through DSPy
+bundle exec ruby -e '
+require "dspy"
+DSPy.configure { |c| c.lm = DSPy::LM.new("openrouter/mistralai/mistral-7b-instruct", api_key: ENV["OPENROUTER_API_KEY"]) }
+puts DSPy::ChainOfThought.new(DSPy::Signature).call(text: "This works").to_h
+'
+```
+
+**Confirmed Working** (unchanged):
 - ✅ Environment variables loaded from `.env`
 - ✅ DSPy configured with correct provider string
 - ✅ OpenRouter API key present and formatted correctly
@@ -19,40 +55,7 @@
 - ✅ Process types extracted correctly
 - ✅ Speaker profiles built
 - ✅ All formatters generating output
-
-**Likely Causes**:
-1. DSPy signature mismatch - LLM might not be returning expected JSON structure
-2. Circuit breaker swallowing errors silently - no error logging visible
-3. OpenRouter rate limiting or model compatibility issue
-4. DSPy-openai adapter needs different configuration for OpenRouter
-
-**Root Cause Found**:
-The `SFLAnnotator` class (lib/sfl/compiler/pass_two/pass_two_engine.rb:211-220) catches ALL StandardError exceptions from DSPy::ChainOfThought and silently returns defaults. The actual LLM errors are only logged to journald.
-
-**Check Actual Errors**:
-```bash
-# Watch logs while running analysis
-journalctl -f | grep sfl
-
-# Or check recent logs
-journalctl -n 100 | grep sfl_annotator_failed
-```
-
-**Next Steps to Debug**:
-1. ✅ Check journald logs for actual DSPy errors: `journalctl -f | grep sfl`
-2. Test with simpler DSPy signature (fewer output fields)
-3. Try native OpenAI provider with gpt-4o-mini to isolate OpenRouter
-4. Add STDOUT logging in addition to journald for easier debugging
-5. Verify OpenRouter model name format matches DSPy expectations
-
-**Workaround**:
-The framework is fully functional with Pass 1 only. You still get:
-- Process type classification (material, mental, verbal, relational)
-- Participant extraction
-- Speaker turn analysis
-- Process type distribution
-
-Pass 2 (LLM tenor/modality) can be debugged independently without breaking the core pipeline.
+- ✅ Error signal now visible on CLI (no more silent failure)
 
 ## Installation Notes
 

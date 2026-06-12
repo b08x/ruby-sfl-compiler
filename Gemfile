@@ -40,7 +40,25 @@ group :development, :test do
   gem "rake"
   gem "pry"
   gem "pry-byebug"
-  gem "rspec", "~> 3.13"
-  gem "rubocop", "~> 1.75"
-  gem "simplecov", "~> 0.22"
+  gem "rspec"
+  gem "rubocop"
+  gem "rubocop-factory_bot"
+  gem "rubocop-minitest"
+  gem "rubocop-packaging"
+  gem "rubocop-performance"
+  gem "rubocop-rake"
+  gem "rubocop-rspec"
+  gem "rubocop-sequel"
+  gem "rubocop-shopify"
+  gem "rubocop-thread_safety"
 end
+
+
+group :quality do
+  gem "git-lint"
+  gem "simplecov", require: false
+end
+
+
+
+gem "ruby-lsp", "~> 0.26.9"
