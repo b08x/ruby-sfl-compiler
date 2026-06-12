@@ -142,6 +142,24 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       expect(annotated.map { |a| a.interpersonal.tenor }).to eq([0.1, 0.2, 0.3, 0.4, 0.5])
     end
 
+    it "interrupts a hung LLM call after chunk_timeout and falls back" do
+      annotator = lambda do |_items|
+        sleep # a dead connection raises nothing — block forever
+      end
+
+      annotated = nil
+      elapsed = nil
+      expect {
+        start = Time.now
+        annotated = described_class.new(batch_annotator: annotator, chunk_timeout: 0.1)
+          .annotate_batch(pairs, batch_size: 5, concurrency: 1)
+        elapsed = Time.now - start
+      }.to output(/\[WARN\]/).to_stderr
+
+      expect(elapsed).to be < 2 # two attempts × 0.1s, not forever
+      expect(annotated.map { |a| a.interpersonal.annotation_source }.uniq).to eq(["fallback"])
+    end
+
     it "returns an empty array for empty input" do
       engine = described_class.new(batch_annotator: ->(_items) { [] })
       expect(engine.annotate_batch([])).to eq([])

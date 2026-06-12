@@ -2,6 +2,7 @@
 
 require "circuit_breaker"
 require "dspy"
+require "timeout"
 require "dry/monads"
 require "journald/logger"
 
@@ -24,10 +25,18 @@ module SFL
       DEFAULT_BATCH_SIZE = ENV.fetch("SFL_BATCH_SIZE", 12).to_i
       DEFAULT_CONCURRENCY = ENV.fetch("SFL_CONCURRENCY", 4).to_i
 
-      def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil)
+      # Watchdog for a single chunk's LLM call. HTTP-level timeouts don't
+      # cover every hang (observed: response bytes sitting unread in the
+      # socket while the async reactor deadlocks on a mutex), so the worker
+      # thread gets a hard Timeout that the retry/fallback ladder catches.
+      DEFAULT_CHUNK_TIMEOUT = ENV.fetch("SFL_CHUNK_TIMEOUT", 180).to_f
+
+      def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil,
+                     chunk_timeout: DEFAULT_CHUNK_TIMEOUT)
         @provider = provider || SFL::Compiler.config.dspy_provider
         @circuit_breaker = circuit_breaker || default_circuit_breaker
         @batch_annotator = batch_annotator || default_batch_annotator
+        @chunk_timeout = chunk_timeout
         @logger = Journald::Logger.new("sfl-compiler-pass-two")
       end
 
@@ -161,11 +170,11 @@ module SFL
         # One retry for transient provider errors; an open circuit means the
         # provider is known-bad, so don't hammer it again.
         results = begin
-          @circuit_breaker.call { @batch_annotator.call(items) }
+          @circuit_breaker.call { call_annotator_with_watchdog(items) }
         rescue CircuitBreaker::CircuitBrokenException
           raise
         rescue StandardError
-          @circuit_breaker.call { @batch_annotator.call(items) }
+          @circuit_breaker.call { call_annotator_with_watchdog(items) }
         end
         by_index = results.to_h { |r| [r[:index], r] }
 
@@ -189,6 +198,18 @@ module SFL
         log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
           "Batch annotation failed: #{e.message} — defaults applied to #{chunk.size} clauses")
         chunk.map { |entry| annotated_clause(entry, default_interpersonal(entry[:clause].id)) }
+      end
+
+      # Timeout::Error is a StandardError, so a hung call flows through the
+      # same retry-once-then-default path as any provider exception. A
+      # timeout of 0/nil disables the watchdog.
+      def call_annotator_with_watchdog(items)
+        return @batch_annotator.call(items) if @chunk_timeout.nil? || @chunk_timeout.zero?
+
+        Timeout.timeout(@chunk_timeout, Timeout::Error,
+          "LLM call exceeded #{@chunk_timeout}s chunk timeout") do
+          @batch_annotator.call(items)
+        end
       end
 
       def payload_from(clause, result, correlation_id)
