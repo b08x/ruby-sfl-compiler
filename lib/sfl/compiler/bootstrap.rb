@@ -40,11 +40,28 @@ module SFL
         Context.new(db: db, config: config)
       end
 
+      DEFAULT_LLM_TIMEOUT = 120.0
+
       def configure_llm(provider, env)
         key = api_key_for(provider, env)
-        DSPy.configure do |c|
-          c.lm = DSPy::LM.new(provider, api_key: key, structured_outputs: true)
-        end
+        lm = DSPy::LM.new(provider, api_key: key, structured_outputs: true)
+        apply_request_timeout(lm, key, (env["SFL_LLM_TIMEOUT"] || DEFAULT_LLM_TIMEOUT).to_f)
+        DSPy.configure { |c| c.lm = lm }
+      end
+
+      # The openai-gem client behind the openai/ and openrouter/ adapters
+      # defaults to a 600s request timeout; a connection the server drops
+      # mid-request blocks a Pass 2 worker for that long (× retries) with
+      # no exception for the engine's fallback ladder to catch. The adapter
+      # doesn't expose timeout, so rebuild its client with one.
+      def apply_request_timeout(lm, api_key, timeout_seconds)
+        adapter = lm.instance_variable_get(:@adapter)
+        client = adapter&.instance_variable_get(:@client)
+        return unless defined?(::OpenAI::Client) && client.is_a?(::OpenAI::Client)
+
+        args = { api_key: api_key, timeout: timeout_seconds }
+        args[:base_url] = adapter.class::BASE_URL if adapter.class.const_defined?(:BASE_URL)
+        adapter.instance_variable_set(:@client, ::OpenAI::Client.new(**args))
       end
 
       def api_key_for(provider, env)

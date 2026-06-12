@@ -38,6 +38,31 @@ RSpec.describe SFL::Compiler::Bootstrap do
     end
   end
 
+  describe "LLM request timeout" do
+    def configured_client
+      DSPy.config.lm.instance_variable_get(:@adapter).instance_variable_get(:@client)
+    end
+
+    it "caps the OpenAI-family client timeout at the default 120s" do
+      call({ "DSPY_PROVIDER" => "openrouter/some/model",
+             "OPENROUTER_API_KEY" => "sk-or-test" })
+      expect(configured_client.timeout).to eq(120.0)
+    end
+
+    it "honors SFL_LLM_TIMEOUT from the environment" do
+      call({ "DSPY_PROVIDER" => "openrouter/some/model",
+             "OPENROUTER_API_KEY" => "sk-or-test",
+             "SFL_LLM_TIMEOUT" => "45" })
+      expect(configured_client.timeout).to eq(45.0)
+    end
+
+    it "preserves the adapter's base_url when rebuilding the client" do
+      call({ "DSPY_PROVIDER" => "openrouter/some/model",
+             "OPENROUTER_API_KEY" => "sk-or-test" })
+      expect(configured_client.inspect).to include("openrouter.ai")
+    end
+  end
+
   describe "require_llm: false" do
     it "skips DSPy configuration and key checks entirely" do
       ctx = call({}, require_llm: false)
