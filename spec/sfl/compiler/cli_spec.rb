@@ -1,0 +1,50 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+RSpec.describe SFL::Compiler::CLI do
+  describe ".parse" do
+    it "parses the conversation subcommand with defaults" do
+      parsed = described_class.parse(%w[conversation chat.jsonl])
+      expect(parsed).to eq(
+        command: :conversation, input: "chat.jsonl",
+        options: { output_dir: "./sfl_output", pass1_only: false }
+      )
+    end
+
+    it "parses conversation flags" do
+      parsed = described_class.parse(%w[conversation chat.jsonl --output-dir ./out --pass1-only])
+      expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true)
+    end
+
+    it "parses documentation with --store" do
+      parsed = described_class.parse(%w[documentation docs/ --store])
+      expect(parsed[:command]).to eq(:documentation)
+      expect(parsed[:input]).to eq("docs/")
+      expect(parsed[:options]).to include(store: true)
+    end
+
+    it "parses context with stance filters and limit" do
+      parsed = described_class.parse(
+        ["context", "how does tenor work", "--mood", "declarative",
+         "--min-tenor", "0.5", "--max-modality", "0.9", "--limit", "5"]
+      )
+      expect(parsed[:command]).to eq(:context)
+      expect(parsed[:input]).to eq("how does tenor work")
+      expect(parsed[:options]).to include(
+        filters: { mood: "declarative", min_tenor: 0.5, max_modality: 0.9 },
+        limit: 5
+      )
+    end
+
+    it "raises UsageError for an unknown subcommand" do
+      expect { described_class.parse(%w[bogus x]) }
+        .to raise_error(SFL::Compiler::CLI::UsageError, /Unknown subcommand/)
+    end
+
+    it "raises UsageError when the input argument is missing" do
+      expect { described_class.parse(%w[conversation]) }
+        .to raise_error(SFL::Compiler::CLI::UsageError, /requires an input/)
+    end
+  end
+end
