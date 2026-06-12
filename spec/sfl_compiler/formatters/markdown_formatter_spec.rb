@@ -255,5 +255,12 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       expect(output).to include("## Speaker Profiles")
       expect(output).to include("**Turns**: 5")
     end
+
+    it "uses actors_list_label for the speakers list when provided" do
+      labeled = result.new(metadata: result.metadata.merge(actors_list_label: "Headings"))
+      out = described_class.new(labeled).render
+      expect(out).to include("**Headings**: Alice, Bob")
+      expect(out).not_to include("**Speakers**:")
+    end
   end
 end

@@ -10,7 +10,7 @@ module SFL
             # Conversation Analysis: #{result.metadata[:conversation_id]}
 
             **Generated**: #{result.metadata[:analyzed_at]}
-            **#{unit_label}s**: #{result.metadata[:turn_count]} | **Speakers**: #{result.metadata[:speakers]&.join(", ")}
+            **#{unit_label}s**: #{result.metadata[:turn_count]} | **#{actors_list_label}**: #{result.metadata[:speakers]&.join(", ")}
             #{data_quality_warning}
             ---
 
@@ -84,6 +84,10 @@ module SFL
 
         def unit_label
           result.metadata[:unit_label] || "Turn"
+        end
+
+        def actors_list_label
+          result.metadata[:actors_list_label] || "Speakers"
         end
 
         def speaker_profiles_table
