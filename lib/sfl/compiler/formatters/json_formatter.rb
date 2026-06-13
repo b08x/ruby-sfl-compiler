@@ -17,6 +17,7 @@ module SFL
           {
             metadata: format_metadata,
             speaker_profiles: format_speaker_profiles,
+            turns: format_turns,
             tenor_timeline: result.tenor_timeline,
             field_evolution: result.field_evolution,
             correlations: result.correlations,
@@ -43,6 +44,26 @@ module SFL
             stub: sources.fetch("stub", 0),
             defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1)
           }
+        end
+
+        # Per-turn rows with preview text and provenance counts. This makes the
+        # JSON report self-contained: `sfl-analyze narrate` grounds its narrative
+        # entirely from this file.
+        def format_turns
+          result.turns.map do |turn|
+            {
+              turn_id: turn.turn_id,
+              speaker: turn.speaker,
+              timestamp: turn.timestamp.iso8601,
+              preview: turn.message_text[0, 200].to_s,
+              avg_tenor: turn.avg_tenor,
+              avg_modality: turn.avg_modality,
+              dominant_mood: turn.dominant_mood,
+              tenor_shift: turn.tenor_shift,
+              clause_count: turn.clauses.size,
+              defaulted_count: turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+            }
+          end
         end
 
         def format_speaker_profiles

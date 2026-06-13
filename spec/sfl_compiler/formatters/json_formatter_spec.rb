@@ -125,4 +125,76 @@ RSpec.describe SFL::Compiler::Formatters::JSONFormatter do
       expect(json["insights"]).to include("Alice maintains casual tenor across conversation")
     end
   end
+
+  describe "turns array" do
+    def build_clause(annotation_source)
+      token = SFL::Compiler::Types::SyntacticToken.new(
+        text: "works", lemma: "work", pos: "VERB", tag: "VBZ",
+        dep: "ROOT", head_index: -1, morphology: {}, index: 0
+      )
+      syntactic = SFL::Compiler::Types::SyntacticClause.new(
+        id: "syn-1", text: "It works.", tokens: [token],
+        root_index: 0, sentence_index: 0, document_id: "doc-1"
+      )
+      ideational = SFL::Compiler::Types::IdeationalPayload.new(
+        clause_id: "syn-1", process_type: "material",
+        participants: [], circumstances: [], raw_transitivity: {}
+      )
+      SFL::Compiler::Types::AnnotatedClause.new(
+        id: "ann-1", text: "It works.", syntactic: syntactic,
+        ideational: ideational,
+        interpersonal: SFL::Compiler::Types::InterpersonalPayload.new(
+          clause_id: "syn-1", mood: "declarative",
+          modality_weight: 0.5, tenor: 0.5,
+          speaker_attitude: nil, reasoning: nil,
+          annotation_source: annotation_source
+        ),
+        document_id: "doc-1", compiled_at: Time.now
+      )
+    end
+
+    def build_turn(clauses:, message_text: "It works.")
+      SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 1, speaker: "Alice", timestamp: Time.parse("2026-06-10 14:32:15"),
+        message_text: message_text, clauses: clauses,
+        avg_tenor: 0.5, avg_modality: 0.5, dominant_mood: "declarative",
+        process_types: {}, participants: [], tenor_shift: nil
+      )
+    end
+
+    let(:mixed_sources_result) do
+      result.new(turns: [build_turn(clauses: %w[llm fallback stub].map { |s| build_clause(s) })])
+    end
+
+    let(:empty_clauses_result) do
+      result.new(turns: [build_turn(clauses: [])])
+    end
+
+    it "emits one row per turn with preview and provenance counts" do
+      with_turns = result.new(turns: [build_turn(clauses: [build_clause("llm")], message_text: "x" * 250)])
+      parsed = JSON.parse(described_class.new(with_turns).render)
+      rows = parsed["turns"]
+
+      expect(rows.size).to eq(with_turns.turns.size)
+      row = rows.first
+      expect(row.keys).to include(
+        "turn_id", "speaker", "timestamp", "preview", "avg_tenor",
+        "avg_modality", "dominant_mood", "tenor_shift",
+        "clause_count", "defaulted_count"
+      )
+      expect(row["preview"].length).to be <= 200
+    end
+
+    it "counts fallback and stub clauses as defaulted, llm as not" do
+      parsed = JSON.parse(described_class.new(mixed_sources_result).render)
+      expect(parsed["turns"].first["defaulted_count"]).to eq(2)
+      expect(parsed["turns"].first["clause_count"]).to eq(3)
+    end
+
+    it "handles a turn with zero clauses" do
+      parsed = JSON.parse(described_class.new(empty_clauses_result).render)
+      expect(parsed["turns"].first["clause_count"]).to eq(0)
+      expect(parsed["turns"].first["defaulted_count"]).to eq(0)
+    end
+  end
 end
