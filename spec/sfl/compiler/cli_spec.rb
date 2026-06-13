@@ -8,13 +8,13 @@ RSpec.describe SFL::Compiler::CLI do
       parsed = described_class.parse(%w[conversation chat.jsonl])
       expect(parsed).to eq(
         command: :conversation, input: "chat.jsonl",
-        options: { output_dir: "./sfl_output", pass1_only: false }
+        options: { output_dir: "./sfl_output", pass1_only: false, narrative: false }
       )
     end
 
     it "parses conversation flags" do
       parsed = described_class.parse(%w[conversation chat.jsonl --output-dir ./out --pass1-only])
-      expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true)
+      expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true, narrative: false)
     end
 
     it "parses documentation with --store" do
@@ -35,6 +35,28 @@ RSpec.describe SFL::Compiler::CLI do
         filters: { mood: "declarative", min_tenor: 0.5, max_modality: 0.9 },
         limit: 5
       )
+    end
+
+    it "parses narrate with input and output-dir" do
+      parsed = described_class.parse(%w[narrate report.json --output-dir ./out])
+      expect(parsed[:command]).to eq(:narrate)
+      expect(parsed[:input]).to eq("report.json")
+      expect(parsed[:options][:output_dir]).to eq("./out")
+    end
+
+    it "defaults narrate output-dir to nil (resolved to the JSON's directory at run time)" do
+      parsed = described_class.parse(%w[narrate report.json])
+      expect(parsed[:options][:output_dir]).to be_nil
+    end
+
+    it "parses --narrative on conversation" do
+      parsed = described_class.parse(%w[conversation chat.jsonl --narrative])
+      expect(parsed[:options][:narrative]).to be(true)
+    end
+
+    it "parses --narrative on documentation" do
+      parsed = described_class.parse(%w[documentation docs/ --narrative])
+      expect(parsed[:options][:narrative]).to be(true)
     end
 
     it "raises UsageError for an unknown subcommand" do

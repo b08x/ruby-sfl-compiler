@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "optparse"
+require "json"
 
 module SFL
   module Compiler
@@ -18,12 +19,14 @@ module SFL
           conversation <input.jsonl>   Analyze a JSONL conversation
           documentation <path>         Analyze a markdown file or directory
           context "<query>"            Query stored clauses, synthesize an answer
+          narrate <analysis.json>      Write an LLM narrative from a report JSON
 
         Common options:
           --output-dir DIR             Where to write reports [./sfl_output]
 
         conversation/documentation:
           --pass1-only                 Skip LLM annotation (placeholder values)
+          --narrative                  Also generate narrative_report.md (LLM)
 
         documentation:
           --store                      Persist clauses + embeddings for `context`
@@ -33,6 +36,9 @@ module SFL
           --min-tenor F  --max-tenor F
           --min-modality F  --max-modality F
           --limit N                    Max clauses to retrieve [10]
+
+        narrate:
+          --output-dir DIR             Where to write narrative_report.md [JSON's directory]
       TEXT
 
       module_function
@@ -42,7 +48,7 @@ module SFL
       def parse(argv)
         argv = argv.dup
         command = argv.shift&.to_sym
-        unless %i[conversation documentation context].include?(command)
+        unless %i[conversation documentation context narrate].include?(command)
           raise UsageError, "Unknown subcommand: #{command}\n\n#{USAGE}"
         end
 
@@ -54,20 +60,22 @@ module SFL
       end
 
       def parse_conversation_options(argv)
-        options = { output_dir: "./sfl_output", pass1_only: false }
+        options = { output_dir: "./sfl_output", pass1_only: false, narrative: false }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
+          opt.on("--narrative") { options[:narrative] = true }
         end.parse!(argv)
         options
       end
 
       def parse_documentation_options(argv)
-        options = { output_dir: "./sfl_output", pass1_only: false, store: false }
+        options = { output_dir: "./sfl_output", pass1_only: false, store: false, narrative: false }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
           opt.on("--store") { options[:store] = true }
+          opt.on("--narrative") { options[:narrative] = true }
         end.parse!(argv)
         options
       end
@@ -86,6 +94,14 @@ module SFL
         options
       end
 
+      def parse_narrate_options(argv)
+        options = { output_dir: nil }
+        OptionParser.new do |opt|
+          opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
+        end.parse!(argv)
+        options
+      end
+
       # Entry point for exe/sfl-analyze. Returns the process exit code.
       def run(argv)
         parsed = parse(argv)
@@ -94,7 +110,7 @@ module SFL
       rescue UsageError => e
         warn e.message
         1
-      rescue BootstrapError, PassOneError, PassTwoError => e
+      rescue BootstrapError, PassOneError, PassTwoError, NarrativeError => e
         warn "[ERROR] #{e.message}"
         1
       rescue DSPy::LM::AdapterError => e
@@ -115,6 +131,7 @@ module SFL
 
         result = analyzer.analyze(input)
         finish_report(result, options[:output_dir])
+        write_narrative(result, options[:output_dir]) if options[:narrative]
       end
 
       def run_documentation(input, options)
@@ -130,6 +147,7 @@ module SFL
 
         result = analyzer.analyze(input, store: options[:store])
         finish_report(result, options[:output_dir])
+        write_narrative(result, options[:output_dir]) if options[:narrative]
       end
 
       def run_context(query, options)
@@ -167,6 +185,27 @@ module SFL
         end
       end
 
+      def run_narrate(input, options)
+        raise UsageError, "No such file: #{input}" unless File.file?(input)
+
+        parsed = begin
+          JSON.parse(File.read(input))
+        rescue JSON::ParserError => e
+          raise UsageError, "#{input} is not valid JSON: #{e.message}"
+        end
+
+        Bootstrap.call(require_db: false)
+        digest = Analysis::NarrativeGenerator::Digest.from_json(parsed)
+        report = Analysis::NarrativeGenerator.new.generate(digest)
+
+        dir = options[:output_dir] || File.dirname(input)
+        require "fileutils"
+        FileUtils.mkdir_p(dir)
+        path = File.join(dir, "narrative_report.md")
+        Formatters::NarrativeFormatter.new(report).write_to(path)
+        puts "Generated:\n  NARRATIVE: #{path}"
+      end
+
       def print_evidence(result)
         result.clauses.each_with_index do |clause, idx|
           marker = result.cited_clause_ids.include?(clause[:clause_id]) ? "*" : " "
@@ -179,6 +218,18 @@ module SFL
           label = event[:defaulted].zero? ? "OK" : "#{event[:defaulted]}/#{event[:clause_count]} DEFAULTED"
           puts "  #{event[:turn_id]}/#{event[:total]} (#{event[:speaker]}) #{event[:elapsed]}s [#{label}]"
         end
+      end
+
+      # Best-effort: the analysis trio is already on disk; a narrative
+      # failure downgrades to a warning rather than failing the run.
+      def write_narrative(result, output_dir)
+        digest = Analysis::NarrativeGenerator::Digest.from_result(result)
+        report = Analysis::NarrativeGenerator.new.generate(digest)
+        path = File.join(output_dir, "narrative_report.md")
+        Formatters::NarrativeFormatter.new(report).write_to(path)
+        puts "  NARRATIVE: #{path}"
+      rescue NarrativeError, DSPy::LM::AdapterError => e
+        warn "[WARN] narrative generation failed: #{e.message}"
       end
 
       def finish_report(result, output_dir)
