@@ -75,6 +75,20 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
         expect(from_json).to eq(from_result)
       end
 
+      it "stays equivalent with populated speaker profiles" do
+        profile = SFL::Compiler::Types::SpeakerProfile.new(
+          speaker_name: "A", turn_count: 1, avg_tenor: 0.6,
+          tenor_range: [0.5, 0.7], tenor_variance: 0.01, avg_modality: 0.7,
+          mood_distribution: { "declarative" => 1.0 },
+          dominant_processes: { "material" => 2 }
+        )
+        with_profiles = result.new(speaker_profiles: { "A" => profile })
+
+        json = SFL::Compiler::Formatters::JSONFormatter.new(with_profiles).render
+        expect(described_class.from_json(JSON.parse(json)).to_text)
+          .to eq(described_class.from_result(with_profiles).to_text)
+      end
+
       it "raises NarrativeError when turns are absent" do
         expect {
           described_class.from_json({ "metadata" => {} })
