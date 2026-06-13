@@ -5,6 +5,7 @@ require_relative "analysis/speaker_profiler"
 require_relative "analysis/correlation_analyzer"
 require_relative "analysis/conversation_analyzer"
 require_relative "analysis/documentation_analyzer"
+require_relative "analysis/narrative_generator"
 
 module SFL
   module Compiler
