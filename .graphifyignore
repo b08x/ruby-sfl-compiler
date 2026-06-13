@@ -21,3 +21,12 @@ Rakefile
 README.md
 bin/rake
 bin/rspec
+.rubocop.yml
+.tool-versions
+.ruby-lsp/
+*.md
+*.lock
+*.gemspec
+*.json
+*.csv
+.ruby-lsp/

@@ -29,3 +29,5 @@ graphify-out/
 
 log/
 
+cost.json
+manifest.json
