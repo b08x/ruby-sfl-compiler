@@ -16,7 +16,7 @@ module SFL
             clause_count defaulted_count
           ].freeze
           UNRELIABLE_THRESHOLD = 0.5
-          PREVIEW_LENGTH = 200
+          PREVIEW_LENGTH = Formatters::JSONFormatter::PREVIEW_LENGTH
 
           attr_reader :metadata, :speaker_profiles, :correlations, :insights, :turns
 
@@ -27,7 +27,7 @@ module SFL
               {
                 "turn_id" => t.turn_id,
                 "speaker" => t.speaker,
-                "preview" => t.message_text[0, PREVIEW_LENGTH].to_s,
+                "preview" => t.message_text[0, PREVIEW_LENGTH],
                 "avg_tenor" => t.avg_tenor,
                 "avg_modality" => t.avg_modality,
                 "dominant_mood" => t.dominant_mood,

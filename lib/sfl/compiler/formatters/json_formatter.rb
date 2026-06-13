@@ -7,6 +7,10 @@ module SFL
     module Formatters
       # Exports conversation analysis to JSON format
       class JSONFormatter < BaseFormatter
+        # Must match Analysis::NarrativeGenerator::Digest::PREVIEW_LENGTH — the
+        # narrate digest built from this JSON must equal one built in-memory.
+        PREVIEW_LENGTH = 200
+
         def render
           JSON.pretty_generate(build_hash)
         end
@@ -55,7 +59,7 @@ module SFL
               turn_id: turn.turn_id,
               speaker: turn.speaker,
               timestamp: turn.timestamp.iso8601,
-              preview: turn.message_text[0, 200].to_s,
+              preview: turn.message_text[0, PREVIEW_LENGTH],
               avg_tenor: turn.avg_tenor,
               avg_modality: turn.avg_modality,
               dominant_mood: turn.dominant_mood,
