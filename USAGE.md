@@ -92,6 +92,42 @@ retrieved evidence; clauses the model actually cited are marked `*`. Notes:
 - Re-ingesting a document with `--store` replaces its previous clauses
   (idempotent per document) — counts don't grow on re-runs.
 
+### 5. Narrative reports
+
+Generate an LLM-written interpretive narrative — overview, cast & roles,
+interpersonal dynamics, conversational arc, data quality, and takeaways —
+from an analysis. Two ways to get one:
+
+```bash
+# From an existing report JSON (the turns array is required)
+bundle exec sfl-analyze narrate ./output/conversation_analysis.json \
+  --output-dir ./output
+
+# Or generate it inline, right after the CSV/JSON/MD trio
+bundle exec sfl-analyze conversation chat.jsonl --output-dir ./output --narrative
+bundle exec sfl-analyze documentation docs/ --output-dir ./output --narrative
+```
+
+Either form writes `narrative_report.md` to the output directory. The
+narrative always includes a **Data Quality** section summarizing annotation
+coverage, and it never interprets tenor/modality for turns where most clauses
+are fallback/stub — those turns are described as unmeasured rather than
+analyzed.
+
+Failure semantics differ by form:
+
+- `narrate` is **fatal** — a missing file, invalid JSON, or LLM failure
+  prints `[ERROR] ...` and exits 1.
+- `--narrative` is **best-effort** — a failure prints
+  `[WARN] narrative generation failed: ...` to stderr but the CSV/JSON/MD
+  trio (already written) is unaffected and the command still exits 0.
+
+Report JSONs written before this feature don't have a `turns` array.
+`narrate`ing one of those fails fast with `[ERROR] Report JSON has no
+`turns` array — it predates narrative support. Re-run the analysis to
+regenerate it.` — re-run `conversation`/`documentation` to produce a JSON
+with `turns`, then `narrate` that.
+
 ## Input Format (conversation)
 
 JSONL, one turn per line:

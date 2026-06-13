@@ -13,15 +13,18 @@ this skill only composes CLI invocations.
 
 ```bash
 # Conversation (JSONL: {name, send_date, mes} per line)
-bundle exec sfl-analyze conversation chat.jsonl [--output-dir DIR] [--pass1-only]
+bundle exec sfl-analyze conversation chat.jsonl [--output-dir DIR] [--pass1-only] [--narrative]
 
 # Documentation (markdown file or directory)
-bundle exec sfl-analyze documentation docs/ [--output-dir DIR] [--pass1-only] [--store]
+bundle exec sfl-analyze documentation docs/ [--output-dir DIR] [--pass1-only] [--store] [--narrative]
 
 # Context query over stored clauses (requires a prior --store ingestion)
 bundle exec sfl-analyze context "how does X work?" \
   [--mood declarative] [--min-tenor 0.5] [--max-tenor 1.0] \
   [--min-modality 0.0] [--max-modality 1.0] [--limit 10] [--output-dir DIR]
+
+# Narrative report from an existing analysis JSON (must contain a `turns` array)
+bundle exec sfl-analyze narrate conversation_analysis.json [--output-dir DIR]
 ```
 
 ## Outputs
@@ -29,6 +32,8 @@ bundle exec sfl-analyze context "how does X work?" \
 conversation/documentation write `conversation_analysis.{csv,json,md}` into
 `--output-dir` (default `./sfl_output`). Reports include a Data Quality
 section whenever clauses carry fallback/stub interpersonal values.
+`--narrative` additionally writes `narrative_report.md` (one LLM call) after
+the trio; failure only warns, the analysis output is unaffected.
 `context` prints the synthesized answer + cited evidence; `--output-dir`
 additionally writes `context_synthesis.json`.
 

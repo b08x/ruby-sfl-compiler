@@ -83,6 +83,7 @@ Raw Text
 Analysis layer (UI-agnostic, used by the CLI):
   Bootstrap → Pipeline → ConversationAnalyzer / DocumentationAnalyzer
             → AnalysisResult → ReportWriter (CSV + JSON + Markdown)
+            → NarrativeGenerator (LLM-written interpretive narrative, optional)
 ```
 
 ## Prerequisites
@@ -140,7 +141,7 @@ gracefully to clause-only storage and retrieval falls back to keyword search.
 
 ## The sfl-analyze CLI
 
-Three subcommands cover the analyze → ingest → query workflow.
+Four subcommands cover the analyze → ingest → query → narrate workflow.
 
 ### Analyze a conversation
 
@@ -207,6 +208,21 @@ failures, or `--pass1-only` runs), the markdown report opens with a
 Use `--pass1-only` on either analysis subcommand to skip the LLM entirely:
 process types and participants are still extracted, and all interpersonal
 values are explicitly marked as placeholders.
+
+### Narrative reports
+
+```bash
+bundle exec sfl-analyze narrate ./output/conversation_analysis.json --output-dir ./output
+```
+
+Reads a previously written report JSON (it must contain the `turns` array —
+re-run `conversation`/`documentation` if it predates this feature) and makes
+one LLM call to write `narrative_report.md`: an interpretive overview, cast &
+roles, interpersonal dynamics, conversational arc, data quality, and
+takeaways, grounded in the report's statistics and message previews. Add
+`--narrative` to `conversation`/`documentation` to generate it inline right
+after the CSV/JSON/MD trio — that path is best-effort and only warns on
+failure, while `narrate` itself exits 1 on error.
 
 ## Library Usage
 

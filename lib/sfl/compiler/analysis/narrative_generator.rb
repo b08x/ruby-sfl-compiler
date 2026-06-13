@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dspy"
+require "dry-struct"
 
 module SFL
   module Compiler

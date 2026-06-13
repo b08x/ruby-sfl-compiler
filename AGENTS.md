@@ -88,7 +88,7 @@ progress via injectable `on_progress` callback) so a TUI can reuse them.
 
 ### Entry Points
 - `lib/sfl/compiler/bootstrap.rb`: `Bootstrap.call(require_db:, require_llm:, env:, load_dotenv:)` — the ONLY ENV reader. Provider prefix → API key map (openrouter/google/openai/anthropic); raises `BootstrapError` on unsupported prefix, missing key, or DB connection failure.
-- `lib/sfl/compiler/cli.rb` + `exe/sfl-analyze`: subcommands `conversation`, `documentation [--store]`, `context` with stance-filter flags. `CLI.parse` is a pure function (tested); `run_*` methods wire Bootstrap → analyzers (live-verified, not unit-tested).
+- `lib/sfl/compiler/cli.rb` + `exe/sfl-analyze`: subcommands `conversation`, `documentation [--store]`, `context` with stance-filter flags, and `narrate <analysis.json>`. `CLI.parse` is a pure function (tested); `run_*` methods wire Bootstrap → analyzers (live-verified, not unit-tested). `conversation`/`documentation` accept `--narrative` to run `NarrativeGenerator` best-effort after the CSV/JSON/MD trio (failure → `[WARN]`, exit 0 unaffected); `narrate` reads a written report JSON (requires its `turns` array — re-run to regenerate older JSONs) and writes `narrative_report.md` via one LLM call, exiting 1 on any error.
 
 ### Analysis
 - `lib/sfl/compiler/analysis/conversation_analyzer.rb`: JSONL → per-turn compile → `Types::AnalysisResult`. Injected pipeline, `pass_one_only:` option (stubs marked `"stub"`), `on_progress` callback.
@@ -133,9 +133,11 @@ lib/sfl/compiler/analysis/
   conversation_analyzer.rb           # JSONL conversation → AnalysisResult
   documentation_analyzer.rb          # Markdown sections-as-turns → AnalysisResult, --store ingest
   tenor_tracker.rb, speaker_profiler.rb, correlation_analyzer.rb
+  narrative_generator.rb             # NarrativeGenerator + Digest + NarrativeSignature → Types::NarrativeReport
 lib/sfl/compiler/formatters.rb       # MANIFEST: require_relative for every formatters/ file
 lib/sfl/compiler/formatters/
   base/csv/json/markdown formatters + report_writer.rb
+  narrative_formatter.rb             # NarrativeReport → narrative_report.md
 lib/sfl/compiler/markdown_loader.rb  # ATX-heading chunks → clean prose sections
 lib/sfl/compiler/llm_tools/
   theme_rheme_extractor.rb           # RubyLLM Tool for Theme/Rheme (experimental)
