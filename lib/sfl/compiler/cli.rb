@@ -228,7 +228,7 @@ module SFL
         path = File.join(output_dir, "narrative_report.md")
         Formatters::NarrativeFormatter.new(report).write_to(path)
         puts "  NARRATIVE: #{path}"
-      rescue NarrativeError, DSPy::LM::AdapterError => e
+      rescue NarrativeError => e
         warn "[WARN] narrative generation failed: #{e.message}"
       end
 
