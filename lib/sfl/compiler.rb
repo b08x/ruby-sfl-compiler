@@ -49,6 +49,11 @@ module SFL
     class ConfigurationError < Error; end
     class BootstrapError < Error; end
 
+    # Raised when narrative generation cannot proceed: the input digest is
+    # absent or invalid (e.g. a report JSON without a `turns` array), or the
+    # LLM returned output missing required sections.
+    class NarrativeError < Error; end
+
     def self.logger
       require "journald/logger"
       @logger ||= Journald::Logger.new("sfl-compiler")

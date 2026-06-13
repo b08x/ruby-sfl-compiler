@@ -261,4 +261,32 @@ RSpec.describe SFL::Compiler::Types do
       expect(result.clauses).to eq([])
     end
   end
+
+  describe SFL::Compiler::Types::NarrativeReport do
+    let(:sections) do
+      { overview: "o", cast_and_roles: "c", interpersonal_dynamics: "i",
+        conversational_arc: "a", data_quality: "d", takeaways: "t" }
+    end
+
+    it "holds source, generated_at, and six prose sections" do
+      report = described_class.new(
+        source: "conv-1", generated_at: Time.now, **sections
+      )
+      expect(report.overview).to eq("o")
+      expect(report.takeaways).to eq("t")
+    end
+
+    it "rejects a missing section" do
+      expect {
+        described_class.new(source: "conv-1", generated_at: Time.now,
+                            **sections.except(:takeaways))
+      }.to raise_error(Dry::Struct::Error)
+    end
+  end
+end
+
+RSpec.describe "SFL::Compiler::NarrativeError" do
+  it "is an SFL::Compiler::Error" do
+    expect(SFL::Compiler::NarrativeError.ancestors).to include(SFL::Compiler::Error)
+  end
 end
