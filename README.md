@@ -322,7 +322,7 @@ bundle install
 bundle exec rspec spec/        # unit suite
 ```
 
-See `USAGE.md` for the operator-focused guide and `CLAUDE.md` for the
+See `docs/guides/USAGE.md` for the operator-focused guide and `CLAUDE.md` for the
 agent/contributor codebase map.
 
 ## License

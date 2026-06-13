@@ -39,7 +39,7 @@ DRY_RUN=1 bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
 FILE=lsd-brain-network-collapse.md bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
 
 # Analyze a conversation / documentation / query stored context
-bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output
+bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output/latest
 bundle exec sfl-analyze documentation docs/ --store
 bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
 ```
@@ -192,7 +192,7 @@ Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTE
 
 5. **Pass 2 defaults are provenance-marked, not silent**: failed/skipped annotations carry `annotation_source: "fallback"`/`"stub"`, print `[WARN]` to `$stderr`, and surface as the markdown report's Data Quality section + JSON `annotation_coverage`. A report full of 0.5s announces itself.
 
-6. **`mean` is duplicated 4×**: SpeakerProfiler, CorrelationAnalyzer, ConversationAnalyzer, DocumentationAnalyzer (plus duplicated `report_progress`/`timeline`/`field_evolution` between the two analyzers). Extract a shared `Analysis::Aggregations` mixin before adding another analyzer — see `BACKLOG_FIXES.md`.
+6. **`mean` is duplicated 4×**: SpeakerProfiler, CorrelationAnalyzer, ConversationAnalyzer, DocumentationAnalyzer (plus duplicated `report_progress`/`timeline`/`field_evolution` between the two analyzers). Extract a shared `Analysis::Aggregations` mixin before adding another analyzer — see `docs/status/BACKLOG_FIXES.md`.
 
 7. **Hardcoded paths in main script**: `scripts/parse_metacognitive_coprocessor.rb` has `../../../Notebook/NotebookLM/metacognitive-coprocessor/` hardcoded. Use `FILE=...` env var for other files.
 
@@ -221,3 +221,11 @@ The `experiments/` directory contains throwaway scripts validating SFL theories.
 - **Skill**: `.claude/skills/sfl-analyze/SKILL.md` — composes `sfl-analyze` CLI invocations for conversation/documentation/context analyses.
 - **Agent**: `.claude/agents/sfl-analyzer.md` — expert agent for SFL analysis tasks.
 - **OpenCode plugin**: `.opencode/plugins/graphify.js` — graph visualization plugin.
+
+## Documentation Index
+
+- **Guides:** `docs/guides/QUICKSTART.md`, `docs/guides/USAGE.md`
+- **Planning:** `docs/planning/NOTEBOOK_ANALYSIS_PLAN.md`, `docs/planning/RESEARCH_APPLICATION_PLAN.md`
+- **Status:** `docs/status/BACKLOG_FIXES.md`, `docs/status/KNOWN_ISSUES.md`, `docs/status/SESSION_SUMMARY.md`, `docs/status/DEBUGGING_SESSION.md`
+- **Architecture & Theory:** `docs/geb-lens-on-sfl-compiler.md`, `docs/knowledge-base.md`, `docs/poignant-guide-to-sfl-compiler.md`
+- **Articles:** `docs/articles/from-graph-to-story.md`
