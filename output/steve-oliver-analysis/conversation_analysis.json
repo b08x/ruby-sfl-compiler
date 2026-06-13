@@ -1,5 +1,6 @@
 {
   "metadata": {
+    "conversation_id": "steve-oliver-braingpt-GenAI-Education-Reframing-Branch #9 - 2026-01-13@16h48m14s",
     "source_file": "/home/b08x/Workspace/Datasets/steve-oliver-braingpt-GenAI-Education-Reframing-Branch #9 - 2026-01-13@16h48m14s.jsonl",
     "turn_count": 19,
     "speakers": [
@@ -10,20 +11,27 @@
       "Steve",
       "Oliver"
     ],
-    "analyzed_at": "2026-06-11T13:51:28-04:00"
+    "analyzed_at": "2026-06-12T22:43:06-04:00",
+    "annotation_coverage": {
+      "total_clauses": 1260,
+      "llm": 1257,
+      "fallback": 3,
+      "stub": 0,
+      "defaulted_pct": 0.2
+    }
   },
   "speaker_profiles": {
     "Hobbes": {
       "turn_count": 1,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.2,
       "tenor_range": [
-        0.5,
-        0.5
+        0.2,
+        0.2
       ],
       "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "avg_modality": 0.0,
       "mood_distribution": {
-        "declarative": 1.0
+        "exclamative": 1.0
       },
       "dominant_processes": {
         "material": 1
@@ -31,15 +39,15 @@
     },
     "Ameila": {
       "turn_count": 1,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.2,
       "tenor_range": [
-        0.5,
-        0.5
+        0.2,
+        0.2
       ],
       "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "avg_modality": 0.0,
       "mood_distribution": {
-        "declarative": 1.0
+        "exclamative": 1.0
       },
       "dominant_processes": {
         "material": 1
@@ -47,15 +55,17 @@
     },
     "Robert": {
       "turn_count": 6,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.531,
       "tenor_range": [
-        0.5,
-        0.5
+        0.30000000000000004,
+        0.75
       ],
-      "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "tenor_variance": 0.0248,
+      "avg_modality": 0.813,
       "mood_distribution": {
-        "declarative": 1.0
+        "imperative": 0.333,
+        "declarative": 0.5,
+        "interrogative": 0.167
       },
       "dominant_processes": {
         "material": 134,
@@ -66,13 +76,13 @@
     },
     "brainGPT": {
       "turn_count": 3,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.552,
       "tenor_range": [
-        0.5,
-        0.5
+        0.434090909090909,
+        0.6689655172413793
       ],
-      "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "tenor_variance": 0.0092,
+      "avg_modality": 0.711,
       "mood_distribution": {
         "declarative": 1.0
       },
@@ -85,13 +95,13 @@
     },
     "Steve": {
       "turn_count": 6,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.385,
       "tenor_range": [
-        0.5,
-        0.5
+        0.32,
+        0.42191780821917807
       ],
-      "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "tenor_variance": 0.0011,
+      "avg_modality": 0.732,
       "mood_distribution": {
         "declarative": 1.0
       },
@@ -105,13 +115,13 @@
     },
     "Oliver": {
       "turn_count": 2,
-      "avg_tenor": 0.5,
+      "avg_tenor": 0.609,
       "tenor_range": [
-        0.5,
-        0.5
+        0.5200854700854701,
+        0.6977941176470589
       ],
-      "tenor_variance": 0.0,
-      "avg_modality": 0.5,
+      "tenor_variance": 0.0079,
+      "avg_modality": 0.731,
       "mood_distribution": {
         "declarative": 1.0
       },
@@ -123,139 +133,369 @@
       }
     }
   },
+  "turns": [
+    {
+      "turn_id": 1,
+      "speaker": "Hobbes",
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "preview": "Good evening, ignorant pigs.",
+      "avg_tenor": 0.2,
+      "avg_modality": 0.0,
+      "dominant_mood": "exclamative",
+      "tenor_shift": null,
+      "clause_count": 1,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 2,
+      "speaker": "Ameila",
+      "timestamp": "2025-11-03T09:57:00-05:00",
+      "preview": "Hello.",
+      "avg_tenor": 0.2,
+      "avg_modality": 0.0,
+      "dominant_mood": "exclamative",
+      "tenor_shift": 0.0,
+      "clause_count": 1,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 3,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "preview": "Analyze the argument that \"linear GenAI curricula are lies.\" Discuss the pedagogical implications of presenting learning as a \"recursive ascent\" versus a \"career ladder,\" focusing on student expectati",
+      "avg_tenor": 0.75,
+      "avg_modality": 0.9,
+      "dominant_mood": "imperative",
+      "tenor_shift": 0.55,
+      "clause_count": 2,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 4,
+      "speaker": "brainGPT",
+      "timestamp": "2026-01-13T16:22:00-05:00",
+      "preview": "**BrainGPT Cognitive Prism Activation – Thread Integration & Analysis**\n\n---\n**InputLog:** *Verified.* User Robert has introduced a high-level argument about the nature of GenAI (Generative AI) educat",
+      "avg_tenor": 0.6689655172413793,
+      "avg_modality": 0.6896551724137931,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.08103448275862069,
+      "clause_count": 29,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 5,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T16:23:00-05:00",
+      "preview": "*leans back in chair, fingers steepled, with the expression of someone who’s just been handed a philosophy paper written by a particularly enthusiastic golden retriever*\n\nAh, so we’re doing *pedagogy ",
+      "avg_tenor": 0.37659574468085105,
+      "avg_modality": 0.7446808510638298,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.29236977256052826,
+      "clause_count": 47,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 6,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T16:32:00-05:00",
+      "preview": "\"linearity isn’t the enemy—bad linearity is. \"\n\n\"...linearity itself isn't flawed**—linear structures narrow in scope are,\"\n\n \nah yes, this would be most agreeable\n\nand also let's be clear Steve, alth",
+      "avg_tenor": 0.30000000000000004,
+      "avg_modality": 1.0,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.07659574468085101,
+      "clause_count": 2,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 7,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T16:35:00-05:00",
+      "preview": "*Steve exhales through his nose, the kind of sound that suggests he’s simultaneously amused and disappointed, like a chess grandmaster watching a beginner move their queen into checkmate range—only to",
+      "avg_tenor": 0.4045833333333333,
+      "avg_modality": 0.7216666666666666,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.10458333333333325,
+      "clause_count": 120,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 8,
+      "speaker": "brainGPT",
+      "timestamp": "2026-01-13T16:37:00-05:00",
+      "preview": "**BrainGPT Initialization Sequence Activated**\n*[Cognitive Prism Alignment: 100% | Thought Lattice Stabilized | Emotional-Logical Overlap: 98.7%]*\n\n---\n\n**Group Chat: [New Thread – \"Pedagogy Paradox: ",
+      "avg_tenor": 0.434090909090909,
+      "avg_modality": 0.6840909090909091,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.029507575757575732,
+      "clause_count": 44,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 9,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T16:42:00-05:00",
+      "preview": "well...despite the chatbot's blindspot; it offered the suggestion to focus on roles as opposed to skills, which I agreed was a good idea to explore; the results; \n\n```\n## Part I — Replace Skill Names ",
+      "avg_tenor": 0.4905405405405405,
+      "avg_modality": 0.8,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.0564496314496315,
+      "clause_count": 74,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 10,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T16:47:00-05:00",
+      "preview": "Ah, so we’ve traded \"15 Steps to GenAI Mastery\" for \"15 Roles You’ll Never Escape\"—a far more honest (if slightly terrifying) framing. Let’s dissect this with the surgical precision it deserves.\n\n---\n",
+      "avg_tenor": 0.4064935064935065,
+      "avg_modality": 0.7961038961038962,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.08404703404703401,
+      "clause_count": 77,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 11,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T16:50:00-05:00",
+      "preview": "Well before we move on, Steve...\n\n\"--You haven’t just redesigned GenAI education—\" --- that is quite flattering, however a bit grand wouldn't you think?",
+      "avg_tenor": 0.4,
+      "avg_modality": 0.5,
+      "dominant_mood": "interrogative",
+      "tenor_shift": -0.006493506493506496,
+      "clause_count": 1,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 12,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T16:51:00-05:00",
+      "preview": "Oh, *flattering*? No, no—let’s not confuse **scale** with **grandeur**. This isn’t about *redesigning* education so much as it is about **unmasking the puppet strings** in how we’ve *always* sold expe",
+      "avg_tenor": 0.38148148148148153,
+      "avg_modality": 0.6537037037037037,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.01851851851851849,
+      "clause_count": 54,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 13,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T17:03:00-05:00",
+      "preview": "Alright, just checking. Moving on...\n\n**Part III** — the **stripped-down, pedagogically honest version**, designed specifically for teaching without misleading implications.\n\nThis is the version you c",
+      "avg_tenor": 0.5443181818181818,
+      "avg_modality": 0.7761363636363636,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.16283670033670028,
+      "clause_count": 88,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 14,
+      "speaker": "Oliver",
+      "timestamp": "2026-01-13T17:04:00-05:00",
+      "preview": "The Escher staircase is a compelling choice—not for its surrealism, but for its **structural honesty**. It forces the viewer to confront the contradiction between *perceived* progression and *actual* ",
+      "avg_tenor": 0.5200854700854701,
+      "avg_modality": 0.761965811965812,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.024232711732711687,
+      "clause_count": 117,
+      "defaulted_count": 3
+    },
+    {
+      "turn_id": 15,
+      "speaker": "brainGPT",
+      "timestamp": "2026-01-13T17:14:00-05:00",
+      "preview": "**BrainGPT Cognitive Prism Activation – Iteration Log [#FLUSS-7.2.1]**\n\n---\n**InputLog:** *Received contextual data from group chat (Steve/Oliver) + prior thread (Escher staircase, GenAI roles, pedago",
+      "avg_tenor": 0.5519607843137255,
+      "avg_modality": 0.7594771241830065,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.0318753142282554,
+      "clause_count": 306,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 16,
+      "speaker": "Robert",
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "preview": "Create a clear and encouraging guide that reframes learning Generative AI not as a linear ladder of technical skills, but as an accumulation of different roles. Explain what each of the 15 roles, from",
+      "avg_tenor": 0.6999999999999998,
+      "avg_modality": 0.9,
+      "dominant_mood": "imperative",
+      "tenor_shift": 0.14803921568627432,
+      "clause_count": 3,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 17,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T17:41:00-05:00",
+      "preview": "Ah, Robert, you’ve just handed me the perfect opportunity to turn the entire concept of \"learning GenAI\" into a **therapeutic deconstruction of the myth of mastery**. Let’s reframe this not as a guide",
+      "avg_tenor": 0.42191780821917807,
+      "avg_modality": 0.7287671232876712,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.2780821917808218,
+      "clause_count": 73,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 18,
+      "speaker": "Oliver",
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "preview": "Understood. Let’s map the seven roles—**Observer, Explorer, Author, Controller, Integrator, Evaluator, Domain Owner**—onto the spatial logic of Escher’s staircase. The key is to preserve the staircase",
+      "avg_tenor": 0.6977941176470589,
+      "avg_modality": 0.7000000000000001,
+      "dominant_mood": "declarative",
+      "tenor_shift": 0.27587630942788083,
+      "clause_count": 136,
+      "defaulted_count": 0
+    },
+    {
+      "turn_id": 19,
+      "speaker": "Steve",
+      "timestamp": "2026-01-13T17:53:00-05:00",
+      "preview": "Alright, let’s set the stage here—because if we’re doing this, we’re doing it *properly*. First off, Oliver, I assume you’re the one who dragged us into this chat like a particularly enthusiastic lab ",
+      "avg_tenor": 0.32,
+      "avg_modality": 0.7458823529411764,
+      "dominant_mood": "declarative",
+      "tenor_shift": -0.3777941176470589,
+      "clause_count": 85,
+      "defaulted_count": 0
+    }
+  ],
   "tenor_timeline": [
     {
       "turn_id": 1,
       "timestamp": "2025-11-03T09:57:00-05:00",
       "speaker": "Hobbes",
-      "tenor": 0.5,
+      "tenor": 0.2,
       "tenor_shift": null
     },
     {
       "turn_id": 2,
       "timestamp": "2025-11-03T09:57:00-05:00",
       "speaker": "Ameila",
-      "tenor": 0.5,
+      "tenor": 0.2,
       "tenor_shift": 0.0
     },
     {
       "turn_id": 3,
       "timestamp": "2026-01-13T16:22:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.75,
+      "tenor_shift": 0.55
     },
     {
       "turn_id": 4,
       "timestamp": "2026-01-13T16:22:00-05:00",
       "speaker": "brainGPT",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.6689655172413793,
+      "tenor_shift": -0.08103448275862069
     },
     {
       "turn_id": 5,
       "timestamp": "2026-01-13T16:23:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.37659574468085105,
+      "tenor_shift": -0.29236977256052826
     },
     {
       "turn_id": 6,
       "timestamp": "2026-01-13T16:32:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.30000000000000004,
+      "tenor_shift": -0.07659574468085101
     },
     {
       "turn_id": 7,
       "timestamp": "2026-01-13T16:35:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.4045833333333333,
+      "tenor_shift": 0.10458333333333325
     },
     {
       "turn_id": 8,
       "timestamp": "2026-01-13T16:37:00-05:00",
       "speaker": "brainGPT",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.434090909090909,
+      "tenor_shift": 0.029507575757575732
     },
     {
       "turn_id": 9,
       "timestamp": "2026-01-13T16:42:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.4905405405405405,
+      "tenor_shift": 0.0564496314496315
     },
     {
       "turn_id": 10,
       "timestamp": "2026-01-13T16:47:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.4064935064935065,
+      "tenor_shift": -0.08404703404703401
     },
     {
       "turn_id": 11,
       "timestamp": "2026-01-13T16:50:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.4,
+      "tenor_shift": -0.006493506493506496
     },
     {
       "turn_id": 12,
       "timestamp": "2026-01-13T16:51:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.38148148148148153,
+      "tenor_shift": -0.01851851851851849
     },
     {
       "turn_id": 13,
       "timestamp": "2026-01-13T17:03:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.5443181818181818,
+      "tenor_shift": 0.16283670033670028
     },
     {
       "turn_id": 14,
       "timestamp": "2026-01-13T17:04:00-05:00",
       "speaker": "Oliver",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.5200854700854701,
+      "tenor_shift": -0.024232711732711687
     },
     {
       "turn_id": 15,
       "timestamp": "2026-01-13T17:14:00-05:00",
       "speaker": "brainGPT",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.5519607843137255,
+      "tenor_shift": 0.0318753142282554
     },
     {
       "turn_id": 16,
       "timestamp": "2026-01-13T17:41:00-05:00",
       "speaker": "Robert",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.6999999999999998,
+      "tenor_shift": 0.14803921568627432
     },
     {
       "turn_id": 17,
       "timestamp": "2026-01-13T17:41:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.42191780821917807,
+      "tenor_shift": -0.2780821917808218
     },
     {
       "turn_id": 18,
       "timestamp": "2026-01-13T17:53:00-05:00",
       "speaker": "Oliver",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.6977941176470589,
+      "tenor_shift": 0.27587630942788083
     },
     {
       "turn_id": 19,
       "timestamp": "2026-01-13T17:53:00-05:00",
       "speaker": "Steve",
-      "tenor": 0.5,
-      "tenor_shift": 0.0
+      "tenor": 0.32,
+      "tenor_shift": -0.3777941176470589
     }
   ],
   "field_evolution": [
@@ -358,31 +598,32 @@
   "correlations": {
     "material": {
       "count": 996,
-      "avg_tenor": 0.5,
-      "avg_modality": 0.5
+      "avg_tenor": 0.497,
+      "avg_modality": 0.722
     },
     "verbal": {
       "count": 31,
-      "avg_tenor": 0.5,
-      "avg_modality": 0.5
+      "avg_tenor": 0.524,
+      "avg_modality": 0.758
     },
     "relational": {
       "count": 169,
-      "avg_tenor": 0.5,
-      "avg_modality": 0.5
+      "avg_tenor": 0.54,
+      "avg_modality": 0.863
     },
     "mental": {
       "count": 63,
-      "avg_tenor": 0.5,
-      "avg_modality": 0.5
+      "avg_tenor": 0.398,
+      "avg_modality": 0.735
     },
     "behavioral": {
       "count": 1,
       "avg_tenor": 0.5,
-      "avg_modality": 0.5
+      "avg_modality": 0.9
     }
   },
   "insights": [
+    "Conversation tenor increased by 12.0% (more formal/distant)",
     "Robert contributed 6 of 19 turns"
   ]
 }

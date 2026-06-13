@@ -138,3 +138,28 @@ Generated from SIFT assessment. Weights: Critical → High → Medium.
 ```bash
 # If this component is still in use (2.4)
 ```
+### Analyzer helper duplication (flagged in Task 6 code review, 2026-06-12)
+
+`mean` now has 4 copies (SpeakerProfiler, CorrelationAnalyzer,
+ConversationAnalyzer, DocumentationAnalyzer); `report_progress`,
+`timeline`/`tenor_timeline`, and `field_evolution` are duplicated between the
+two analyzers. Extract a shared `Analysis::Aggregations` mixin before adding
+any further analyzer.
+
+### sfl-analyze CLI follow-ups (final review, 2026-06-12)
+
+- `CLI.parse` rejects inputs starting with `--`; a context query beginning
+  with a dash would be misread. Consider `--` separator support.
+- CSV/JSON formatters do not honor `unit_label`/`actor_label` (markdown
+  only); documentation reports' CSV/JSON still say turn/speaker.
+
+## PyCall/Python process isolation (hardening)
+
+`Pipeline#compile` now forces `GC.start` at the Pass 1 → Pass 2 boundary so
+dead spaCy/PyCall wrappers are swept on the main (GIL-capable) thread
+(b47e27c, gdb-verified GVL/GIL deadlock otherwise). This guards the known
+window, but conservative stack scanning can in principle keep a wrapper
+alive past the boundary sweep and free it on a worker later. The structural
+fix is process isolation: run spaCy in a subprocess (JSON over pipe) so no
+Python object ever shares a process with the threaded Pass 2. Do this if
+the hang ever reappears despite the boundary sweep.
