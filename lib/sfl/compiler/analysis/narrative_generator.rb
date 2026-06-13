@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "dspy"
+
 module SFL
   module Compiler
     module Analysis
@@ -8,6 +10,35 @@ module SFL
       # in-memory AnalysisResult (--narrative flag) or from a written
       # report JSON (narrate subcommand), producing identical text.
       class NarrativeGenerator
+        SECTION_KEYS = %i[
+          overview cast_and_roles interpersonal_dynamics
+          conversational_arc data_quality takeaways
+        ].freeze
+
+        # @param narrator [#call, nil] (digest_text) → Hash of SECTION_KEYS;
+        #   defaults to the DSPy-backed SFLNarrator. Injectable for tests.
+        def initialize(narrator: nil)
+          @narrator = narrator || lambda { |text| SFLNarrator.new(text).call }
+        end
+
+        # @param digest [Digest]
+        # @return [Types::NarrativeReport]
+        # @raise [NarrativeError] on narrator failure or missing sections
+        def generate(digest)
+          sections = @narrator.call(digest.to_text)
+          Types::NarrativeReport.new(
+            source: digest.source,
+            generated_at: Time.now,
+            **sections.to_h.slice(*SECTION_KEYS)
+          )
+        rescue Dry::Struct::Error => e
+          raise NarrativeError, "Narrative output missing or invalid sections: #{e.message}"
+        rescue NarrativeError
+          raise
+        rescue StandardError => e
+          raise NarrativeError, "Narrative generation failed: #{e.message}"
+        end
+
         # Source-agnostic, string-keyed snapshot of an analysis, plus its
         # serialization to the exact text block the LLM receives.
         class Digest
@@ -145,6 +176,48 @@ module SFL
             line += " UNRELIABLE (#{(defaulted_pct * 100).round}% fallback)" if defaulted_pct > UNRELIABLE_THRESHOLD
             "#{line}\n  preview: #{t['preview']}"
           end
+        end
+      end
+
+      # DSPy signature: one call produces all six narrative sections.
+      class NarrativeSignature < DSPy::Signature
+        description "Write an interpretive analytical narrative of a " \
+                    "conversation analyzed with Systemic Functional Linguistics. " \
+                    "Ground every claim in the supplied statistics; quote message " \
+                    "previews where they illustrate a point. NEVER interpret " \
+                    "tenor/modality values from turns marked UNRELIABLE — " \
+                    "describe those turns as unmeasured. Style exemplar: " \
+                    "'Robert is the only speaker who uses imperatives — in SFL " \
+                    "terms, the only one demanding rather than giving. That " \
+                    "asymmetry is the facilitator role, recovered from grammar " \
+                    "alone.' Write clear analytical prose, not bullet dumps."
+
+        input do
+          const :analysis_digest, String,
+            description: "Statistics, speaker profiles, correlations, and " \
+                         "per-turn stance rows with message previews"
+        end
+
+        output do
+          const :overview, String, description: "What this conversation is: topic, participants, setting"
+          const :cast_and_roles, String, description: "Each speaker's role as the grammar reveals it"
+          const :interpersonal_dynamics, String, description: "Tenor/modality patterns and shifts between speakers"
+          const :conversational_arc, String, description: "Phases, pivots, and how the interaction resolves"
+          const :data_quality, String, description: "Annotation coverage caveats; which turns are unmeasured"
+          const :takeaways, String, description: "Three to five grounded conclusions"
+        end
+      end
+
+      # Default DSPy-backed narrator.
+      class SFLNarrator
+        def initialize(digest_text)
+          @digest_text = digest_text
+        end
+
+        # @return [Hash] symbol-keyed sections
+        def call
+          result = DSPy::ChainOfThought.new(NarrativeSignature).call(analysis_digest: @digest_text)
+          NarrativeGenerator::SECTION_KEYS.to_h { |key| [key, result.public_send(key)] }
         end
       end
     end

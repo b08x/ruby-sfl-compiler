@@ -103,4 +103,40 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
       end
     end
   end
+
+  describe "#generate" do
+    let(:digest) { described_class::Digest.from_result(result) }
+
+    let(:canned_sections) do
+      { overview: "An overview.", cast_and_roles: "Cast.",
+        interpersonal_dynamics: "Dynamics.", conversational_arc: "Arc.",
+        data_quality: "Quality.", takeaways: "Takeaways." }
+    end
+
+    it "passes the digest text to the narrator and assembles a NarrativeReport" do
+      received = nil
+      narrator = lambda { |text| received = text; canned_sections }
+
+      report = described_class.new(narrator: narrator).generate(digest)
+
+      expect(received).to eq(digest.to_text)
+      expect(report).to be_a(SFL::Compiler::Types::NarrativeReport)
+      expect(report.source).to eq("conv-1")
+      expect(report.overview).to eq("An overview.")
+    end
+
+    it "raises NarrativeError when the narrator output is missing a section" do
+      narrator = ->(_text) { canned_sections.except(:takeaways) }
+      expect {
+        described_class.new(narrator: narrator).generate(digest)
+      }.to raise_error(SFL::Compiler::NarrativeError, /takeaways|missing/i)
+    end
+
+    it "raises NarrativeError when the narrator itself fails" do
+      narrator = ->(_text) { raise StandardError, "provider exploded" }
+      expect {
+        described_class.new(narrator: narrator).generate(digest)
+      }.to raise_error(SFL::Compiler::NarrativeError, /provider exploded/)
+    end
+  end
 end
