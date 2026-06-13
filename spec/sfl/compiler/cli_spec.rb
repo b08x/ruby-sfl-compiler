@@ -8,7 +8,7 @@ RSpec.describe SFL::Compiler::CLI do
       parsed = described_class.parse(%w[conversation chat.jsonl])
       expect(parsed).to eq(
         command: :conversation, input: "chat.jsonl",
-        options: { output_dir: "./sfl_output", pass1_only: false, narrative: false }
+        options: { output_dir: "./output/latest", pass1_only: false, narrative: false }
       )
     end
 

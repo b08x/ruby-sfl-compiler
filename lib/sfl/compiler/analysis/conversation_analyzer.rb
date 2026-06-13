@@ -36,6 +36,7 @@ module SFL
           end
 
           TenorTracker.new(turns).calculate_shifts
+          turns = CohesionAnalyzer.new.analyze(turns)
           profiles = SpeakerProfiler.build_profiles(turns)
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
           timeline = tenor_timeline(turns)
@@ -53,11 +54,93 @@ module SFL
             tenor_timeline: timeline,
             field_evolution: field_evolution(turns),
             correlations: correlations,
-            insights: generate_insights(turns, timeline, correlations)
+            insights: generate_insights(turns, timeline, correlations),
+            key_moments: detect_key_moments(turns),
+            example_passages: detect_example_passages(turns)
           )
         end
 
         private
+
+        def detect_key_moments(turns)
+          moments = []
+          
+          # Significant Tenor Shifts
+          turns.each_cons(2) do |prev, curr|
+            shift = (curr.avg_tenor - prev.avg_tenor).round(3)
+            if shift.abs > 0.15
+              direction = shift.positive? ? "increased" : "decreased"
+              moments << Types::KeyMoment.new(
+                turn_id: curr.turn_id,
+                type: "tenor_shift",
+                magnitude: shift,
+                description: "Formality #{direction} dramatically (+#{shift}) between #{prev.speaker} and #{curr.speaker}"
+              )
+            end
+          end
+
+          # Significant Modality Shifts
+          turns.each_cons(2) do |prev, curr|
+            shift = (curr.avg_modality - prev.avg_modality).round(3)
+            if shift.abs > 0.3
+              direction = shift.positive? ? "increased" : "decreased"
+              moments << Types::KeyMoment.new(
+                turn_id: curr.turn_id,
+                type: "modality_shift",
+                magnitude: shift,
+                description: "Certainty #{direction} significantly (+#{shift}) in #{curr.speaker}'s response"
+              )
+            end
+          end
+
+          moments
+        end
+
+        def detect_example_passages(turns)
+          passages = []
+          
+          # Most Formal
+          most_formal = turns.max_by(&:avg_tenor)
+          passages << Types::ExamplePassage.new(
+            label: "Most Formal",
+            text: most_formal.message_text,
+            speaker: most_formal.speaker,
+            value: most_formal.avg_tenor,
+            reason: "Highest tenor (formality) score in the conversation"
+          ) if most_formal
+
+          # Most Casual
+          most_casual = turns.min_by(&:avg_tenor)
+          passages << Types::ExamplePassage.new(
+            label: "Most Casual",
+            text: most_casual.message_text,
+            speaker: most_casual.speaker,
+            value: most_casual.avg_tenor,
+            reason: "Lowest tenor score; uses informal register"
+          ) if most_casual
+
+          # Most Certain
+          most_certain = turns.max_by(&:avg_modality)
+          passages << Types::ExamplePassage.new(
+            label: "Most Certain",
+            text: most_certain.message_text,
+            speaker: most_certain.speaker,
+            value: most_certain.avg_modality,
+            reason: "Highest modality weight; assertive and definitive language"
+          ) if most_certain
+
+          # Most Uncertain/Hedged
+          most_hedged = turns.min_by(&:avg_modality)
+          passages << Types::ExamplePassage.new(
+            label: "Most Hedged",
+            text: most_hedged.message_text,
+            speaker: most_hedged.speaker,
+            value: most_hedged.avg_modality,
+            reason: "Lowest modality weight; frequent use of hedging or uncertainty"
+          ) if most_hedged
+
+          passages
+        end
 
         def report_progress(turn, total, elapsed)
           return unless @on_progress

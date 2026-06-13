@@ -38,6 +38,7 @@ module SFL
           end
 
           TenorTracker.new(turns).calculate_shifts
+          turns = CohesionAnalyzer.new.analyze(turns)
           profiles = SpeakerProfiler.build_profiles(turns)
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
 
@@ -57,11 +58,59 @@ module SFL
             tenor_timeline: timeline(turns),
             field_evolution: field_evolution(turns),
             correlations: correlations,
-            insights: []
+            insights: [],
+            key_moments: detect_key_moments(turns),
+            example_passages: detect_example_passages(turns)
           )
         end
 
         private
+
+        def detect_key_moments(turns)
+          moments = []
+          
+          # Significant Tenor Shifts (Formality Flow)
+          turns.each_cons(2) do |prev, curr|
+            shift = (curr.avg_tenor - prev.avg_tenor).round(3)
+            if shift.abs > 0.15
+              direction = shift.positive? ? "increased" : "decreased"
+              moments << Types::KeyMoment.new(
+                turn_id: curr.turn_id,
+                type: "tenor_shift",
+                magnitude: shift,
+                description: "Formality #{direction} dramatically (+#{shift}) in section '#{curr.speaker}'"
+              )
+            end
+          end
+
+          moments
+        end
+
+        def detect_example_passages(turns)
+          passages = []
+          
+          # Most Formal Section
+          most_formal = turns.max_by(&:avg_tenor)
+          passages << Types::ExamplePassage.new(
+            label: "Most Formal Section",
+            text: most_formal.message_text[0..200] + "...",
+            speaker: most_formal.speaker,
+            value: most_formal.avg_tenor,
+            reason: "Highest formality score in the document"
+          ) if most_formal
+
+          # Most Certain Section
+          most_certain = turns.max_by(&:avg_modality)
+          passages << Types::ExamplePassage.new(
+            label: "Most Assertive Section",
+            text: most_certain.message_text[0..200] + "...",
+            speaker: most_certain.speaker,
+            value: most_certain.avg_modality,
+            reason: "Highest certainty score; authoritative stance"
+          ) if most_certain
+
+          passages
+        end
 
         # @return [Array<[MarkdownLoader::Section, Time]>]
         def load_sections(path)

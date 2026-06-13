@@ -60,7 +60,7 @@ module SFL
       end
 
       def parse_conversation_options(argv)
-        options = { output_dir: "./sfl_output", pass1_only: false, narrative: false }
+        options = { output_dir: "./output/latest", pass1_only: false, narrative: false }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
@@ -70,7 +70,7 @@ module SFL
       end
 
       def parse_documentation_options(argv)
-        options = { output_dir: "./sfl_output", pass1_only: false, store: false, narrative: false }
+        options = { output_dir: "./output/latest", pass1_only: false, store: false, narrative: false }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }

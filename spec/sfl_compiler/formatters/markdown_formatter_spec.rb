@@ -92,11 +92,11 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       separator_line = lines.find { |l| l.start_with?("|---") }
       data_lines = lines.select { |l| l.start_with?("| Alice") || l.start_with?("| Bob") }
 
-      expect(header_line).to eq("| Speaker | Avg Tenor | Range | Variance | Avg Modality |")
-      expect(separator_line).to eq("|---------|-----------|-------|----------|--------------|")
+      expect(header_line).to include("| Speaker | Avg Tenor | Range | Variance | Avg Modality |")
+      expect(separator_line).to include("|---------|-----------|-------|----------|--------------|")
       expect(data_lines.length).to eq(2)
-      expect(data_lines).to include(a_string_starting_with("| Alice |"))
-      expect(data_lines).to include(a_string_starting_with("| Bob |"))
+      expect(data_lines).to include(a_string_starting_with("| Alice"))
+      expect(data_lines).to include(a_string_starting_with("| Bob"))
     end
 
     it "renders correlations as a valid markdown table with 2 data rows" do

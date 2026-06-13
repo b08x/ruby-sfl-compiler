@@ -18,7 +18,7 @@ module SFL
       TenorValue = Types::Float.constrained(gteq: 0.0, lteq: 1.0)
 
       # Mood types from SFL
-      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative")
+      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "minor")
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
@@ -76,6 +76,16 @@ module SFL
         attribute :annotation_source, Types::AnnotationSource
       end
 
+      # Textual metafunction payload (from Pass 2)
+      class TextualPayload < Dry::Struct
+        attribute :clause_id, Types::String
+        attribute :topical_theme, Types::String.optional
+        attribute :textual_theme, Types::String.optional
+        attribute :interpersonal_theme, Types::String.optional
+        attribute :rheme, Types::String.optional
+        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical").optional
+      end
+
       # Combined annotated clause — the full output of the two-pass compiler
       class AnnotatedClause < Dry::Struct
         attribute :id, Types::String
@@ -83,8 +93,16 @@ module SFL
         attribute :syntactic, SyntacticClause
         attribute :ideational, IdeationalPayload
         attribute :interpersonal, InterpersonalPayload
+        attribute :textual, TextualPayload.optional.default(nil)
         attribute :document_id, Types::String.optional
         attribute :compiled_at, Types::Time
+      end
+
+      # Cohesion metrics for a group of clauses
+      class CohesionMetrics < Dry::Struct
+        attribute :repetition_score, Types::Float.constrained(gteq: 0.0, lteq: 1.0).default(0.0)
+        attribute :conjunction_density, Types::Float.constrained(gteq: 0.0, lteq: 1.0).default(0.0)
+        attribute :pronoun_density, Types::Float.constrained(gteq: 0.0, lteq: 1.0).default(0.0)
       end
 
       # Dispatch decision for the orchestrator
@@ -124,6 +142,7 @@ module SFL
         attribute :process_types, Types::Hash.default({}.freeze)
         attribute :participants, Types::Array.of(Types::String).default([].freeze)
         attribute :tenor_shift, Types::Float.optional
+        attribute :cohesion, CohesionMetrics.optional.default(nil)
       end
 
       # Aggregated profile for a single speaker across conversation
@@ -138,6 +157,23 @@ module SFL
         attribute :dominant_processes, Types::Hash.default({}.freeze)
       end
 
+      # Key moments in a conversation
+      class KeyMoment < Dry::Struct
+        attribute :turn_id, Types::Integer
+        attribute :type, Types::String.enum("tenor_shift", "modality_shift", "topic_shift")
+        attribute :magnitude, Types::Float
+        attribute :description, Types::String
+      end
+
+      # Example passages for a specific rhetorical stance
+      class ExamplePassage < Dry::Struct
+        attribute :label, Types::String
+        attribute :text, Types::String
+        attribute :speaker, Types::String
+        attribute :value, Types::Float
+        attribute :reason, Types::String
+      end
+
       # Complete analysis result for a conversation
       class AnalysisResult < Dry::Struct
         attribute :metadata, Types::Hash
@@ -147,6 +183,8 @@ module SFL
         attribute :field_evolution, Types::Array.of(Types::Hash)
         attribute :correlations, Types::Hash
         attribute :insights, Types::Array.of(Types::String)
+        attribute :key_moments, Types::Array.of(KeyMoment).default([].freeze)
+        attribute :example_passages, Types::Array.of(ExamplePassage).default([].freeze)
       end
 
       # Result of a context query: hybrid retrieval + LLM synthesis

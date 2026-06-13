@@ -26,6 +26,12 @@ module SFL
 
             ---
 
+            ## Cohesion Metrics
+
+            #{cohesion_table}
+
+            ---
+
             ## Tenor ↔ Field Correlations
 
             #{correlations_table}
@@ -35,7 +41,8 @@ module SFL
             ## Generated Insights
 
             #{insights_list}
-
+            #{key_moments_section}
+            #{example_passages_section}
             ---
 
             ## Methodology
@@ -98,9 +105,26 @@ module SFL
           header += "|#{"-" * (name_pad + 2)}|-----------|-------|----------|--------------|\n"
 
           rows = result.speaker_profiles.map do |name, profile|
-            "| #{name} | #{profile.avg_tenor} (#{tenor_label(profile.avg_tenor)}) | #{profile.tenor_range.inspect} | #{profile.tenor_variance} | #{profile.avg_modality} |"
+            "| #{name.to_s.ljust(name_pad)} | #{profile.avg_tenor.round(3)} (#{tenor_label(profile.avg_tenor)}) | " \
+            "[#{profile.tenor_range.map { |v| v.round(2) }.join(', ')}] | " \
+            "#{profile.tenor_variance.round(4)} | #{profile.avg_modality.round(3)} |"
           end
 
+          header + rows.join("\n")
+        end
+
+        def cohesion_table
+          header = "| #{unit_label} | Speaker | Repetition | Conjunctions | Pronouns |\n"
+          header += "|:-----|:---------|:-----------|:-------------|:---------|\n"
+
+          rows = result.turns.map do |turn|
+            c = turn.cohesion
+            next unless c
+            "| #{turn.turn_id} | #{turn.speaker} | #{c.repetition_score.round(3)} | " \
+            "#{c.conjunction_density.round(3)} | #{c.pronoun_density.round(3)} |"
+          end.compact
+
+          return "_No cohesion metrics available_" if rows.empty?
           header + rows.join("\n")
         end
 
@@ -111,8 +135,9 @@ module SFL
           header += "|--------------|-----------|--------------|-------|\n"
 
           rows = result.correlations.map do |process_type, data|
-            "| #{process_type} | #{data[:avg_tenor]} | #{data[:avg_modality]} | #{data[:count]} |"
-          end
+            next unless data.is_a?(Hash) && data[:count]
+            "| #{process_type} | #{data[:avg_tenor].round(3)} | #{data[:avg_modality].round(3)} | #{data[:count]} |"
+          end.compact
 
           header + rows.join("\n")
         end
@@ -121,6 +146,30 @@ module SFL
           return "_No insights generated_" if result.insights.empty?
 
           result.insights.map.with_index { |insight, i| "#{i + 1}. #{insight}" }.join("\n\n")
+        end
+
+        def key_moments_section
+          return "" if result.key_moments.empty?
+
+          section = ["", "### ⚡ Key Moments", ""]
+          result.key_moments.each do |moment|
+            section << "- **#{unit_label} #{moment.turn_id}** (#{moment.type.tr('_', ' ')}): #{moment.description}"
+          end
+          section.join("\n")
+        end
+
+        def example_passages_section
+          return "" if result.example_passages.empty?
+
+          section = ["", "### 📖 Example Passages", ""]
+          result.example_passages.each do |passage|
+            section << "#### #{passage.label} (score: #{passage.value.round(3)})"
+            section << "> \"#{passage.text.gsub("\n", " ").strip}\""
+            section << ""
+            section << "*— #{passage.speaker}. #{passage.reason}.*"
+            section << ""
+          end
+          section.join("\n")
         end
 
         def tenor_label(tenor)
