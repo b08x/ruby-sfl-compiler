@@ -1,0 +1,75 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Analysis & Clustering (35 nodes, 45 edges)
+    subgraph analysis_clustering_compiler_analysis_speaker_pr_ea09ffe8["compiler/analysis/speaker_profiler.rb"]
+        analysis_speaker_profiler_speakerprofiler_f8dbb0c2("SpeakerProfiler<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_build_65a31526("build_profile()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_aggreg_49516921("aggregate_process_types()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_build_d489d1c2("build_profiles()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_calcul_35874cf7("calculate_mood_distribution()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_initia_4e55b369("initialize()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+        analysis_speaker_profiler_speakerprofiler_mean_d08818b7("mean()<br/><small>compiler/analysis/speaker_profiler.rb</small>")
+    end
+    subgraph analysis_clustering_compiler_analysis_cohesion_a_7a915b48["compiler/analysis/cohesion_analyzer.rb"]
+        analysis_cohesion_analyzer_cohesionanalyzer_70dd4798("CohesionAnalyzer<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+        analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707("calculate_metrics()<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+        analysis_cohesion_analyzer_cohesionanalyzer_anal_39b06f66("analyze()<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+        analysis_cohesion_analyzer_cohesionanalyzer_calc_f6915252("calculate_density()<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+        analysis_cohesion_analyzer_cohesionanalyzer_calc_288eebb1("calculate_repetition()<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+        analysis_cohesion_analyzer_cohesionanalyzer_defa_01100d60("default_metrics()<br/><small>compiler/analysis/cohesion_analyzer.rb</small>")
+    end
+    subgraph analysis_clustering_compiler_analysis_correlatio_de428fc3["compiler/analysis/correlation_analyzer.rb"]
+        analysis_correlation_analyzer_correlationanalyze_42517e87("CorrelationAnalyzer<br/><small>compiler/analysis/correlation_analyzer.rb</small>")
+        analysis_correlation_analyzer_correlationanalyze_71ba14d5("correlate_process_tenor()<br/><small>compiler/analysis/correlation_analyzer.rb</small>")
+        analysis_correlation_analyzer_correlationanalyze_a8a69b71("initialize()<br/><small>compiler/analysis/correlation_analyzer.rb</small>")
+        analysis_correlation_analyzer_correlationanalyze_ffde35ac("mean()<br/><small>compiler/analysis/correlation_analyzer.rb</small>")
+    end
+    query_20260613_032646_parse_6dcec26c("parse()<br/><small>graphify-out/memory/query_20260613_032646_why_does_parse_connect_conversation_analysis_to_co.md</small>")
+    analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 -->|method| analysis_cohesion_analyzer_cohesionanalyzer_anal_39b06f66
+    analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 -->|method| analysis_cohesion_analyzer_cohesionanalyzer_calc_f6915252
+    analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 -->|method| analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707
+    analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 -->|method| analysis_cohesion_analyzer_cohesionanalyzer_calc_288eebb1
+    analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 -->|method| analysis_cohesion_analyzer_cohesionanalyzer_defa_01100d60
+    analysis_cohesion_analyzer_cohesionanalyzer_anal_39b06f66 -->|calls| analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707
+    analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707 -->|calls| analysis_cohesion_analyzer_cohesionanalyzer_calc_f6915252
+    analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707 -->|calls| analysis_cohesion_analyzer_cohesionanalyzer_calc_288eebb1
+    analysis_correlation_analyzer_correlationanalyze_42517e87 -->|method| analysis_correlation_analyzer_correlationanalyze_71ba14d5
+    analysis_correlation_analyzer_correlationanalyze_42517e87 -->|method| analysis_correlation_analyzer_correlationanalyze_a8a69b71
+    analysis_correlation_analyzer_correlationanalyze_42517e87 -->|method| analysis_correlation_analyzer_correlationanalyze_ffde35ac
+    analysis_correlation_analyzer_correlationanalyze_71ba14d5 -->|calls| analysis_correlation_analyzer_correlationanalyze_ffde35ac
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_aggreg_49516921
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_build_65a31526
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_build_d489d1c2
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_calcul_35874cf7
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_initia_4e55b369
+    analysis_speaker_profiler_speakerprofiler_f8dbb0c2 -->|method| analysis_speaker_profiler_speakerprofiler_mean_d08818b7
+    analysis_speaker_profiler_speakerprofiler_build_65a31526 -->|calls| analysis_speaker_profiler_speakerprofiler_mean_d08818b7
+    analysis_speaker_profiler_speakerprofiler_build_65a31526 -->|calls| analysis_speaker_profiler_speakerprofiler_build_d489d1c2
+    %% Omitted for readability: 17 nodes, 0 edges
+    class analysis_speaker_profiler_speakerprofiler_f8dbb0c2 klass;
+    class analysis_speaker_profiler_speakerprofiler_build_65a31526 function;
+    class analysis_speaker_profiler_speakerprofiler_aggreg_49516921 function;
+    class analysis_speaker_profiler_speakerprofiler_build_d489d1c2 function;
+    class analysis_speaker_profiler_speakerprofiler_calcul_35874cf7 function;
+    class analysis_speaker_profiler_speakerprofiler_initia_4e55b369 function;
+    class analysis_speaker_profiler_speakerprofiler_mean_d08818b7 function;
+    class analysis_cohesion_analyzer_cohesionanalyzer_70dd4798 klass;
+    class analysis_cohesion_analyzer_cohesionanalyzer_calc_5f89f707 function;
+    class analysis_cohesion_analyzer_cohesionanalyzer_anal_39b06f66 function;
+    class analysis_cohesion_analyzer_cohesionanalyzer_calc_f6915252 function;
+    class analysis_cohesion_analyzer_cohesionanalyzer_calc_288eebb1 function;
+    class analysis_cohesion_analyzer_cohesionanalyzer_defa_01100d60 function;
+    class analysis_correlation_analyzer_correlationanalyze_42517e87 klass;
+    class analysis_correlation_analyzer_correlationanalyze_71ba14d5 function;
+    class analysis_correlation_analyzer_correlationanalyze_a8a69b71 function;
+    class analysis_correlation_analyzer_correlationanalyze_ffde35ac function;
+    class query_20260613_032646_parse_6dcec26c function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

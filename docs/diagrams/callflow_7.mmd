@@ -1,0 +1,66 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Serving API (16 nodes, 22 edges)
+    subgraph serve_api_compiler_retrieval_hybrid_retriever_rb_edab0fcc["compiler/retrieval/hybrid_retriever.rb"]
+        retrieval_hybrid_retriever_hybridretriever_be70b989("HybridRetriever<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b("retrieve()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_apply_95985841("apply_filters()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_initi_33e29682("initialize()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c("keyword_search()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26("reciprocal_rank_fusion()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_hybridretriever_seman_536c621c("semantic_search()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
+        retrieval_hybrid_retriever_85ebcc67("hybrid_retriever.rb")
+    end
+    subgraph serve_api_compiler_retrieval_embedder_rb_f1a565d3["compiler/retrieval/embedder.rb"]
+        retrieval_embedder_embedder_18bbb897("Embedder<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_embedder_embed_63c12c1f("embed()<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_embedder_initialize_740507d3("initialize()<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_embedder_call_ruby_llm_df4ff24e("call_ruby_llm()<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9("configure_ruby_llm()<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_embedder_openai_compatible_ba_530b291f("openai_compatible_base()<br/><small>compiler/retrieval/embedder.rb</small>")
+        retrieval_embedder_507174a5("embedder.rb")
+    end
+    sfl_compiler_configure_6d77cc62("configure()<br/><small>lib/sfl/compiler.rb</small>")
+    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_call_ruby_llm_df4ff24e
+    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9
+    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_embed_63c12c1f
+    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_initialize_740507d3
+    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_openai_compatible_ba_530b291f
+    retrieval_embedder_embedder_initialize_740507d3 -->|calls| retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9
+    retrieval_embedder_embedder_embed_63c12c1f -->|calls| retrieval_embedder_embedder_call_ruby_llm_df4ff24e
+    retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9 -->|calls| retrieval_embedder_embedder_openai_compatible_ba_530b291f
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_apply_95985841
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_initi_33e29682
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b
+    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_seman_536c621c
+    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_apply_95985841
+    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c
+    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26
+    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_seman_536c621c
+    class retrieval_hybrid_retriever_hybridretriever_be70b989 klass;
+    class retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b function;
+    class retrieval_hybrid_retriever_hybridretriever_apply_95985841 function;
+    class retrieval_hybrid_retriever_hybridretriever_initi_33e29682 function;
+    class retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c function;
+    class retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26 function;
+    class retrieval_hybrid_retriever_hybridretriever_seman_536c621c function;
+    class retrieval_hybrid_retriever_85ebcc67 module;
+    class retrieval_embedder_embedder_18bbb897 klass;
+    class retrieval_embedder_embedder_embed_63c12c1f function;
+    class retrieval_embedder_embedder_initialize_740507d3 function;
+    class retrieval_embedder_embedder_call_ruby_llm_df4ff24e function;
+    class retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9 function;
+    class retrieval_embedder_embedder_openai_compatible_ba_530b291f function;
+    class retrieval_embedder_507174a5 module;
+    class sfl_compiler_configure_6d77cc62 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

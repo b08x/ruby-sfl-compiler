@@ -1,0 +1,27 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Markdown Loader (6 nodes, 5 edges)
+    experiments_01_fca_proof_of_concept_simplefca_92ccc686("SimpleFCA<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
+    experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2("find_concepts()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
+    experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9("find_implications()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
+    experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af("initialize()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
+    experiments_01_fca_proof_of_concept_7c5e32ba("01_fca_proof_of_concept.rb")
+    experiments_01_fca_proof_of_concept_extract_attr_19379f6b("extract_attributes()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
+    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2
+    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9
+    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af
+    class experiments_01_fca_proof_of_concept_simplefca_92ccc686 klass;
+    class experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2 function;
+    class experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9 function;
+    class experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af function;
+    class experiments_01_fca_proof_of_concept_7c5e32ba module;
+    class experiments_01_fca_proof_of_concept_extract_attr_19379f6b function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

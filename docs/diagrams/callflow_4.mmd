@@ -1,0 +1,76 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Outputs & Docs (62 nodes, 80 edges)
+    subgraph outputs_docs_compiler_analysis_documentation_ana_e30e1b1d["compiler/analysis/documentation_analyzer.rb"]
+        analysis_documentation_analyzer_documentationana_84138c61("DocumentationAnalyzer<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_238df06d("analyze()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_c48446d1("compile_section()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_5d78a700("detect_example_passages()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_74662ff2("detect_key_moments()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_ae1cbd8d("field_evolution()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_cfd8516d("generate_topic_insights()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_9ff4b5a3("initialize()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_f1942732("load_sections()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_617723f6("mean()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_d6213cab("report_progress()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_4d2a8c13("timeline()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+        analysis_documentation_analyzer_documentationana_4c02b29e("topic_evolution()<br/><small>compiler/analysis/documentation_analyzer.rb</small>")
+    end
+    subgraph outputs_docs_compiler_analysis_tenor_tracker_rb_96f412c5["compiler/analysis/tenor_tracker.rb"]
+        analysis_tenor_tracker_tenortracker_bafc7015("TenorTracker<br/><small>compiler/analysis/tenor_tracker.rb</small>")
+        analysis_tenor_tracker_tenortracker_calculate_sh_d216dd7b("calculate_shifts()<br/><small>compiler/analysis/tenor_tracker.rb</small>")
+    end
+    formatters_base_formatter_baseformatter_dc96c473("BaseFormatter<br/><small>compiler/formatters/base_formatter.rb</small>")
+    pass_one_pass_one_engine_passoneengine_1967dc5f("PassOneEngine<br/><small>compiler/pass_one/pass_one_engine.rb</small>")
+    compiler_pipeline_pipeline_554e7cf0("Pipeline<br/><small>sfl/compiler/pipeline.rb</small>")
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_238df06d
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_c48446d1
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_5d78a700
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_74662ff2
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_ae1cbd8d
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_cfd8516d
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_9ff4b5a3
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_f1942732
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_617723f6
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_d6213cab
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_4d2a8c13
+    analysis_documentation_analyzer_documentationana_84138c61 -->|method| analysis_documentation_analyzer_documentationana_4c02b29e
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_c48446d1
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_5d78a700
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_74662ff2
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_ae1cbd8d
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_cfd8516d
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_f1942732
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_d6213cab
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_4d2a8c13
+    analysis_documentation_analyzer_documentationana_238df06d -->|calls| analysis_documentation_analyzer_documentationana_4c02b29e
+    analysis_documentation_analyzer_documentationana_c48446d1 -->|calls| analysis_documentation_analyzer_documentationana_617723f6
+    analysis_tenor_tracker_tenortracker_bafc7015 -->|method| analysis_tenor_tracker_tenortracker_calculate_sh_d216dd7b
+    %% Omitted for readability: 44 nodes, 0 edges
+    class analysis_documentation_analyzer_documentationana_84138c61 klass;
+    class analysis_documentation_analyzer_documentationana_238df06d function;
+    class analysis_documentation_analyzer_documentationana_c48446d1 function;
+    class analysis_documentation_analyzer_documentationana_5d78a700 function;
+    class analysis_documentation_analyzer_documentationana_74662ff2 function;
+    class analysis_documentation_analyzer_documentationana_ae1cbd8d function;
+    class analysis_documentation_analyzer_documentationana_cfd8516d function;
+    class analysis_documentation_analyzer_documentationana_9ff4b5a3 function;
+    class analysis_documentation_analyzer_documentationana_f1942732 function;
+    class analysis_documentation_analyzer_documentationana_617723f6 function;
+    class analysis_documentation_analyzer_documentationana_d6213cab function;
+    class analysis_documentation_analyzer_documentationana_4d2a8c13 function;
+    class analysis_documentation_analyzer_documentationana_4c02b29e function;
+    class analysis_tenor_tracker_tenortracker_bafc7015 klass;
+    class analysis_tenor_tracker_tenortracker_calculate_sh_d216dd7b function;
+    class formatters_base_formatter_baseformatter_dc96c473 klass;
+    class pass_one_pass_one_engine_passoneengine_1967dc5f klass;
+    class compiler_pipeline_pipeline_554e7cf0 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

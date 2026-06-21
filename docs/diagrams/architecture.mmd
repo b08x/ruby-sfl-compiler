@@ -1,0 +1,51 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>79 nodes</small>")
+    class EXTRACT_PIPELINE_5F350230 module;
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>23 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    ANALYSIS_CLUSTERING_C79796DA("Analysis & Clustering<br/><small>35 nodes</small>")
+    class ANALYSIS_CLUSTERING_C79796DA module;
+    OUTPUTS_DOCS_ED82387C("Outputs & Docs<br/><small>62 nodes</small>")
+    class OUTPUTS_DOCS_ED82387C module;
+    CLI_SKILLS_9964CBB8("CLI & Skill Installers<br/><small>2 nodes</small>")
+    class CLI_SKILLS_9964CBB8 module;
+    INGEST_CACHE_UPDATE_FF457338("Ingestion & Updates<br/><small>96 nodes</small>")
+    class INGEST_CACHE_UPDATE_FF457338 module;
+    SERVE_API_35EC8E86("Serving API<br/><small>16 nodes</small>")
+    class SERVE_API_35EC8E86 module;
+    CORRELATION_ANALYSIS_AA399C69("Correlation Analysis<br/><small>28 nodes</small>")
+    class CORRELATION_ANALYSIS_AA399C69 module;
+    CONVERSATION_ANALYSIS_17C283AE("Conversation Analysis<br/><small>27 nodes</small>")
+    class CONVERSATION_ANALYSIS_17C283AE module;
+    HYBRID_RETRIEVER_975D0030("Hybrid Retriever<br/><small>18 nodes</small>")
+    class HYBRID_RETRIEVER_975D0030 module;
+    DATABASE_MIGRATIONS_37A83AD7("Database & Migrations<br/><small>8 nodes</small>")
+    class DATABASE_MIGRATIONS_37A83AD7 module;
+    MARKDOWN_LOADER_7351760A("Markdown Loader<br/><small>6 nodes</small>")
+    class MARKDOWN_LOADER_7351760A module;
+    SPEAKER_PROFILER_3A42CFA9("Speaker Profiler<br/><small>4 nodes</small>")
+    class SPEAKER_PROFILER_3A42CFA9 module;
+    COHESION_ANALYSIS_FD1FF4CE("Cohesion Analysis<br/><small>3 nodes</small>")
+    class COHESION_ANALYSIS_FD1FF4CE module;
+    OTHER_D0941E68("Other<br/><small>9 nodes</small>")
+    class OTHER_D0941E68 module;
+    OUTPUTS_DOCS_ED82387C -->|method x2| INGEST_CACHE_UPDATE_FF457338
+    CORRELATION_ANALYSIS_AA399C69 -->|contains x2| EXTRACT_PIPELINE_5F350230
+    BUILD_GRAPH_321CBB04 -->|method| OUTPUTS_DOCS_ED82387C
+    CONVERSATION_ANALYSIS_17C283AE -->|method| INGEST_CACHE_UPDATE_FF457338
+    OUTPUTS_DOCS_ED82387C -->|method| EXTRACT_PIPELINE_5F350230
+    EXTRACT_PIPELINE_5F350230 -->|contains| INGEST_CACHE_UPDATE_FF457338
+    EXTRACT_PIPELINE_5F350230 -->|contains| SERVE_API_35EC8E86
+    EXTRACT_PIPELINE_5F350230 -->|calls| CORRELATION_ANALYSIS_AA399C69
+    INGEST_CACHE_UPDATE_FF457338 -->|method| ANALYSIS_CLUSTERING_C79796DA
+    ANALYSIS_CLUSTERING_C79796DA -->|calls| INGEST_CACHE_UPDATE_FF457338
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

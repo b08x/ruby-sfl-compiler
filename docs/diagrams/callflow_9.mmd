@@ -1,0 +1,75 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Conversation Analysis (27 nodes, 37 edges)
+    subgraph conversation_analysis_compiler_analysis_narrativ_4453dc56["compiler/analysis/narrative_generator.rb"]
+        analysis_narrative_generator_digest_de4de09b("Digest<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_from_result_25a0b57f("from_result()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_narrativegenerator_c8f33c62("generate()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_narrativegenerator_faf2d70e("NarrativeGenerator<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_sflnarrator_2b7404e6("SFLNarrator<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_narrativegenerator_f8107ada("initialize()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_sflnarrator_call_3518a2d2("call()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_source_c5591de9("source()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_to_text_ec47dea8("to_text()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_coverage_c23d0b19("coverage()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_deep_stringi_45daccf7("deep_stringify()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_initialize_09b676aa("initialize()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_profiles_has_41c5ffb4("profiles_hash()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_digest_turn_line_d825a90e("turn_line()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+        analysis_narrative_generator_sflnarrator_initial_c3df9c83("initialize()<br/><small>compiler/analysis/narrative_generator.rb</small>")
+    end
+    subgraph conversation_analysis_compiler_formatters_csv_fo_969c9aac["compiler/formatters/csv_formatter.rb"]
+        formatters_csv_formatter_csvformatter_3f1012c3("CSVFormatter<br/><small>compiler/formatters/csv_formatter.rb</small>")
+        formatters_csv_formatter_csvformatter_format_pro_e1c31950("format_process_counts()<br/><small>compiler/formatters/csv_formatter.rb</small>")
+        formatters_csv_formatter_csvformatter_headers_eaec50ca("headers()<br/><small>compiler/formatters/csv_formatter.rb</small>")
+    end
+    analysis_narrative_generator_narrativegenerator_faf2d70e -->|method| analysis_narrative_generator_narrativegenerator_c8f33c62
+    analysis_narrative_generator_narrativegenerator_faf2d70e -->|method| analysis_narrative_generator_narrativegenerator_f8107ada
+    analysis_narrative_generator_narrativegenerator_f8107ada -->|calls| analysis_narrative_generator_sflnarrator_call_3518a2d2
+    analysis_narrative_generator_narrativegenerator_c8f33c62 -->|calls| analysis_narrative_generator_digest_source_c5591de9
+    analysis_narrative_generator_narrativegenerator_c8f33c62 -->|calls| analysis_narrative_generator_digest_to_text_ec47dea8
+    analysis_narrative_generator_narrativegenerator_c8f33c62 -->|calls| analysis_narrative_generator_sflnarrator_call_3518a2d2
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_coverage_c23d0b19
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_deep_stringi_45daccf7
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_from_result_25a0b57f
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_initialize_09b676aa
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_profiles_has_41c5ffb4
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_source_c5591de9
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_to_text_ec47dea8
+    analysis_narrative_generator_digest_de4de09b -->|method| analysis_narrative_generator_digest_turn_line_d825a90e
+    analysis_narrative_generator_digest_from_result_25a0b57f -->|calls| analysis_narrative_generator_digest_coverage_c23d0b19
+    analysis_narrative_generator_digest_from_result_25a0b57f -->|calls| analysis_narrative_generator_digest_deep_stringi_45daccf7
+    analysis_narrative_generator_digest_from_result_25a0b57f -->|calls| analysis_narrative_generator_digest_profiles_has_41c5ffb4
+    analysis_narrative_generator_digest_to_text_ec47dea8 -->|calls| analysis_narrative_generator_digest_turn_line_d825a90e
+    analysis_narrative_generator_sflnarrator_2b7404e6 -->|method| analysis_narrative_generator_sflnarrator_call_3518a2d2
+    analysis_narrative_generator_sflnarrator_2b7404e6 -->|method| analysis_narrative_generator_sflnarrator_initial_c3df9c83
+    formatters_csv_formatter_csvformatter_3f1012c3 -->|method| formatters_csv_formatter_csvformatter_format_pro_e1c31950
+    formatters_csv_formatter_csvformatter_3f1012c3 -->|method| formatters_csv_formatter_csvformatter_headers_eaec50ca
+    %% Omitted for readability: 9 nodes, 0 edges
+    class analysis_narrative_generator_digest_de4de09b klass;
+    class analysis_narrative_generator_digest_from_result_25a0b57f function;
+    class analysis_narrative_generator_narrativegenerator_c8f33c62 function;
+    class analysis_narrative_generator_narrativegenerator_faf2d70e klass;
+    class analysis_narrative_generator_sflnarrator_2b7404e6 klass;
+    class analysis_narrative_generator_narrativegenerator_f8107ada function;
+    class analysis_narrative_generator_sflnarrator_call_3518a2d2 function;
+    class analysis_narrative_generator_digest_source_c5591de9 function;
+    class analysis_narrative_generator_digest_to_text_ec47dea8 function;
+    class analysis_narrative_generator_digest_coverage_c23d0b19 function;
+    class analysis_narrative_generator_digest_deep_stringi_45daccf7 function;
+    class analysis_narrative_generator_digest_initialize_09b676aa function;
+    class analysis_narrative_generator_digest_profiles_has_41c5ffb4 function;
+    class analysis_narrative_generator_digest_turn_line_d825a90e function;
+    class analysis_narrative_generator_sflnarrator_initial_c3df9c83 function;
+    class formatters_csv_formatter_csvformatter_3f1012c3 klass;
+    class formatters_csv_formatter_csvformatter_format_pro_e1c31950 function;
+    class formatters_csv_formatter_csvformatter_headers_eaec50ca function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

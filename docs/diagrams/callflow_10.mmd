@@ -1,0 +1,65 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Hybrid Retriever (18 nodes, 17 edges)
+    compiler_types_0103137e("types.rb")
+    compiler_types_analysisresult_7beff7c2("AnalysisResult<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_annotatedclause_ffd3d9b3("AnnotatedClause<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_cohesionmetrics_bf728e18("CohesionMetrics<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_conversationturn_3fe64342("ConversationTurn<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_dispatchdecision_5fa64a85("DispatchDecision<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_examplepassage_1bda8070("ExamplePassage<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_ideationalpayload_fdfaf973("IdeationalPayload<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_interpersonalpayload_09352c53("InterpersonalPayload<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_keymoment_0c86f98e("KeyMoment<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_narrativereport_b9e8b3f0("NarrativeReport<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_participant_f44bd4e8("Participant<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_speakerprofile_ec550106("SpeakerProfile<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_syntacticclause_db1f85c9("SyntacticClause<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_syntactictoken_a2705bcd("SyntacticToken<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_synthesisresult_d025be6a("SynthesisResult<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_taskresult_a1ef7e9f("TaskResult<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_textualpayload_5d74bbc5("TextualPayload<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_0103137e -->|contains| compiler_types_analysisresult_7beff7c2
+    compiler_types_0103137e -->|contains| compiler_types_annotatedclause_ffd3d9b3
+    compiler_types_0103137e -->|contains| compiler_types_cohesionmetrics_bf728e18
+    compiler_types_0103137e -->|contains| compiler_types_conversationturn_3fe64342
+    compiler_types_0103137e -->|contains| compiler_types_dispatchdecision_5fa64a85
+    compiler_types_0103137e -->|contains| compiler_types_examplepassage_1bda8070
+    compiler_types_0103137e -->|contains| compiler_types_ideationalpayload_fdfaf973
+    compiler_types_0103137e -->|contains| compiler_types_interpersonalpayload_09352c53
+    compiler_types_0103137e -->|contains| compiler_types_keymoment_0c86f98e
+    compiler_types_0103137e -->|contains| compiler_types_narrativereport_b9e8b3f0
+    compiler_types_0103137e -->|contains| compiler_types_participant_f44bd4e8
+    compiler_types_0103137e -->|contains| compiler_types_speakerprofile_ec550106
+    compiler_types_0103137e -->|contains| compiler_types_syntacticclause_db1f85c9
+    compiler_types_0103137e -->|contains| compiler_types_syntactictoken_a2705bcd
+    compiler_types_0103137e -->|contains| compiler_types_synthesisresult_d025be6a
+    compiler_types_0103137e -->|contains| compiler_types_taskresult_a1ef7e9f
+    compiler_types_0103137e -->|contains| compiler_types_textualpayload_5d74bbc5
+    class compiler_types_0103137e module;
+    class compiler_types_analysisresult_7beff7c2 klass;
+    class compiler_types_annotatedclause_ffd3d9b3 klass;
+    class compiler_types_cohesionmetrics_bf728e18 klass;
+    class compiler_types_conversationturn_3fe64342 klass;
+    class compiler_types_dispatchdecision_5fa64a85 klass;
+    class compiler_types_examplepassage_1bda8070 klass;
+    class compiler_types_ideationalpayload_fdfaf973 klass;
+    class compiler_types_interpersonalpayload_09352c53 klass;
+    class compiler_types_keymoment_0c86f98e klass;
+    class compiler_types_narrativereport_b9e8b3f0 klass;
+    class compiler_types_participant_f44bd4e8 klass;
+    class compiler_types_speakerprofile_ec550106 klass;
+    class compiler_types_syntacticclause_db1f85c9 klass;
+    class compiler_types_syntactictoken_a2705bcd klass;
+    class compiler_types_synthesisresult_d025be6a klass;
+    class compiler_types_taskresult_a1ef7e9f klass;
+    class compiler_types_textualpayload_5d74bbc5 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

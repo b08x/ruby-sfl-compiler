@@ -1,0 +1,65 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Ingestion & Updates (96 nodes, 143 edges)
+    subgraph ingest_cache_update_compiler_analysis_topic_mode_2a162623["compiler/analysis/topic_modeler.rb"]
+        analysis_topic_modeler_topicmodeler_7c56ddc2("TopicModeler<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f("detect_topic_shifts()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_fit_e9c2e99c("fit()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_initialize_be9d7e39("initialize()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_load_model_5b54b5a8("load_model()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_save_afa76bfb("save()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topicmodeler_turn_distrib_5324a076("turn_distributions()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_tokenize_a0d8fa87("tokenize()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_cosine_distance_f4c683ed("cosine_distance()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_topic_name_b8f92bd8("topic_name()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+        analysis_topic_modeler_assign_topics_to_turns_06b015c2("assign_topics_to_turns()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+    end
+    subgraph ingest_cache_update_compiler_formatters_markdown_d891989c["compiler/formatters/markdown_formatter.rb"]
+        formatters_markdown_formatter_markdownformatter_a25bab02("MarkdownFormatter<br/><small>compiler/formatters/markdown_formatter.rb</small>")
+        formatters_markdown_formatter_markdownformatter_a2c6e035("actor_label()<br/><small>compiler/formatters/markdown_formatter.rb</small>")
+        formatters_markdown_formatter_markdownformatter_26329071("actors_list_label()<br/><small>compiler/formatters/markdown_formatter.rb</small>")
+    end
+    chat_app_app_147c126d("App<br/><small>compiler/chat/app.rb</small>")
+    chat_session_session_f70f055a("Session<br/><small>compiler/chat/session.rb</small>")
+    storage_pipeline_cache_pipelinecache_c1343951("PipelineCache<br/><small>compiler/storage/pipeline_cache.rb</small>")
+    compiler_markdown_loader_markdownloader_06e0c660("MarkdownLoader<br/><small>sfl/compiler/markdown_loader.rb</small>")
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_fit_e9c2e99c
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_initialize_be9d7e39
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_load_model_5b54b5a8
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_save_afa76bfb
+    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_turn_distrib_5324a076
+    analysis_topic_modeler_topicmodeler_fit_e9c2e99c -->|calls| analysis_topic_modeler_tokenize_a0d8fa87
+    analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f -->|calls| analysis_topic_modeler_cosine_distance_f4c683ed
+    analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f -->|calls| analysis_topic_modeler_topic_name_b8f92bd8
+    analysis_topic_modeler_assign_topics_to_turns_06b015c2 -->|calls| analysis_topic_modeler_tokenize_a0d8fa87
+    formatters_markdown_formatter_markdownformatter_a25bab02 -->|method| formatters_markdown_formatter_markdownformatter_a2c6e035
+    formatters_markdown_formatter_markdownformatter_a25bab02 -->|method| formatters_markdown_formatter_markdownformatter_26329071
+    %% Omitted for readability: 78 nodes, 0 edges
+    class analysis_topic_modeler_topicmodeler_7c56ddc2 klass;
+    class analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f function;
+    class analysis_topic_modeler_topicmodeler_fit_e9c2e99c function;
+    class analysis_topic_modeler_topicmodeler_initialize_be9d7e39 function;
+    class analysis_topic_modeler_topicmodeler_load_model_5b54b5a8 function;
+    class analysis_topic_modeler_topicmodeler_save_afa76bfb function;
+    class analysis_topic_modeler_topicmodeler_turn_distrib_5324a076 function;
+    class analysis_topic_modeler_tokenize_a0d8fa87 function;
+    class analysis_topic_modeler_cosine_distance_f4c683ed function;
+    class analysis_topic_modeler_topic_name_b8f92bd8 function;
+    class analysis_topic_modeler_assign_topics_to_turns_06b015c2 function;
+    class formatters_markdown_formatter_markdownformatter_a25bab02 klass;
+    class formatters_markdown_formatter_markdownformatter_a2c6e035 function;
+    class formatters_markdown_formatter_markdownformatter_26329071 function;
+    class chat_app_app_147c126d klass;
+    class chat_session_session_f70f055a klass;
+    class storage_pipeline_cache_pipelinecache_c1343951 klass;
+    class compiler_markdown_loader_markdownloader_06e0c660 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;

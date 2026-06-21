@@ -1,0 +1,34 @@
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Database & Migrations (8 nodes, 13 edges)
+    scripts_scrub_incidents_apply_entity_mapping_f8fb1efd("apply_entity_mapping()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_build_entity_mapping_b17a3cec("build_entity_mapping()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_extract_text_23940f12("extract_text()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_scrub_known_terms_4f3cb32f("scrub_known_terms()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_scrub_structured_pii_2c510e14("scrub_structured_pii()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_main_845d37d9("main()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_scrub_text_d4ba3010("scrub_text()<br/><small>scripts/scrub_incidents.rb</small>")
+    scripts_scrub_incidents_1ccb66f6("scrub_incidents.rb")
+    scripts_scrub_incidents_extract_text_23940f12 -->|calls| scripts_scrub_incidents_main_845d37d9
+    scripts_scrub_incidents_build_entity_mapping_b17a3cec -->|calls| scripts_scrub_incidents_main_845d37d9
+    scripts_scrub_incidents_apply_entity_mapping_f8fb1efd -->|calls| scripts_scrub_incidents_scrub_text_d4ba3010
+    scripts_scrub_incidents_scrub_structured_pii_2c510e14 -->|calls| scripts_scrub_incidents_scrub_text_d4ba3010
+    scripts_scrub_incidents_scrub_known_terms_4f3cb32f -->|calls| scripts_scrub_incidents_main_845d37d9
+    scripts_scrub_incidents_scrub_text_d4ba3010 -->|calls| scripts_scrub_incidents_main_845d37d9
+    class scripts_scrub_incidents_apply_entity_mapping_f8fb1efd function;
+    class scripts_scrub_incidents_build_entity_mapping_b17a3cec function;
+    class scripts_scrub_incidents_extract_text_23940f12 function;
+    class scripts_scrub_incidents_scrub_known_terms_4f3cb32f function;
+    class scripts_scrub_incidents_scrub_structured_pii_2c510e14 function;
+    class scripts_scrub_incidents_main_845d37d9 function;
+    class scripts_scrub_incidents_scrub_text_d4ba3010 function;
+    class scripts_scrub_incidents_1ccb66f6 module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
