@@ -133,6 +133,68 @@ RSpec.describe SFL::Compiler::Types do
     end
   end
 
+  describe "TextualPayload" do
+    it "creates a textual payload with valid theme_type values" do
+      payload = SFL::Compiler::Types::TextualPayload.new(
+        clause_id: "c-1",
+        topical_theme: "The system",
+        textual_theme: "However",
+        interpersonal_theme: "Surely",
+        rheme: "processes data",
+        theme_type: "unmarked"
+      )
+
+      expect(payload.clause_id).to eq("c-1")
+      expect(payload.topical_theme).to eq("The system")
+      expect(payload.theme_type).to eq("unmarked")
+    end
+
+    it "accepts all valid theme_type enum values" do
+      valid_types = [
+        "unmarked", "marked", "interrogative", "imperative",
+        "multiple", "topical", "topical_unmarked", "simple",
+        "existential", "clausal", "textual", "interjection", "interpersonal"
+      ]
+
+      valid_types.each do |theme_type|
+        payload = SFL::Compiler::Types::TextualPayload.new(
+          clause_id: "c-1",
+          theme_type: theme_type,
+          topical_theme: "Test",
+          textual_theme: nil,
+          interpersonal_theme: nil,
+          rheme: nil
+        )
+        expect(payload.theme_type).to eq(theme_type)
+      end
+    end
+
+    it "rejects invalid theme_type values" do
+      expect {
+        SFL::Compiler::Types::TextualPayload.new(
+          clause_id: "c-1",
+          theme_type: "invalid_type",
+          topical_theme: "Test",
+          textual_theme: nil,
+          interpersonal_theme: nil,
+          rheme: nil
+        )
+      }.to raise_error(Dry::Struct::Error)
+    end
+
+    it "accepts nil for optional theme_type" do
+      payload = SFL::Compiler::Types::TextualPayload.new(
+        clause_id: "c-1",
+        theme_type: nil,
+        topical_theme: "Test",
+        textual_theme: nil,
+        interpersonal_theme: nil,
+        rheme: nil
+      )
+      expect(payload.theme_type).to be_nil
+    end
+  end
+
   describe "AnnotatedClause" do
     it "creates a fully annotated clause" do
       token = SFL::Compiler::Types::SyntacticToken.new(

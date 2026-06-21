@@ -110,5 +110,81 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         expect(result.interpersonal.mood).to eq("declarative")
       end
     end
+
+    describe "#textual_from" do
+      let(:correlation_id) { "test-correlation" }
+
+      it "normalizes 'topual' typo to 'topical'" do
+        result = { theme_type: "topual", topical_theme: "Test", rheme: "clause" }
+        payload = engine.send(:textual_from, clause, result, correlation_id)
+        expect(payload.theme_type).to eq("topical")
+      end
+
+      it "handles compound types like 'textual + topical'" do
+        result = { theme_type: "textual + topical", topical_theme: "Test", rheme: "clause" }
+        payload = engine.send(:textual_from, clause, result, correlation_id)
+        expect(payload.theme_type).to eq("textual")
+      end
+
+      it "maps 'topical_unmarked' to 'unmarked'" do
+        result = { theme_type: "topical_unmarked", topical_theme: "Test", rheme: "clause" }
+        payload = engine.send(:textual_from, clause, result, correlation_id)
+        expect(payload.theme_type).to eq("unmarked")
+      end
+
+      it "accepts new valid types 'interjection' and 'interpersonal'" do
+        ["interjection", "interpersonal"].each do |theme_type|
+          result = { theme_type: theme_type, topical_theme: "Test", rheme: "clause" }
+          payload = engine.send(:textual_from, clause, result, correlation_id)
+          expect(payload.theme_type).to eq(theme_type)
+        end
+      end
+
+      it "handles nil theme_type by defaulting to 'unmarked'" do
+        result = { theme_type: nil, topical_theme: "Test", rheme: "clause" }
+        payload = engine.send(:textual_from, clause, result, correlation_id)
+        expect(payload.theme_type).to eq("unmarked")
+      end
+
+      it "handles empty string theme_type by defaulting to 'unmarked'" do
+        result = { theme_type: "", topical_theme: "Test", rheme: "clause" }
+        payload = engine.send(:textual_from, clause, result, correlation_id)
+        expect(payload.theme_type).to eq("unmarked")
+      end
+    end
+
+    describe "#normalize_theme_type" do
+      it "fixes 'topual' to 'topical'" do
+        expect(engine.send(:normalize_theme_type, "topual")).to eq("topical")
+      end
+
+      it "handles compound types with plus sign" do
+        expect(engine.send(:normalize_theme_type, "textual + topical")).to eq("textual")
+        expect(engine.send(:normalize_theme_type, "interpersonal+marked")).to eq("interpersonal")
+      end
+
+      it "maps 'topical_unmarked' to 'unmarked'" do
+        expect(engine.send(:normalize_theme_type, "topical_unmarked")).to eq("unmarked")
+      end
+
+      it "handles case insensitivity" do
+        expect(engine.send(:normalize_theme_type, "INTERJECTION")).to eq("interjection")
+        expect(engine.send(:normalize_theme_type, "InterPersonal")).to eq("interpersonal")
+      end
+
+      it "handles whitespace" do
+        expect(engine.send(:normalize_theme_type, "  interjection  ")).to eq("interjection")
+      end
+
+      it "returns 'unmarked' for nil input" do
+        expect(engine.send(:normalize_theme_type, nil)).to eq("unmarked")
+      end
+
+      it "passes through valid types unchanged" do
+        ["unmarked", "marked", "interrogative", "imperative"].each do |type|
+          expect(engine.send(:normalize_theme_type, type)).to eq(type)
+        end
+      end
+    end
   end
 end
