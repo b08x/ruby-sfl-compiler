@@ -27,7 +27,7 @@ module SFL
             sentence_index: annotated.syntactic.sentence_index,
             tokens: Sequel.pg_jsonb(annotated.syntactic.tokens.map(&:to_h)),
             root_token: Sequel.pg_jsonb(
-              annotated.syntactic.tokens[annotated.syntactic.root_index]&.to_h || {}
+              annotated.syntactic.tokens[annotated.syntactic.root_index].to_h
             ),
             created_at: Time.now
           )
@@ -83,7 +83,7 @@ module SFL
       # @return [Integer] number of clauses removed
       def delete_by_document(document_id)
         @db.transaction do
-          scoped = @db[:clauses].where(document_id: document_id)
+          scoped = @db[:clauses].where(document_id:)
           clause_ids = scoped.select_map(:external_id)
           break 0 if clause_ids.empty?
 
@@ -102,15 +102,15 @@ module SFL
         clause = @db[:clauses].where(external_id: clause_id).first
         return nil unless clause
 
-        ideational = @db[:ideational_payloads].where(clause_id: clause_id).first
-        interpersonal = @db[:interpersonal_payloads].where(clause_id: clause_id).first
-        embedding = @db[:embeddings].where(clause_id: clause_id).first
+        ideational = @db[:ideational_payloads].where(clause_id:).first
+        interpersonal = @db[:interpersonal_payloads].where(clause_id:).first
+        embedding = @db[:embeddings].where(clause_id:).first
 
         {
-          clause: clause,
-          ideational: ideational,
-          interpersonal: interpersonal,
-          embedding: embedding
+          clause:,
+          ideational:,
+          interpersonal:,
+          embedding:,
         }
       end
 
@@ -130,9 +130,9 @@ module SFL
         limit: 50
       )
         ds = @db[:clauses]
-              .join(:interpersonal_payloads, clause_id: :external_id)
+          .join(:interpersonal_payloads, clause_id: :external_id)
 
-        ds = ds.where(mood: mood) if mood
+        ds = ds.where(mood:) if mood
         ds = ds.where { modality_weight >= min_modality } if min_modality
         ds = ds.where { modality_weight <= max_modality } if max_modality
         ds = ds.where { tenor >= min_tenor } if min_tenor
@@ -149,11 +149,10 @@ module SFL
       def find_by_process_type(process_type, limit: 50)
         @db[:clauses]
           .join(:ideational_payloads, clause_id: :external_id)
-          .where(process_type: process_type)
+          .where(process_type:)
           .limit(limit)
           .all
       end
     end
   end
 end
-

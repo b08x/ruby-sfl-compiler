@@ -13,7 +13,7 @@ module SFL
     #
     # RRF formula: score(d) = Σ 1/(60 + rank_i(d)) for each list i
     class HybridRetriever
-      RRF_K = 60  # Standard RRF constant
+      RRF_K = 60 # Standard RRF constant
 
       def initialize(db:, embedder: nil)
         @db = db
@@ -40,10 +40,10 @@ module SFL
         @logger.send_message(
           message: "retrieval_started",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           query: query[0..100],
-          filters: filters,
-          limit: limit
+          filters:,
+          limit:
         )
 
         # Pass 1: Semantic search (vector similarity)
@@ -66,7 +66,7 @@ module SFL
         @logger.send_message(
           message: "retrieval_completed",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           semantic_count: semantic_results.length,
           keyword_count: keyword_results.length,
           merged_count: merged.length,
@@ -77,9 +77,7 @@ module SFL
         results
       end
 
-      private
-
-      def semantic_search(query, limit:)
+      private def semantic_search(query, limit:)
         return [] unless @embedder
 
         query_embedding = @embedder.embed(query)
@@ -97,10 +95,10 @@ module SFL
             Sequel[:clauses][:document_id],
             Sequel.lit("1 - (embedding <=> ?) AS similarity_score", vector)
           )
-          .to_a.each_with_index.map { |row, idx|
+          .to_a.each_with_index.map do |row, idx|
             row.merge(semantic_rank: idx + 1)
-          }
-      rescue StandardError => e
+          end
+      rescue => e
         @logger.send_message(
           message: "semantic_search_failed",
           priority: Journald::LOG_WARNING,
@@ -109,7 +107,7 @@ module SFL
         []
       end
 
-      def keyword_search(query, limit:)
+      private def keyword_search(query, limit:)
         @db[:clauses]
           .where(
             Sequel.lit(
@@ -129,10 +127,10 @@ module SFL
             Sequel[:clauses][:text],
             Sequel[:clauses][:document_id]
           )
-          .to_a.each_with_index.map { |row, idx|
+          .to_a.each_with_index.map do |row, idx|
             row.merge(keyword_rank: idx + 1)
-          }
-      rescue StandardError => e
+          end
+      rescue => e
         @logger.send_message(
           message: "keyword_search_failed",
           priority: Journald::LOG_WARNING,
@@ -141,7 +139,7 @@ module SFL
         []
       end
 
-      def reciprocal_rank_fusion(semantic_results, keyword_results)
+      private def reciprocal_rank_fusion(semantic_results, keyword_results)
         scores = Hash.new { |h, k| h[k] = { rrf_score: 0.0, data: {} } }
 
         semantic_results.each do |row|
@@ -158,24 +156,24 @@ module SFL
           scores[cid][:data].merge!(row)
         end
 
-        scores.map { |_, v|
+        scores.map do |_, v|
           v[:data].merge(rrf_score: v[:rrf_score].round(6))
-        }.sort_by { |r| -r[:rrf_score] }
+        end.sort_by { |r| -r[:rrf_score] }
       end
 
-      def apply_filters(results, filters)
+      private def apply_filters(results, filters)
         return results if filters.empty?
 
         clause_ids = results.map { |r| r[:clause_id] }
-        
+
         # Pre-fetch payloads to avoid N+1 queries
         interpersonal_map = @db[:interpersonal_payloads]
-                            .where(clause_id: clause_ids)
-                            .as_hash(:clause_id)
-        
+          .where(clause_id: clause_ids)
+          .as_hash(:clause_id)
+
         ideational_map = @db[:ideational_payloads]
-                         .where(clause_id: clause_ids)
-                         .as_hash(:clause_id)
+          .where(clause_id: clause_ids)
+          .as_hash(:clause_id)
 
         results.select do |row|
           clause_id = row[:clause_id]
@@ -184,29 +182,17 @@ module SFL
 
           next false unless interpersonal
 
-          if filters[:mood] && interpersonal[:mood] != filters[:mood]
-            next false
-          end
+          next false if filters[:mood] && interpersonal[:mood] != filters[:mood]
 
-          if filters[:min_modality] && interpersonal[:modality_weight] < filters[:min_modality]
-            next false
-          end
+          next false if filters[:min_modality] && interpersonal[:modality_weight] < filters[:min_modality]
 
-          if filters[:max_modality] && interpersonal[:modality_weight] > filters[:max_modality]
-            next false
-          end
+          next false if filters[:max_modality] && interpersonal[:modality_weight] > filters[:max_modality]
 
-          if filters[:min_tenor] && interpersonal[:tenor] < filters[:min_tenor]
-            next false
-          end
+          next false if filters[:min_tenor] && interpersonal[:tenor] < filters[:min_tenor]
 
-          if filters[:max_tenor] && interpersonal[:tenor] > filters[:max_tenor]
-            next false
-          end
+          next false if filters[:max_tenor] && interpersonal[:tenor] > filters[:max_tenor]
 
-          if filters[:process_type] && ideational && ideational[:process_type] != filters[:process_type]
-            next false
-          end
+          next false if filters[:process_type] && ideational && ideational[:process_type] != filters[:process_type]
 
           true
         end

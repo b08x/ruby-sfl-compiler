@@ -21,15 +21,15 @@ module SFL
       def store(clause_id, embedding, model: "embeddinggemma:latest")
         vector = Pgvector.encode(embedding)
         @db[:embeddings].insert(
-          clause_id: clause_id,
+          clause_id:,
           embedding: vector,
-          model: model,
+          model:,
           created_at: Time.now
         )
       rescue Sequel::UniqueConstraintViolation
         # Update existing embedding
         @db[:embeddings]
-          .where(clause_id: clause_id, model: model)
+          .where(clause_id:, model:)
           .update(embedding: vector, created_at: Time.now)
       end
 
@@ -41,11 +41,11 @@ module SFL
       # @return [Array<Hash>]
       def nearest_neighbors(query_embedding, limit: 10, distance: :cosine)
         operator = case distance
-                  when :cosine then "<=>"
-                  when :l2 then "<->"
-                  when :inner_product then "<#>"
-                  else "<=>"
-                  end
+                   when :cosine then "<=>"
+                   when :l2 then "<->"
+                   when :inner_product then "<#>"
+                   else "<=>"
+        end
 
         vector = Pgvector.encode(query_embedding)
 

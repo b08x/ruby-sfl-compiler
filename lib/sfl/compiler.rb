@@ -72,8 +72,8 @@ module SFL
 
     class Configuration
       attr_accessor :database_url, :spacy_model, :dspy_provider,
-                    :dspy_api_key_env, :openai_api_key, :log_level,
-                    :ollama_base_url, :embedding_model
+        :dspy_api_key_env, :openai_api_key, :log_level,
+        :ollama_base_url, :embedding_model
 
       def initialize
         @database_url = ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
@@ -111,9 +111,15 @@ loader.collapse("#{__dir__}/compiler/pass_one")
 loader.collapse("#{__dir__}/compiler/pass_two")
 loader.collapse("#{__dir__}/compiler/storage")
 loader.collapse("#{__dir__}/compiler/retrieval")
-loader.collapse("#{__dir__}/compiler/analysis")
-loader.collapse("#{__dir__}/compiler/formatters")
-loader.collapse("#{__dir__}/compiler/chat")
-loader.collapse("#{__dir__}/compiler/tui")
-loader.collapse("#{__dir__}/compiler/tui/wizards")
+# analysis/, formatters/, chat/, tui/, tui/wizards/ define NESTED modules
+# (Analysis::X, Chat::App, ...) loaded eagerly by their sibling manifest file
+# (analysis.rb, chat.rb, ...) via require_relative — Zeitwerk never needs to
+# autoload the files inside these directories itself, so they're ignored
+# rather than collapsed. `collapse` would tell Zeitwerk to expect flat
+# constants here, which doesn't match what these files actually define.
+loader.ignore("#{__dir__}/compiler/analysis")
+loader.ignore("#{__dir__}/compiler/formatters")
+loader.ignore("#{__dir__}/compiler/chat")
+loader.ignore("#{__dir__}/compiler/tui")
+loader.ignore("#{__dir__}/compiler/tui/wizards")
 loader.setup

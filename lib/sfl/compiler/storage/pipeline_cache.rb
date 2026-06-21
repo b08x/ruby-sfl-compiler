@@ -114,31 +114,29 @@ module SFL
         Dir.glob(File.join(dir, "*.json")).size
       end
 
-      private
-
       # Deterministic cache key: SHA256(document_id + sentence_index + clause_text).
       # sentence_index disambiguates clauses with identical text recurring at
       # different positions in the same document (e.g. repeated boilerplate
       # headers) — without it they collide on one cache file and, on a
       # resumed run, both report the cached entry's single external_id,
       # causing a duplicate-key violation when both get stored.
-      def cache_key(document_id, clause)
+      private def cache_key(document_id, clause)
         Digest::SHA256.hexdigest("#{document_id}#{clause.sentence_index}#{clause.text}")
       end
 
-      def cache_path(document_id, clause)
+      private def cache_path(document_id, clause)
         key = cache_key(document_id, clause)
         File.join(@cache_dir, document_id, "#{key}.json")
       end
 
-      def document_dir(document_id)
+      private def document_dir(document_id)
         File.join(@cache_dir, document_id)
       end
 
       # Reconstruct an AnnotatedClause from a hash.
       # Handles nested Dry::Struct types (SyntacticClause, IdeationalPayload,
       # InterpersonalPayload, TextualPayload).
-      def reconstruct(hash)
+      private def reconstruct(hash)
         Types::AnnotatedClause.new(
           id: hash[:id],
           text: hash[:text],
@@ -151,7 +149,7 @@ module SFL
         )
       end
 
-      def reconstruct_syntactic(hash)
+      private def reconstruct_syntactic(hash)
         return nil unless hash
 
         Types::SyntacticClause.new(
@@ -164,7 +162,7 @@ module SFL
         )
       end
 
-      def reconstruct_token(hash)
+      private def reconstruct_token(hash)
         Types::SyntacticToken.new(
           text: hash[:text],
           lemma: hash[:lemma],
@@ -177,7 +175,7 @@ module SFL
         )
       end
 
-      def reconstruct_ideational(hash)
+      private def reconstruct_ideational(hash)
         return nil unless hash
 
         Types::IdeationalPayload.new(
@@ -189,7 +187,7 @@ module SFL
         )
       end
 
-      def reconstruct_participant(hash)
+      private def reconstruct_participant(hash)
         Types::Participant.new(
           text: hash[:text],
           role: hash[:role],
@@ -197,7 +195,7 @@ module SFL
         )
       end
 
-      def reconstruct_interpersonal(hash)
+      private def reconstruct_interpersonal(hash)
         return nil unless hash
 
         Types::InterpersonalPayload.new(
@@ -211,7 +209,7 @@ module SFL
         )
       end
 
-      def reconstruct_textual(hash)
+      private def reconstruct_textual(hash)
         return nil unless hash
 
         Types::TextualPayload.new(

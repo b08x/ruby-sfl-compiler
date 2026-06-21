@@ -34,3 +34,15 @@ log/
 
 cost.json
 manifest.json
+
+.sfl-cache/
+.trackboi/
+
+**/scrubbed-*
+**/verified-*
+
+output/
+
+scrub_incidents.rb
+session-ses_*
+db/dumps/*
