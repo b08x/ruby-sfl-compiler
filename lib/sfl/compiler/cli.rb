@@ -128,14 +128,16 @@ module SFL
 
       def run_conversation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
-        pipeline = Pipeline.new(db: ctx.db)
+        pipeline_args = { db: ctx.db }
+        pipeline_args[:cache_dir] = ".sfl-cache" if options[:resume]
+        pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::ConversationAnalyzer.new(
           pipeline: pipeline,
           pass_one_only: options[:pass1_only],
           on_progress: progress_printer
         )
 
-        result = analyzer.analyze(input, topics: options[:topics])
+        result = analyzer.analyze(input, topics: options[:topics], resume: options[:resume])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
       end
@@ -144,6 +146,7 @@ module SFL
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
         pipeline_args = { db: ctx.db }
         pipeline_args[:embedder] = Embedder.new if options[:store]
+        pipeline_args[:cache_dir] = ".sfl-cache" if options[:resume]
         pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline: pipeline,
@@ -151,7 +154,7 @@ module SFL
           on_progress: progress_printer
         )
 
-        result = analyzer.analyze(input, store: options[:store], topics: options[:topics])
+        result = analyzer.analyze(input, store: options[:store], topics: options[:topics], resume: options[:resume])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
       end

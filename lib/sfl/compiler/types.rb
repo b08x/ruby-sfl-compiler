@@ -18,7 +18,7 @@ module SFL
       TenorValue = Types::Float.constrained(gteq: 0.0, lteq: 1.0)
 
       # Mood types from SFL
-      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "minor", "fragment")
+      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "indicative", "minor", "fragment")
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,

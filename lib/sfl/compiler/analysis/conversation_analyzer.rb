@@ -20,12 +20,15 @@ module SFL
           @pipeline = pipeline
           @pass_one_only = pass_one_only
           @on_progress = on_progress
+          @resume = pipeline.cache ? true : false
         end
 
         # @param jsonl_path [String]
         # @param topics [Integer, nil] number of topics for LDA; nil = no topic modeling
+        # @param resume [Boolean] reuse cached Pass 2 results
         # @return [Types::AnalysisResult]
-        def analyze(jsonl_path, topics: nil)
+        def analyze(jsonl_path, topics: nil, resume: false)
+          @resume = resume
           raw_turns = load_jsonl(jsonl_path)
           total = raw_turns.size
 
@@ -202,7 +205,7 @@ module SFL
 
         def compile_clauses(text, document_id)
           unless @pass_one_only
-            return @pipeline.compile(text, document_id: document_id, store: false, embed: false)
+            return @pipeline.compile(text, document_id: document_id, store: false, embed: false, resume: @resume)
           end
 
           @pipeline.compile_pass_one(text, document_id: document_id)

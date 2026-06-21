@@ -21,13 +21,16 @@ module SFL
           @pipeline = pipeline
           @clause_repo = clause_repo
           @on_progress = on_progress
+          @resume = pipeline.cache ? true : false
         end
 
         # @param path [String] a .md file or a directory of .md files
         # @param store [Boolean] persist clauses + embeddings
         # @param topics [Integer, nil] number of topics for LDA; nil = no topic modeling
+        # @param resume [Boolean] reuse cached Pass 2 results
         # @return [Types::AnalysisResult]
-        def analyze(path, store: false, topics: nil)
+        def analyze(path, store: false, topics: nil, resume: false)
+          @resume = resume
           sections = load_sections(path)
           total = sections.size
 
@@ -144,7 +147,8 @@ module SFL
           clauses = @pipeline.compile(
             section.text,
             document_id: section.document_id,
-            store: store, embed: store
+            store: store, embed: store,
+            resume: @resume
           )
 
           Types::ConversationTurn.new(

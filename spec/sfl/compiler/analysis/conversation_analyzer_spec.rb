@@ -37,6 +37,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
 
   describe "#analyze (full pipeline)" do
     before do
+      allow(pipeline).to receive(:cache).and_return(nil)
       allow(pipeline).to receive(:compile) do |_text, document_id:, **|
         [annotated_clause(document_id)]
       end
@@ -48,7 +49,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       expect(result).to be_a(SFL::Compiler::Types::AnalysisResult)
       expect(result.turns.size).to eq(5)
       expect(pipeline).to have_received(:compile)
-        .with(anything, document_id: "turn-1", store: false, embed: false)
+        .with(anything, document_id: "turn-1", store: false, embed: false, resume: false)
     end
 
     it "fills metadata from the file and turns" do
@@ -80,6 +81,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
 
   describe "#analyze (pass_one_only: true)" do
     before do
+      allow(pipeline).to receive(:cache).and_return(nil)
       allow(pipeline).to receive(:compile_pass_one) do |_text, document_id:|
         syntactic = SFL::Compiler::Types::SyntacticClause.new(
           id: "s", text: "It works.", tokens: [token],
@@ -104,6 +106,10 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
   end
 
   describe "malformed JSONL" do
+    before do
+      allow(pipeline).to receive(:cache).and_return(nil)
+    end
+
     it "skips unparseable lines instead of raising" do
       Dir.mktmpdir do |dir|
         path = File.join(dir, "bad.jsonl")

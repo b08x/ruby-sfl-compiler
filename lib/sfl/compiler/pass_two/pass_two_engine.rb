@@ -219,7 +219,7 @@ module SFL
       def interpersonal_from(clause, result, correlation_id)
         Types::InterpersonalPayload.new(
           clause_id: clause.id,
-          mood: result[:mood] || "declarative",
+          mood: (result[:mood] || "declarative").to_s.downcase,
           modality_weight: clamp01(result[:modality_weight] || 0.5),
           tenor: clamp01(result[:tenor] || 0.5),
           speaker_attitude: result[:speaker_attitude],
@@ -239,7 +239,7 @@ module SFL
           textual_theme: result[:textual_theme],
           interpersonal_theme: result[:interpersonal_theme],
           rheme: result[:rheme],
-          theme_type: result[:theme_type] || "unmarked"
+          theme_type: (result[:theme_type] || "unmarked").to_s.downcase
         )
       rescue Dry::Struct::Error => e
         log_and_warn("pass_two_invalid_textual", correlation_id, clause,
@@ -400,7 +400,7 @@ module SFL
       end
 
       output do
-        const :mood, String, description: "Clause mood: declarative, interrogative, imperative, exclamative, minor, or fragment"
+        const :mood, String, description: "Clause mood: declarative, interrogative, imperative, exclamative, indicative, minor, or fragment"
         const :modality_weight, Float, description: "Modality strength 0.0-1.0 (0=weak/hedged, 1=strong/certain)"
         const :tenor, Float, description: "Formality level 0.0-1.0 (0=informal, 1=formal)"
         const :speaker_attitude, String, description: "Speaker attitude: neutral, positive, negative, skeptical, assertive"

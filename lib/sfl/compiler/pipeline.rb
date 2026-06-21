@@ -27,7 +27,7 @@ module SFL
         @clause_repo = ClauseRepository.new(db)
         @embedding_repo = EmbeddingRepository.new(db)
         @embedder = embedder
-        @cache = Storage::PipelineCache.new(cache_dir: cache_dir) if cache_dir
+        @cache = PipelineCache.new(cache_dir: cache_dir) if cache_dir
         @logger = Journald::Logger.new("sfl-compiler-pipeline")
       end
 

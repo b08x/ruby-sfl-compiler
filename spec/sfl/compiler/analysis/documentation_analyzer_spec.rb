@@ -33,6 +33,10 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
   let(:pipeline) { instance_double(SFL::Compiler::Pipeline) }
   let(:clause_repo) { instance_double(SFL::Compiler::ClauseRepository, delete_by_document: 0) }
 
+  before do
+    allow(pipeline).to receive(:cache).and_return(nil)
+  end
+
   # Two headings with >40 chars of prose each (MarkdownLoader min_length).
   let(:markdown) do
     <<~MD
@@ -78,7 +82,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
         .analyze(write_doc(dir))
 
       expect(pipeline).to have_received(:compile)
-        .with(anything, document_id: "guide#introduction", store: false, embed: false)
+        .with(anything, document_id: "guide#introduction", store: false, embed: false, resume: false)
       expect(clause_repo).not_to have_received(:delete_by_document)
     end
   end
@@ -91,7 +95,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
       expect(clause_repo).to have_received(:delete_by_document).with("guide#introduction")
       expect(clause_repo).to have_received(:delete_by_document).with("guide#usage")
       expect(pipeline).to have_received(:compile)
-        .with(anything, document_id: "guide#usage", store: true, embed: true)
+        .with(anything, document_id: "guide#usage", store: true, embed: true, resume: false)
     end
   end
 
