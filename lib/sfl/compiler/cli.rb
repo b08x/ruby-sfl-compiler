@@ -128,8 +128,7 @@ module SFL
 
       def run_conversation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
-        pipeline_args = { db: ctx.db }
-        pipeline_args[:cache_dir] = ".sfl-cache" if options[:resume]
+        pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
         pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::ConversationAnalyzer.new(
           pipeline: pipeline,
@@ -144,9 +143,8 @@ module SFL
 
       def run_documentation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
-        pipeline_args = { db: ctx.db }
+        pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
         pipeline_args[:embedder] = Embedder.new if options[:store]
-        pipeline_args[:cache_dir] = ".sfl-cache" if options[:resume]
         pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline: pipeline,

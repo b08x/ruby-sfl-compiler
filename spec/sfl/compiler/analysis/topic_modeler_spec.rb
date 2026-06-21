@@ -86,7 +86,8 @@ RSpec.describe SFL::Compiler::Analysis::TopicModeler do
       shifts = modeler.detect_topic_shifts(threshold: 0.0)
       expect(shifts).to be_an(Array)
       shifts.each do |shift|
-        expect(shift).to include(:turn_id, :from_topic, :to_topic, :distance, :description)
+        expect(shift).to include(:turn_id, :type, :from_topic, :to_topic, :magnitude, :description)
+        expect(shift[:type]).to eq("topic_shift")
       end
     end
 

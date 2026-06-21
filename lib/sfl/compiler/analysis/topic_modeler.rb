@@ -112,9 +112,10 @@ module SFL
 
             shifts << {
               turn_id: curr.turn_id,
+              type: "topic_shift",
               from_topic: prev_dominant,
               to_topic: curr_dominant,
-              distance: distance.round(4),
+              magnitude: distance.round(4),
               description: "Topic shifted from #{topic_name(prev_dominant)} " \
                 "to #{topic_name(curr_dominant)} (distance: #{distance.round(3)})",
             }
