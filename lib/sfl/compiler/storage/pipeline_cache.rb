@@ -116,9 +116,14 @@ module SFL
 
       private
 
-      # Deterministic cache key: SHA256(document_id + clause_text).
+      # Deterministic cache key: SHA256(document_id + sentence_index + clause_text).
+      # sentence_index disambiguates clauses with identical text recurring at
+      # different positions in the same document (e.g. repeated boilerplate
+      # headers) — without it they collide on one cache file and, on a
+      # resumed run, both report the cached entry's single external_id,
+      # causing a duplicate-key violation when both get stored.
       def cache_key(document_id, clause)
-        Digest::SHA256.hexdigest("#{document_id}#{clause.text}")
+        Digest::SHA256.hexdigest("#{document_id}#{clause.sentence_index}#{clause.text}")
       end
 
       def cache_path(document_id, clause)
@@ -179,7 +184,7 @@ module SFL
           clause_id: hash[:clause_id],
           process_type: hash[:process_type],
           participants: (hash[:participants] || []).map { |p| reconstruct_participant(p) },
-          circumstances: (hash[:circumstances] || []).map { |c| reconstruct_participant(c) },
+          circumstances: hash[:circumstances] || [],
           raw_transitivity: hash[:raw_transitivity]
         )
       end
