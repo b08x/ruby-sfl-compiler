@@ -83,7 +83,7 @@ module SFL
         attribute :textual_theme, Types::String.optional
         attribute :interpersonal_theme, Types::String.optional
         attribute :rheme, Types::String.optional
-        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "topical_unmarked", "simple", "existential", "clausal", "textual").optional
+        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "topical_unmarked", "simple", "existential", "clausal", "textual", "interjection", "interpersonal").optional
       end
 
       # Combined annotated clause — the full output of the two-pass compiler

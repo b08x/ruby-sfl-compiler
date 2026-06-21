@@ -146,6 +146,29 @@ module SFL
 
       private
 
+      # Normalize theme_type value from LLM output
+      # Handles typos, compound types, and legacy values
+      def normalize_theme_type(type)
+        return "unmarked" if type.nil? || type.to_s.strip.empty?
+
+        type = type.to_s.downcase.strip
+
+        # Fix known typos
+        type = "topical" if type == "topual"
+
+        # Normalize compound types (e.g., "textual + topical" → "textual")
+        if type.include?("+")
+          parts = type.split("+").map(&:strip)
+          # Prefer the first non-null part
+          type = parts.find { |p| !p.empty? } || "unmarked"
+        end
+
+        # Map legacy/alternate names
+        type = "unmarked" if type == "topical_unmarked"
+
+        type
+      end
+
       # Returns a transparent callable that simply yields the block.
       # TODO: replace with a proper CircuitBreaker::CircuitHandler once
       #       Pass 2 is in active use and failure rates are monitored.
@@ -233,9 +256,21 @@ module SFL
       end
 
       def textual_from(clause, result, correlation_id)
-        # Normalize theme_type: "topical_unmarked" → "unmarked" (standard SFL term)
-        theme_type = (result[:theme_type] || "unmarked").to_s.downcase
-        theme_type = "unmarked" if theme_type == "topical_unmarked"
+        # Normalize theme_type
+        theme_type = normalize_theme_type(result[:theme_type])
+
+        # Validate against known allowed types (from TextualPayload enum)
+        allowed_types = [
+          "unmarked", "marked", "interrogative", "imperative",
+          "multiple", "topical", "topical_unmarked", "simple",
+          "existential", "clausal", "textual", "interjection", "interpersonal"
+        ]
+
+        unless allowed_types.include?(theme_type)
+          log_and_warn("pass_two_invalid_textual", correlation_id, clause,
+            "Invalid theme_type '#{theme_type}' normalized to 'unmarked'")
+          theme_type = "unmarked"
+        end
 
         Types::TextualPayload.new(
           clause_id: clause.id,
@@ -415,7 +450,7 @@ module SFL
         const :textual_theme, String, description: "Textual Theme: conjunctions/connectives at start (e.g., however, therefore, and)"
         const :interpersonal_theme, String, description: "Interpersonal Theme: modal adjuncts/discourse markers at start (e.g., surely, perhaps, well)"
         const :rheme, String, description: "Rheme: everything after the Theme"
-        const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, simple, existential, clausal, or textual"
+        const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, topical_unmarked, simple, existential, clausal, textual, interjection, or interpersonal"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
       end
     end
