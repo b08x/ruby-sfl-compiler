@@ -29,3 +29,9 @@ end
 gem "ruby-lsp", "~> 0.26.9"
 
 gem "gush", "~> 5.0"
+
+gem "kreuzberg", "~> 4.9"
+
+gem "informers", "~> 1.3"
+
+gem "onnxruntime", "~> 0.11.3"

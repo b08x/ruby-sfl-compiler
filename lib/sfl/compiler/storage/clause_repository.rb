@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "sequel"
-require "ruby_llm"
 require "circuit_breaker"
 require "journald/logger"
 

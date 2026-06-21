@@ -2,6 +2,7 @@
 
 require "optparse"
 require "json"
+require_relative "retrieval/hybrid_retriever"
 
 module SFL
   module Compiler

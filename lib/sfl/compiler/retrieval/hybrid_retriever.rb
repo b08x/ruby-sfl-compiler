@@ -2,6 +2,7 @@
 
 require "circuit_breaker"
 require "journald/logger"
+require "pgvector"
 
 module SFL
   module Compiler
@@ -84,15 +85,17 @@ module SFL
         query_embedding = @embedder.embed(query)
         return [] unless query_embedding
 
+        vector = Pgvector.encode(query_embedding)
+
         @db[:embeddings]
           .join(:clauses, external_id: :clause_id)
-          .order(Sequel.lit("embedding <=> ?", query_embedding))
+          .order(Sequel.lit("embedding <=> ?", vector))
           .limit(limit)
           .select(
             Sequel[:clauses][:external_id].as(:clause_id),
             Sequel[:clauses][:text],
             Sequel[:clauses][:document_id],
-            Sequel.lit("1 - (embedding <=> ?) AS similarity_score", query_embedding)
+            Sequel.lit("1 - (embedding <=> ?) AS similarity_score", vector)
           )
           .to_a.each_with_index.map { |row, idx|
             row.merge(semantic_rank: idx + 1)
@@ -207,65 +210,6 @@ module SFL
 
           true
         end
-      end
-    end
-
-    # Simple embedding interface compatible with HybridRetriever.
-    # Uses Ollama for embedding generation via ruby_llm.
-    class Embedder
-      include CircuitBreaker
-
-      def initialize(model: "embeddinggemma:latest", ollama_base_url: nil)
-        @model = model
-        @logger = Journald::Logger.new("sfl-compiler-embedder")
-        configure_ruby_llm(ollama_base_url)
-      end
-
-      # Generate embedding vector for text.
-      #
-      # @param text [String]
-      # @return [Array<Float>, nil]
-      def embed(text)
-        return nil if text.nil? || text.strip.empty?
-
-        call_ruby_llm(text)
-      rescue CircuitBreaker::CircuitBrokenException
-        @logger.send_message(
-          message: "embedder_circuit_open",
-          priority: Journald::LOG_WARNING
-        )
-        nil
-      rescue StandardError => e
-        @logger.send_message(
-          message: "embed_failed",
-          priority: Journald::LOG_ERR,
-          error: e.message
-        )
-        nil
-      end
-
-      private
-
-      def configure_ruby_llm(ollama_base_url)
-        return unless defined?(RubyLLM)
-
-        ollama_base_url ||= ENV.fetch("OLLAMA_BASE_URL", "http://localhost:11434")
-        RubyLLM.configure do |config|
-          config.ollama_api_base = ollama_base_url
-          config.default_embedding_model = @model
-        end
-      end
-
-      def call_ruby_llm(text)
-        response = RubyLLM.embed(text, model: @model, provider: :ollama)
-        response.vectors
-      end
-      circuit_method :call_ruby_llm
-
-      circuit_handler do |handler|
-        handler.failure_threshold = 5
-        handler.failure_timeout = 60
-        handler.invocation_timeout = 30
       end
     end
   end

@@ -2,6 +2,7 @@
 
 require "sequel"
 require "journald/logger"
+require "pgvector"
 
 module SFL
   module Compiler
@@ -18,9 +19,10 @@ module SFL
       # @param embedding [Array<Float>] 768-dim vector
       # @param model [String] Model identifier
       def store(clause_id, embedding, model: "embeddinggemma:latest")
+        vector = Pgvector.encode(embedding)
         @db[:embeddings].insert(
           clause_id: clause_id,
-          embedding: embedding,
+          embedding: vector,
           model: model,
           created_at: Time.now
         )
@@ -28,7 +30,7 @@ module SFL
         # Update existing embedding
         @db[:embeddings]
           .where(clause_id: clause_id, model: model)
-          .update(embedding: embedding, created_at: Time.now)
+          .update(embedding: vector, created_at: Time.now)
       end
 
       # Find nearest neighbors to a query embedding.
@@ -45,14 +47,16 @@ module SFL
                   else "<=>"
                   end
 
+        vector = Pgvector.encode(query_embedding)
+
         @db[:embeddings]
           .join(:clauses, external_id: :clause_id)
-          .order(Sequel.lit("embedding #{operator} ?", query_embedding))
+          .order(Sequel.lit("embedding #{operator} ?", vector))
           .limit(limit)
           .select(
             Sequel[:clauses][:external_id],
             Sequel[:clauses][:text],
-            Sequel.lit("1 - (embedding #{operator} ?) AS similarity", query_embedding)
+            Sequel.lit("1 - (embedding #{operator} ?) AS similarity", vector)
           )
           .all
       end
