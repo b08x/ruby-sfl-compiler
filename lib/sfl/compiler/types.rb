@@ -18,7 +18,7 @@ module SFL
       TenorValue = Types::Float.constrained(gteq: 0.0, lteq: 1.0)
 
       # Mood types from SFL
-      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "minor")
+      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "minor", "fragment")
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
@@ -83,7 +83,7 @@ module SFL
         attribute :textual_theme, Types::String.optional
         attribute :interpersonal_theme, Types::String.optional
         attribute :rheme, Types::String.optional
-        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical").optional
+        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "simple", "existential", "clausal", "textual").optional
       end
 
       # Combined annotated clause — the full output of the two-pass compiler
@@ -143,6 +143,8 @@ module SFL
         attribute :participants, Types::Array.of(Types::String).default([].freeze)
         attribute :tenor_shift, Types::Float.optional
         attribute :cohesion, CohesionMetrics.optional.default(nil)
+        attribute :topic_distribution, Types::Hash.optional.default(nil)
+        attribute :dominant_topic, Types::Integer.optional.default(nil)
       end
 
       # Aggregated profile for a single speaker across conversation
@@ -185,6 +187,8 @@ module SFL
         attribute :insights, Types::Array.of(Types::String)
         attribute :key_moments, Types::Array.of(KeyMoment).default([].freeze)
         attribute :example_passages, Types::Array.of(ExamplePassage).default([].freeze)
+        attribute :topic_labels, Types::Hash.optional.default(nil)
+        attribute :topic_evolution, Types::Array.of(Types::Hash).default([].freeze)
       end
 
       # Result of a context query: hybrid retrieval + LLM synthesis

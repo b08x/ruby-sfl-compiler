@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
   spec.bindir = "exe"
-  spec.executables = ["sfl-analyze"]
+  spec.executables = ["sfl-analyze", "sfl-tui"]
 
   spec.add_dependency "circuit_breaker", "~> 1.1"
   spec.add_dependency "csv", "~> 3.3"
@@ -47,6 +47,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pragmatic_tokenizer", "~> 3.0"
   spec.add_dependency "ruby_llm", "~> 1.3"
   spec.add_dependency "ruby-spacy", "~> 0.4"
+  spec.add_dependency "pastel", "~> 0.8"
   spec.add_dependency "sequel", "~> 5.88"
+  spec.add_dependency "tomoto", "~> 0.3"
+  spec.add_dependency "tty-progressbar", "~> 0.18"
+  spec.add_dependency "tty-prompt", "~> 0.23"
   spec.add_dependency "zeitwerk", "~> 2.7"
 end

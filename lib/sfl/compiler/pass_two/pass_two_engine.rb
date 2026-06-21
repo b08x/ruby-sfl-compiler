@@ -220,8 +220,8 @@ module SFL
         Types::InterpersonalPayload.new(
           clause_id: clause.id,
           mood: result[:mood] || "declarative",
-          modality_weight: result[:modality_weight] || 0.5,
-          tenor: result[:tenor] || 0.5,
+          modality_weight: clamp01(result[:modality_weight] || 0.5),
+          tenor: clamp01(result[:tenor] || 0.5),
           speaker_attitude: result[:speaker_attitude],
           reasoning: result[:reasoning],
           annotation_source: "llm"
@@ -361,6 +361,17 @@ module SFL
         )
       end
 
+      # Clamp a numeric value to [0.0, 1.0]. Handles LLMs that output
+      # on a 1-5 or 0-10 scale by treating values >1 as needing division.
+      def clamp01(value)
+        return 0.0 if value.nil?
+        return value.clamp(0.0, 1.0) if value <= 1.0
+
+        # Likely a 1-5 or similar scale; normalize down
+        normalized = value / 5.0
+        normalized.clamp(0.0, 1.0)
+      end
+
       def log_and_warn(message, correlation_id, clause, human_message)
         @logger.send_message(
           message: message,
@@ -389,7 +400,7 @@ module SFL
       end
 
       output do
-        const :mood, String, description: "Clause mood: declarative, interrogative, imperative, or exclamative"
+        const :mood, String, description: "Clause mood: declarative, interrogative, imperative, exclamative, minor, or fragment"
         const :modality_weight, Float, description: "Modality strength 0.0-1.0 (0=weak/hedged, 1=strong/certain)"
         const :tenor, Float, description: "Formality level 0.0-1.0 (0=informal, 1=formal)"
         const :speaker_attitude, String, description: "Speaker attitude: neutral, positive, negative, skeptical, assertive"
@@ -397,7 +408,7 @@ module SFL
         const :textual_theme, String, description: "Textual Theme: conjunctions/connectives at start"
         const :interpersonal_theme, String, description: "Interpersonal Theme: modal adjuncts"
         const :rheme, String, description: "Rheme: everything after the Theme"
-        const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, or imperative"
+        const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, simple, existential, clausal, or textual"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
       end
     end

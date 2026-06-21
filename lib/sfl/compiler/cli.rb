@@ -27,6 +27,8 @@ module SFL
         conversation/documentation:
           --pass1-only                 Skip LLM annotation (placeholder values)
           --narrative                  Also generate narrative_report.md (LLM)
+          --topics N                   Number of topics for LDA topic modeling
+          --resume                     Reuse cached Pass 2 results from previous runs
 
         documentation:
           --store                      Persist clauses + embeddings for `context`
@@ -60,22 +62,26 @@ module SFL
       end
 
       def parse_conversation_options(argv)
-        options = { output_dir: "./output/latest", pass1_only: false, narrative: false }
+        options = { output_dir: "./output/latest", pass1_only: false, resume: false, narrative: false, topics: nil }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
+          opt.on("--resume") { options[:resume] = true }
           opt.on("--narrative") { options[:narrative] = true }
+          opt.on("--topics N", Integer) { |v| options[:topics] = v }
         end.parse!(argv)
         options
       end
 
       def parse_documentation_options(argv)
-        options = { output_dir: "./output/latest", pass1_only: false, store: false, narrative: false }
+        options = { output_dir: "./output/latest", pass1_only: false, resume: false, store: false, narrative: false, topics: nil }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
+          opt.on("--resume") { options[:resume] = true }
           opt.on("--store") { options[:store] = true }
           opt.on("--narrative") { options[:narrative] = true }
+          opt.on("--topics N", Integer) { |v| options[:topics] = v }
         end.parse!(argv)
         options
       end
@@ -129,7 +135,7 @@ module SFL
           on_progress: progress_printer
         )
 
-        result = analyzer.analyze(input)
+        result = analyzer.analyze(input, topics: options[:topics])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
       end
@@ -145,7 +151,7 @@ module SFL
           on_progress: progress_printer
         )
 
-        result = analyzer.analyze(input, store: options[:store])
+        result = analyzer.analyze(input, store: options[:store], topics: options[:topics])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
       end

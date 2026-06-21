@@ -41,6 +41,7 @@ module SFL
             ## Generated Insights
 
             #{insights_list}
+            #{topic_modeling_section}
             #{key_moments_section}
             #{example_passages_section}
             ---
@@ -146,6 +147,29 @@ module SFL
           return "_No insights generated_" if result.insights.empty?
 
           result.insights.map.with_index { |insight, i| "#{i + 1}. #{insight}" }.join("\n\n")
+        end
+
+        def topic_modeling_section
+          return "" unless result.topic_labels && result.topic_labels.any?
+
+          section = ["", "### 🏷️ Topic Modeling", ""]
+          section << "**#{result.topic_labels.size} topics identified**\n"
+
+          result.topic_labels.each do |topic_id, words|
+            top_words = words.first(5).join(", ")
+            section << "- **Topic #{topic_id}**: #{top_words}"
+          end
+
+          if result.topic_evolution && result.topic_evolution.any?
+            section << ""
+            section << "**Topic Evolution:**"
+            result.topic_evolution.each do |evolution|
+              topic_words = result.topic_labels[evolution[:dominant_topic]]&.first(3)&.join(", ") || "topic #{evolution[:dominant_topic]}"
+              section << "- #{unit_label} #{evolution[:turn_id]}: #{topic_words}"
+            end
+          end
+
+          section.join("\n")
         end
 
         def key_moments_section

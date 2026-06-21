@@ -23,8 +23,9 @@ module SFL
         end
 
         # @param jsonl_path [String]
+        # @param topics [Integer, nil] number of topics for LDA; nil = no topic modeling
         # @return [Types::AnalysisResult]
-        def analyze(jsonl_path)
+        def analyze(jsonl_path, topics: nil)
           raw_turns = load_jsonl(jsonl_path)
           total = raw_turns.size
 
@@ -41,22 +42,38 @@ module SFL
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
           timeline = tenor_timeline(turns)
 
+          # Topic modeling (optional)
+          topic_labels = nil
+          topic_shifts = []
+          if topics && turns.size >= 3
+            modeler = TopicModeler.new(k: topics)
+            modeler.fit(turns)
+            topic_labels = modeler.topic_labels
+            topic_shifts = modeler.detect_topic_shifts
+          end
+
+          all_key_moments = detect_key_moments(turns)
+          all_key_moments.concat(topic_shifts)
+
           Types::AnalysisResult.new(
             metadata: {
               conversation_id: File.basename(jsonl_path, ".*"),
               source_file: jsonl_path,
               turn_count: turns.size,
               speakers: turns.map(&:speaker).uniq,
-              analyzed_at: Time.now.iso8601
+              analyzed_at: Time.now.iso8601,
+              topics_enabled: !topic_labels.nil?
             },
             turns: turns,
             speaker_profiles: profiles,
             tenor_timeline: timeline,
             field_evolution: field_evolution(turns),
             correlations: correlations,
-            insights: generate_insights(turns, timeline, correlations),
-            key_moments: detect_key_moments(turns),
-            example_passages: detect_example_passages(turns)
+            insights: generate_insights(turns, timeline, correlations, topic_labels),
+            key_moments: all_key_moments,
+            example_passages: detect_example_passages(turns),
+            topic_labels: topic_labels,
+            topic_evolution: topic_evolution(turns)
           )
         end
 
@@ -223,7 +240,17 @@ module SFL
           end
         end
 
-        def generate_insights(turns, timeline, correlations)
+        def topic_evolution(turns)
+          turns.filter_map do |turn|
+            next unless turn.dominant_topic
+
+            { turn_id: turn.turn_id, timestamp: turn.timestamp.iso8601,
+              dominant_topic: turn.dominant_topic,
+              topic_distribution: turn.topic_distribution }
+          end
+        end
+
+        def generate_insights(turns, timeline, correlations, topic_labels = nil)
           insights = []
 
           return insights if turns.empty?
@@ -247,6 +274,18 @@ module SFL
               insights << "Strong positive correlation between modality and tenor (r=#{corr.round(2)})"
             elsif corr < -0.5
               insights << "Strong negative correlation between modality and tenor (r=#{corr.round(2)})"
+            end
+          end
+
+          if topic_labels && topic_labels.any?
+            topic_count = topic_labels.size
+            insights << "#{topic_count} topics identified across the conversation"
+
+            dominant_topics = turns.filter_map(&:dominant_topic).tally
+            if dominant_topics.any?
+              top_topic = dominant_topics.max_by { |_, count| count }.first
+              top_words = topic_labels[top_topic]&.first(3)&.join(", ") || "topic #{top_topic}"
+              insights << "Most prominent topic: #{top_words} (#{dominant_topics[top_topic]} turns)"
             end
           end
 

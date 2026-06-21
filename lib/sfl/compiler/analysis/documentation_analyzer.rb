@@ -25,8 +25,9 @@ module SFL
 
         # @param path [String] a .md file or a directory of .md files
         # @param store [Boolean] persist clauses + embeddings
+        # @param topics [Integer, nil] number of topics for LDA; nil = no topic modeling
         # @return [Types::AnalysisResult]
-        def analyze(path, store: false)
+        def analyze(path, store: false, topics: nil)
           sections = load_sections(path)
           total = sections.size
 
@@ -42,6 +43,19 @@ module SFL
           profiles = SpeakerProfiler.build_profiles(turns)
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
 
+          # Topic modeling (optional)
+          topic_labels = nil
+          topic_shifts = []
+          if topics && turns.size >= 3
+            modeler = TopicModeler.new(k: topics)
+            modeler.fit(turns)
+            topic_labels = modeler.topic_labels
+            topic_shifts = modeler.detect_topic_shifts
+          end
+
+          all_key_moments = detect_key_moments(turns)
+          all_key_moments.concat(topic_shifts)
+
           Types::AnalysisResult.new(
             metadata: {
               conversation_id: File.basename(path, ".*"),
@@ -51,16 +65,19 @@ module SFL
               analyzed_at: Time.now.iso8601,
               unit_label: "Section",
               actor_label: "Section",
-              actors_list_label: "Headings"
+              actors_list_label: "Headings",
+              topics_enabled: !topic_labels.nil?
             },
             turns: turns,
             speaker_profiles: profiles,
             tenor_timeline: timeline(turns),
             field_evolution: field_evolution(turns),
             correlations: correlations,
-            insights: [],
-            key_moments: detect_key_moments(turns),
-            example_passages: detect_example_passages(turns)
+            insights: generate_topic_insights(turns, topic_labels),
+            key_moments: all_key_moments,
+            example_passages: detect_example_passages(turns),
+            topic_labels: topic_labels,
+            topic_evolution: topic_evolution(turns)
           )
         end
 
@@ -170,6 +187,33 @@ module SFL
             { turn_id: turn.turn_id, timestamp: turn.timestamp.iso8601,
               dominant_process: turn.process_types.max_by { |_, count| count }&.first }
           end
+        end
+
+        def topic_evolution(turns)
+          turns.filter_map do |turn|
+            next unless turn.dominant_topic
+
+            { turn_id: turn.turn_id, timestamp: turn.timestamp.iso8601,
+              dominant_topic: turn.dominant_topic,
+              topic_distribution: turn.topic_distribution }
+          end
+        end
+
+        def generate_topic_insights(turns, topic_labels)
+          return [] unless topic_labels && topic_labels.any?
+
+          insights = []
+          topic_count = topic_labels.size
+          insights << "#{topic_count} topics identified across the document"
+
+          dominant_topics = turns.filter_map(&:dominant_topic).tally
+          if dominant_topics.any?
+            top_topic = dominant_topics.max_by { |_, count| count }.first
+            top_words = topic_labels[top_topic]&.first(3)&.join(", ") || "topic #{top_topic}"
+            insights << "Most prominent topic: #{top_words} (#{dominant_topics[top_topic]} sections)"
+          end
+
+          insights
         end
 
         def mean(values)

@@ -81,7 +81,7 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       annotator = lambda do |items|
         items.filter_map do |item|
           next if item[:index] == 1                                  # missing
-          next annotation_for(item[:index], tenor: 9.9) if item[:index] == 2 # out of range
+          next annotation_for(item[:index], tenor: 9.9) if item[:index] == 2 # out of range (clamped)
           annotation_for(item[:index])
         end
       end
@@ -93,8 +93,10 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       }.to output(/\[WARN\]/).to_stderr
 
       sources = annotated.map { |a| a.interpersonal.annotation_source }
-      expect(sources).to eq(%w[llm fallback fallback llm llm])
+      # Index 1 is missing → fallback; index 2 has out-of-range tenor (9.9) → clamped to 1.0 (llm)
+      expect(sources).to eq(%w[llm fallback llm llm llm])
       expect(annotated[1].interpersonal.tenor).to eq(0.5)
+      expect(annotated[2].interpersonal.tenor).to eq(1.0)
     end
 
     it "falls back for the whole chunk when its LLM call fails persistently, without affecting other chunks" do

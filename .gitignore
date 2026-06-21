@@ -1,3 +1,4 @@
+
 .codemap/
 .worktrees/
 docs/superpowers/
@@ -7,6 +8,8 @@ node-compile-cache/
 
 **/graphify-out/cache/
 
+.graphify_python
+.graphify_save_result.json
 cost.json
 manifest.json
 

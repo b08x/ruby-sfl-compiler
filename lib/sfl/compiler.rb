@@ -54,6 +54,9 @@ module SFL
     # LLM returned output missing required sections.
     class NarrativeError < Error; end
 
+    # Raised when topic modeling encounters unrecoverable errors.
+    class TopicModelerError < Error; end
+
     def self.logger
       require "journald/logger"
       @logger ||= Journald::Logger.new("sfl-compiler")

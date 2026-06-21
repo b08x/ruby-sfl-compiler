@@ -92,7 +92,7 @@ module SFL
               "topical_theme": "word(s)",
               "full_theme": "all theme components combined",
               "rheme": "remaining part of clause",
-              "theme_type": "unmarked/marked/interrogative/imperative",
+              "theme_type": "unmarked/marked/interrogative/imperative/multiple/topical/simple/existential/clausal/textual",
               "reasoning": "brief explanation of your analysis"
             }
 

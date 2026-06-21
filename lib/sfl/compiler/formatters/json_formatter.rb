@@ -25,7 +25,9 @@ module SFL
             tenor_timeline: result.tenor_timeline,
             field_evolution: result.field_evolution,
             correlations: result.correlations,
-            insights: result.insights
+            insights: result.insights,
+            topic_labels: result.topic_labels,
+            topic_evolution: result.topic_evolution
           }
         end
 
@@ -65,7 +67,9 @@ module SFL
               dominant_mood: turn.dominant_mood,
               tenor_shift: turn.tenor_shift,
               clause_count: turn.clauses.size,
-              defaulted_count: turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+              defaulted_count: turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" },
+              dominant_topic: turn.dominant_topic,
+              topic_distribution: turn.topic_distribution
             }
           end
         end

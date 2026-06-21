@@ -11,20 +11,23 @@ module SFL
     #   Pass 2: SemanticAnnotator (DSPy.rb)
     #   Storage: ClauseRepository + EmbeddingRepository
     #
+    # Supports resume mode: when `resume: true`, cached Pass 2 results
+    # from previous runs are reused, avoiding redundant LLM calls.
+    #
     # Usage:
     #   pipeline = SFL::Compiler::Pipeline.new(db: db)
     #   results = pipeline.compile("Your text here", document_id: "doc-1")
+    #   results = pipeline.compile("Your text here", document_id: "doc-1", resume: true)
     class Pipeline
-      def initialize(db:, spacy_model: nil, embedder: nil)
+      def initialize(db:, spacy_model: nil, embedder: nil, cache_dir: nil)
         @db = db
         @pass_one = PassOneEngine.new(model: spacy_model)
         @ideational_extractor = IdeationalExtractor.new
         @pass_two = PassTwoEngine.new
         @clause_repo = ClauseRepository.new(db)
         @embedding_repo = EmbeddingRepository.new(db)
-        # Embedder is optional — only required for the `embed: true` path of
-        # compile(). Pass nil to defer resolution until the class is implemented.
         @embedder = embedder
+        @cache = Storage::PipelineCache.new(cache_dir: cache_dir) if cache_dir
         @logger = Journald::Logger.new("sfl-compiler-pipeline")
       end
 
@@ -34,8 +37,9 @@ module SFL
       # @param document_id [String, nil] Source document identifier
       # @param store [Boolean] Whether to persist to database
       # @param embed [Boolean] Whether to generate and store embeddings
+      # @param resume [Boolean] Use cached Pass 2 results from previous runs
       # @return [Array<Types::AnnotatedClause>]
-      def compile(text, document_id: nil, store: true, embed: true)
+      def compile(text, document_id: nil, store: true, embed: true, resume: false)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
@@ -44,7 +48,8 @@ module SFL
           priority: Journald::LOG_INFO,
           correlation_id: correlation_id,
           document_id: document_id,
-          text_length: text.length
+          text_length: text.length,
+          resume: resume
         )
 
         # === PASS 1: Syntactic Extraction ===
@@ -55,6 +60,8 @@ module SFL
           @ideational_extractor.extract(clause)
         end
 
+        pairs = syntactic_clauses.zip(ideational_payloads)
+
         # === PASS 2: Semantic Annotation (DSPy.rb, batched) ===
         # Sweep Pass 1's dead PyCall wrappers NOW, on this thread. If GC
         # instead triggers on a Pass 2 worker, pycall_pyptr_free blocks on
@@ -63,7 +70,18 @@ module SFL
         # Timeout watchdog and HTTP reads frozen behind the GVL).
         GC.start
 
-        annotated = @pass_two.annotate_batch(syntactic_clauses.zip(ideational_payloads))
+        if resume && @cache
+          annotated = compile_with_cache(document_id, pairs, correlation_id)
+        else
+          annotated = @pass_two.annotate_batch(pairs)
+        end
+
+        # === Cache store after successful Pass 2 ===
+        if @cache && document_id
+          pairs.zip(annotated).each do |(clause, _ideational), ac|
+            @cache.store(document_id, clause, ac)
+          end
+        end
 
         # === Storage ===
         if store
@@ -92,6 +110,7 @@ module SFL
           clause_count: annotated.length,
           stored: store,
           embedded: embed,
+          resume: resume,
           latency_ms: elapsed_ms
         )
 
@@ -135,6 +154,58 @@ module SFL
       # @return [Types::AnnotatedClause]
       def compile_pass_two(clause, ideational)
         @pass_two.annotate(clause, ideational)
+      end
+
+      # Access the cache for external operations (clear, stats).
+      # @return [Storage::PipelineCache, nil]
+      def cache
+        @cache
+      end
+
+      private
+
+      # Compile with cache: serve hits from disk, run Pass 2 only for misses.
+      def compile_with_cache(document_id, pairs, correlation_id)
+        cached, uncached = @cache.partition(document_id, pairs)
+
+        if uncached.empty?
+          @logger.send_message(
+            message: "pass_two_cache_full_hit",
+            priority: Journald::LOG_INFO,
+            correlation_id: correlation_id,
+            document_id: document_id,
+            clause_count: cached.size
+          )
+          return cached
+        end
+
+        @logger.send_message(
+          message: "pass_two_cache_partial_hit",
+          priority: Journald::LOG_INFO,
+          correlation_id: correlation_id,
+          document_id: document_id,
+          cached_count: cached.size,
+          uncached_count: uncached.size
+        )
+
+        # Run Pass 2 only on uncached clauses
+        fresh = @pass_two.annotate_batch(uncached)
+
+        # Merge: cached results first (in order), then fresh results
+        # We need to rebuild the full list in original order
+        result = []
+        uncached_idx = 0
+        pairs.each_with_index do |(clause, _ideational), idx|
+          hit = @cache.fetch(document_id, clause)
+          if hit
+            result << hit
+          else
+            result << fresh[uncached_idx]
+            uncached_idx += 1
+          end
+        end
+
+        result
       end
     end
   end
