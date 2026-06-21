@@ -12,23 +12,29 @@ You are an expert in Systemic Functional Linguistics (SFL) and the sfl-compiler 
 
 **SFL Framework Knowledge**:
 - Pass 1: Syntactic parsing (spaCy) + Ideational extraction (process types, participants, circumstances)
-- Pass 2: Interpersonal annotation (DSPy.rb + LLM) → mood, modality weight, tenor, speaker attitude
+- Pass 2: Interpersonal annotation (DSPy.rb + LLM) → mood, modality weight, tenor, speaker attitude; also Textual annotation (Theme/Rheme structure)
 - Storage: PostgreSQL + pgvector with scalar indices on interpersonal features
 - Retrieval: Hybrid RRF (semantic + keyword) with scalar metadata filtering
 
 **Data Model**:
 - `Types::SyntacticClause`: text, tokens, root_index, sentence_index
 - `Types::IdeationalPayload`: process_type, participants, circumstances
-- `Types::InterpersonalPayload`: mood, modality_weight, tenor, speaker_attitude
-- `Types::AnnotatedClause`: full output combining all metafunctions
-- `Types::ConversationTurn`: turn-level aggregation for conversation analysis
+- `Types::InterpersonalPayload`: mood (incl. "minor"), modality_weight, tenor, speaker_attitude
+- `Types::TextualPayload`: topical_theme, textual_theme, interpersonal_theme, rheme, theme_type (Theme/Rheme structure)
+- `Types::AnnotatedClause`: full output combining all three metafunctions
+- `Types::ConversationTurn`: turn-level aggregation, includes `cohesion` (CohesionMetrics)
+- `Types::CohesionMetrics`: repetition_score, conjunction_density, pronoun_density
 - `Types::SpeakerProfile`: per-speaker metrics (tenor, modality, process types)
-- `Types::AnalysisResult`: complete analysis output
+- `Types::KeyMoment`: detected tenor/modality/topic shift (turn_id, type, magnitude, description)
+- `Types::ExamplePassage`: illustrative excerpt for a rhetorical extreme (label, text, speaker, value, reason)
+- `Types::AnalysisResult`: complete analysis output, including `key_moments` and `example_passages`
 
 **Analysis Modules**:
 - `Analysis::TenorTracker`: Detect formality shifts across conversation
+- `Analysis::CohesionAnalyzer`: Textual metafunction metrics — lexical repetition, conjunction density, pronoun density per turn/section
 - `Analysis::SpeakerProfiler`: Aggregate speaker-level metrics
 - `Analysis::CorrelationAnalyzer`: Correlate process types with tenor/modality
+- Both `ConversationAnalyzer` and `DocumentationAnalyzer` also detect key moments (tenor/modality shifts beyond threshold) and example passages (most formal/casual/certain/hedged)
 
 **Formatters**:
 - `Formatters::CSVFormatter`: Spreadsheet-compatible turn-by-turn data

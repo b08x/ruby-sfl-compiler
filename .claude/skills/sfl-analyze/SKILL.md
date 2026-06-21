@@ -30,10 +30,13 @@ bundle exec sfl-analyze narrate conversation_analysis.json [--output-dir DIR]
 ## Outputs
 
 conversation/documentation write `conversation_analysis.{csv,json,md}` into
-`--output-dir` (default `./sfl_output`). Reports include a Data Quality
-section whenever clauses carry fallback/stub interpersonal values.
-`--narrative` additionally writes `narrative_report.md` (one LLM call) after
-the trio; failure only warns, the analysis output is unaffected.
+`--output-dir` (default `./output/latest`). Reports include a Data Quality
+section whenever clauses carry fallback/stub interpersonal values, plus
+Cohesion Metrics (repetition/conjunction/pronoun density per turn or
+section), ⚡ Key Moments (tenor/modality shifts beyond threshold), and 📖
+Example Passages (most formal/casual/certain/hedged). `--narrative`
+additionally writes `narrative_report.md` (one LLM call) after the trio;
+failure only warns, the analysis output is unaffected.
 `context` prints the synthesized answer + cited evidence; `--output-dir`
 additionally writes `context_synthesis.json`.
 
