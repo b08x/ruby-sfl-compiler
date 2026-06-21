@@ -103,6 +103,7 @@ loader.tag = "sfl-compiler"
 loader.inflector.inflect(
   "sfl" => "SFL",
   "cli" => "CLI",
+  "tui" => "TUI",
   "rrf" => "RRF",
   "markdown_loader" => "MarkdownLoader"
 )
@@ -112,4 +113,7 @@ loader.collapse("#{__dir__}/compiler/storage")
 loader.collapse("#{__dir__}/compiler/retrieval")
 loader.collapse("#{__dir__}/compiler/analysis")
 loader.collapse("#{__dir__}/compiler/formatters")
+loader.collapse("#{__dir__}/compiler/chat")
+loader.collapse("#{__dir__}/compiler/tui")
+loader.collapse("#{__dir__}/compiler/tui/wizards")
 loader.setup

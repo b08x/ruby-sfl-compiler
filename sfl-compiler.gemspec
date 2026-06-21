@@ -31,6 +31,8 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = ["sfl-analyze", "sfl-tui"]
 
+  spec.add_dependency "bubbles", "~> 0.1"
+  spec.add_dependency "bubbletea", "~> 0.1"
   spec.add_dependency "circuit_breaker", "~> 1.1"
   spec.add_dependency "csv", "~> 3.3"
   spec.add_dependency "dotenv", "~> 3.1"
@@ -39,8 +41,11 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dry-types", "~> 1.7"
   spec.add_dependency "dspy", "~> 1.0"
   spec.add_dependency "dspy-openai", "~> 1.0"
+  spec.add_dependency "glamour", "~> 0.2"
+  spec.add_dependency "gum"
   spec.add_dependency "inkmark", "~> 0.1"
   spec.add_dependency "journald-logger", "~> 3.1"
+  spec.add_dependency "lipgloss", "~> 0.2"
   spec.add_dependency "pg", "~> 1.5"
   spec.add_dependency "pgvector", "~> 0.3"
   spec.add_dependency "pragmatic_segmenter", "~> 0.3"

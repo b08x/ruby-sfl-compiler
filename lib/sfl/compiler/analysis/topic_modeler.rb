@@ -67,7 +67,10 @@ module SFL
           docs = turns.map { |t| tokenize(t.message_text) }
 
           @model = build_model
-          docs.each { |tokens| @model.add_doc(tokens) }
+          docs.each_with_index do |tokens, idx|
+            next if tokens.empty?
+            @model.add_doc(tokens)
+          end
 
           train_model
           build_topic_labels
@@ -174,20 +177,25 @@ module SFL
         private def assign_topics_to_turns
           @turns = @turns.map do |turn|
             tokens = tokenize(turn.message_text)
-            doc = @model.make_doc(tokens)
-            topic_dist, = @model.infer(doc)
 
-            distribution = {}
-            topic_dist.each_with_index do |prob, idx|
-              distribution[idx] = prob.round(4) if prob > 0.01
+            if tokens.empty?
+              turn.new(topic_distribution: {}, dominant_topic: 0)
+            else
+              doc = @model.make_doc(tokens)
+              topic_dist, = @model.infer(doc)
+
+              distribution = {}
+              topic_dist.each_with_index do |prob, idx|
+                distribution[idx] = prob.round(4) if prob > 0.01
+              end
+
+              dominant = distribution.max_by { |_, v| v }&.first || 0
+
+              turn.new(
+                topic_distribution: distribution,
+                dominant_topic: dominant
+              )
             end
-
-            dominant = distribution.max_by { |_, v| v }&.first || 0
-
-            turn.new(
-              topic_distribution: distribution,
-              dominant_topic: dominant
-            )
           end
         end
 
