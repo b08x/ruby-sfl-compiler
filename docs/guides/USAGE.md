@@ -34,10 +34,10 @@ Any other prefix makes the CLI exit with
 DSPy.rb supports — configure `DSPy.configure { |c| c.lm = ... }` yourself and
 skip `Bootstrap` — but the CLI's provider map is those four.)
 
-For semantic search and `context` queries you also need `OPENAI_API_KEY`,
-because embeddings use OpenAI `text-embedding-ada-002`. Without it,
-`--store` still persists clauses (no embeddings) and retrieval works
-keyword-only.
+For semantic search and `context` queries you also need Ollama running with
+`embeddinggemma:latest` model (configure `OLLAMA_BASE_URL` and `EMBEDDING_MODEL`
+in `.env`). Without it, `--store` still persists clauses (no embeddings) and
+retrieval works keyword-only.
 
 ### 2. Run an Analysis
 

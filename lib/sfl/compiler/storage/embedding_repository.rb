@@ -15,9 +15,9 @@ module SFL
       # Store an embedding vector for a clause.
       #
       # @param clause_id [String]
-      # @param embedding [Array<Float>] 1536-dim vector
+      # @param embedding [Array<Float>] 768-dim vector
       # @param model [String] Model identifier
-      def store(clause_id, embedding, model: "text-embedding-ada-002")
+      def store(clause_id, embedding, model: "embeddinggemma:latest")
         @db[:embeddings].insert(
           clause_id: clause_id,
           embedding: embedding,

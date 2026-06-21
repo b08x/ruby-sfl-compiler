@@ -135,9 +135,10 @@ SPACY_MODEL=en_core_web_sm
 
 The CLI resolves the API key from the provider prefix and fails fast with a
 clear error for unsupported prefixes or missing keys. Embeddings (used by
-semantic search and `context` queries) additionally require `OPENAI_API_KEY` —
-the embedder calls `text-embedding-ada-002`. Without it, ingestion degrades
-gracefully to clause-only storage and retrieval falls back to keyword search.
+semantic search and `context` queries) use Ollama `embeddinggemma:latest`
+(requires `OLLAMA_BASE_URL` and `EMBEDDING_MODEL` in `.env`). Without them,
+ingestion degrades gracefully to clause-only storage and retrieval falls back
+to keyword search.
 
 ## The sfl-analyze CLI
 

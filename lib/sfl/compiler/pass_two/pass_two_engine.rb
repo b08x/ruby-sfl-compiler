@@ -233,13 +233,17 @@ module SFL
       end
 
       def textual_from(clause, result, correlation_id)
+        # Normalize theme_type: "topical_unmarked" → "unmarked" (standard SFL term)
+        theme_type = (result[:theme_type] || "unmarked").to_s.downcase
+        theme_type = "unmarked" if theme_type == "topical_unmarked"
+
         Types::TextualPayload.new(
           clause_id: clause.id,
           topical_theme: result[:topical_theme] || clause.text.split.first,
           textual_theme: result[:textual_theme],
           interpersonal_theme: result[:interpersonal_theme],
           rheme: result[:rheme],
-          theme_type: (result[:theme_type] || "unmarked").to_s.downcase
+          theme_type: theme_type
         )
       rescue Dry::Struct::Error => e
         log_and_warn("pass_two_invalid_textual", correlation_id, clause,
@@ -384,17 +388,20 @@ module SFL
     end
 
     # DSPy.rb signature for SFL interpersonal and textual annotation.
+    # NOTE: Processes belong to the Ideational metafunction (handled in Pass 1).
+    # This signature handles Interpersonal (mood, modality, tenor) and
+    # Textual (Theme/Rheme organization) metafunctions only.
     class SFLSignature < DSPy::Signature
       description "Analyze the interpersonal and textual metafunctions of a clause using " \
-                  "Systemic Functional Linguistics (SFL). Determine mood type, " \
-                  "modality weight (certainty), tenor (formality), and " \
-                  "Theme/Rheme structure. Theme is the starting point of the message."
+                  "Systemic Functional Linguistics (SFL). " \
+                  "Interpersonal: mood type, modality weight (certainty), tenor (formality), speaker attitude. " \
+                  "Textual: Theme/Rheme structure — Theme is the starting point of the message."
 
       input do
         const :text, String, description: "The raw clause text"
-        const :root_verb, String, description: "The root verb with POS and lemma"
-        const :process_type, String, description: "Ideational process type from Pass 1"
-        const :participants, String, description: "Semantic roles of participants"
+        const :root_verb, String, description: "The root verb with POS and lemma (from Pass 1 Ideational analysis)"
+        const :process_type, String, description: "Ideational process type (from Pass 1 — for context only, not analyzed here)"
+        const :participants, String, description: "Semantic roles of participants (from Pass 1 — for context only)"
         const :pos_tags, String, description: "POS tag sequence"
         const :dependencies, String, description: "Dependency relation sequence"
       end
@@ -405,8 +412,8 @@ module SFL
         const :tenor, Float, description: "Formality level 0.0-1.0 (0=informal, 1=formal)"
         const :speaker_attitude, String, description: "Speaker attitude: neutral, positive, negative, skeptical, assertive"
         const :topical_theme, String, description: "Topical Theme: main starting point (Subject, fronted element, or Predicator)"
-        const :textual_theme, String, description: "Textual Theme: conjunctions/connectives at start"
-        const :interpersonal_theme, String, description: "Interpersonal Theme: modal adjuncts"
+        const :textual_theme, String, description: "Textual Theme: conjunctions/connectives at start (e.g., however, therefore, and)"
+        const :interpersonal_theme, String, description: "Interpersonal Theme: modal adjuncts/discourse markers at start (e.g., surely, perhaps, well)"
         const :rheme, String, description: "Rheme: everything after the Theme"
         const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, simple, existential, clausal, or textual"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
@@ -487,13 +494,16 @@ module SFL
     # Batched variant of SFLSignature: annotates many clauses per LLM call.
     class SFLBatchSignature < DSPy::Signature
       description "Analyze the interpersonal and textual metafunctions of EACH numbered clause " \
-                  "using Systemic Functional Linguistics (SFL). For every clause, " \
-                  "determine mood, modality, tenor, and Theme/Rheme structure. " \
+                  "using Systemic Functional Linguistics (SFL). " \
+                  "Interpersonal: mood, modality, tenor, speaker attitude. " \
+                  "Textual: Theme/Rheme structure. " \
+                  "Processes (material, mental, relational, etc.) are Ideational — handled in Pass 1. " \
                   "Return exactly one annotation per clause, carrying over the index."
 
       input do
         const :clauses, String,
-          description: "Numbered clauses, each with text, root verb, process type, " \
+          description: "Numbered clauses, each with text, root verb, process type " \
+                       "(from Pass 1 Ideational — for context only), " \
                        "participants, POS tags, and dependency relations"
       end
 

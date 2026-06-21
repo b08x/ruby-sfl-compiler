@@ -106,8 +106,8 @@ module SFL
         @db.create_table?(:embeddings) do
           primary_key :id
           String :clause_id, null: false
-          column :embedding, "vector(1536)"  # OpenAI text-embedding-ada-002
-          String :model, null: false, default: "text-embedding-ada-002"
+          column :embedding, "vector(768)"  # Ollama embeddinggemma:latest
+          String :model, null: false, default: "embeddinggemma:latest"
           DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 
           index [:clause_id, :model], unique: true

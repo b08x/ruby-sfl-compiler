@@ -59,7 +59,7 @@ Four tables, created by `Migrator#run_all`:
 | `clauses` | Base text, token JSONB | `external_id` (UUID), `document_id`, `tokens` |
 | `ideational_payloads` | Pass 1 output | `process_type`, `participants` (jsonb), `circumstances` |
 | `interpersonal_payloads` | Pass 2 output | `mood`, `modality_weight`, `tenor` |
-| `embeddings` | Vectors | `clause_id`, `embedding vector(1536)`, `model` |
+| `embeddings` | Vectors | `clause_id`, `embedding vector(768)`, `model` |
 
 Scalar indices on `interpersonal_payloads(mood, modality_weight, tenor)` for filtering. Vector index on `embeddings(embedding)` using ivfflat cosine. GIN index on `clauses.tokens` for JSONB queries.
 

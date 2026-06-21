@@ -196,7 +196,7 @@ Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTE
 
 7. **Hardcoded paths in main script**: `scripts/parse_metacognitive_coprocessor.rb` has `../../../Notebook/NotebookLM/metacognitive-coprocessor/` hardcoded. Use `FILE=...` env var for other files.
 
-8. **Embedding dimension is 1536**: Hardcoded for OpenAI `text-embedding-ada-002` (the `Embedder` class requires `OPENAI_API_KEY` regardless of `DSPY_PROVIDER`; it degrades to nil/no-embedding without it). Change the column type in `create_embeddings_table` if using a different model.
+8. **Embedding dimension is 768**: Uses Ollama `embeddinggemma:latest` (requires `OLLAMA_BASE_URL` and `EMBEDDING_MODEL` in `.env`). The `Embedder` class configures RubyLLM to use the Ollama provider. Change the column type in `create_embeddings_table` if using a different model.
 
 9. **Zeitwerk collapsing + manifest split**: `pass_one/`, `pass_two/`, `storage/`, `retrieval/` files define FLAT constants at `SFL::Compiler` (e.g., `PassOneEngine`, `HybridRetriever`, `ContextSynthesizer`) and autoload normally. But `analysis/` and `formatters/` files use NESTED modules (`Analysis::TenorTracker`, `Formatters::CSVFormatter`) and only load via explicit `require_relative` lines in the manifest files `lib/sfl/compiler/analysis.rb` / `lib/sfl/compiler/formatters.rb` — **a new file in those two dirs MUST be added to its manifest** or you get `uninitialized constant`.
 

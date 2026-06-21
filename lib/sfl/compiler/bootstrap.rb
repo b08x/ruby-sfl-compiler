@@ -33,6 +33,8 @@ module SFL
         config.database_url = env["DATABASE_URL"] if env["DATABASE_URL"]
         config.spacy_model = env["SPACY_MODEL"] if env["SPACY_MODEL"]
         config.dspy_provider = env["DSPY_PROVIDER"] if env["DSPY_PROVIDER"]
+        config.ollama_base_url = env["OLLAMA_BASE_URL"] if env["OLLAMA_BASE_URL"]
+        config.embedding_model = env["EMBEDDING_MODEL"] if env["EMBEDDING_MODEL"]
 
         configure_llm(config.dspy_provider, env) if require_llm
         db = connect_db(config) if require_db

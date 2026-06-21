@@ -144,7 +144,12 @@ module SFL
       def run_documentation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
         pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
-        pipeline_args[:embedder] = Embedder.new if options[:store]
+        if options[:store]
+          pipeline_args[:embedder] = Embedder.new(
+            model: ctx.config.embedding_model,
+            ollama_base_url: ctx.config.ollama_base_url
+          )
+        end
         pipeline = Pipeline.new(**pipeline_args)
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline: pipeline,
@@ -160,8 +165,12 @@ module SFL
       def run_context(query, options)
         ctx = Bootstrap.call(require_llm: true)
         db = ctx.db
+        embedder = Embedder.new(
+          model: ctx.config.embedding_model,
+          ollama_base_url: ctx.config.ollama_base_url
+        )
         synthesizer = ContextSynthesizer.new(
-          retriever: HybridRetriever.new(db: db, embedder: Embedder.new),
+          retriever: HybridRetriever.new(db: db, embedder: embedder),
           clause_repo: ClauseRepository.new(db)
         )
 

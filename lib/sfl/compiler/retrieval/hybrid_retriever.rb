@@ -211,13 +211,14 @@ module SFL
     end
 
     # Simple embedding interface compatible with HybridRetriever.
-    # Uses ruby_llm for embedding generation.
+    # Uses Ollama for embedding generation via ruby_llm.
     class Embedder
       include CircuitBreaker
 
-      def initialize(model: "text-embedding-ada-002")
+      def initialize(model: "embeddinggemma:latest", ollama_base_url: nil)
         @model = model
         @logger = Journald::Logger.new("sfl-compiler-embedder")
+        configure_ruby_llm(ollama_base_url)
       end
 
       # Generate embedding vector for text.
@@ -245,9 +246,19 @@ module SFL
 
       private
 
+      def configure_ruby_llm(ollama_base_url)
+        return unless defined?(RubyLLM)
+
+        ollama_base_url ||= ENV.fetch("OLLAMA_BASE_URL", "http://localhost:11434")
+        RubyLLM.configure do |config|
+          config.ollama_api_base = ollama_base_url
+          config.default_embedding_model = @model
+        end
+      end
+
       def call_ruby_llm(text)
-        response = RubyLLM.embed(text, model: @model)
-        response.embedding
+        response = RubyLLM.embed(text, model: @model, provider: :ollama)
+        response.vectors
       end
       circuit_method :call_ruby_llm
 

@@ -72,7 +72,8 @@ module SFL
 
     class Configuration
       attr_accessor :database_url, :spacy_model, :dspy_provider,
-                    :dspy_api_key_env, :openai_api_key, :log_level
+                    :dspy_api_key_env, :openai_api_key, :log_level,
+                    :ollama_base_url, :embedding_model
 
       def initialize
         @database_url = ENV.fetch("DATABASE_URL", "postgresql:///sfl_compiler_dev")
@@ -81,6 +82,8 @@ module SFL
         @dspy_api_key_env = "OPENAI_API_KEY"
         @openai_api_key = ENV.fetch("OPENAI_API_KEY", nil)
         @log_level = ENV.fetch("LOG_LEVEL", "info")
+        @ollama_base_url = ENV.fetch("OLLAMA_BASE_URL", "http://localhost:11434")
+        @embedding_model = ENV.fetch("EMBEDDING_MODEL", "embeddinggemma:latest")
       end
 
       def validate!
