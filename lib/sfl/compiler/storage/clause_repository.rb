@@ -16,8 +16,11 @@ module SFL
       # Store a fully annotated clause with separated payloads.
       #
       # @param annotated [Types::AnnotatedClause]
+      # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
+      #   fit over the clause's document/section — nil when topic modeling
+      #   wasn't requested.
       # @return [String] The stored clause external_id
-      def store(annotated)
+      def store(annotated, topic: nil)
         @db.transaction do
           # Store base clause
           @db[:clauses].insert(
@@ -29,6 +32,8 @@ module SFL
             root_token: Sequel.pg_jsonb(
               annotated.syntactic.tokens[annotated.syntactic.root_index].to_h
             ),
+            topic_id: topic&.fetch(:id, nil),
+            topic_label: topic&.fetch(:label, nil),
             created_at: Time.now
           )
 

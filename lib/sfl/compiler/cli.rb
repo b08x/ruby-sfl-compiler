@@ -29,7 +29,7 @@ module SFL
         conversation/documentation:
           --pass1-only                 Skip LLM annotation (placeholder values)
           --narrative                  Also generate narrative_report.md (LLM)
-          --topics N                   Number of topics for LDA topic modeling
+          --topics N                   Number of topics for LDA; 0 = HDP (auto-discover)
           --resume                     Reuse cached Pass 2 results from previous runs
 
         documentation:

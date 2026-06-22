@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-# Note: Pipeline#initialize constructs PassOneEngine (which requires ruby-spacy)
+# NOTE: Pipeline#initialize constructs PassOneEngine (which requires ruby-spacy)
 # and uses Zeitwerk autoloading. Since spacy isn't installed in CI, we bypass
 # the constructor with Pipeline.allocate and inject mocks directly via
 # instance_variable_set. This exercises the orchestration logic without
@@ -40,7 +40,7 @@ RSpec.describe SFL::Compiler::Pipeline do
   let(:annotated_clause) do
     SFL::Compiler::Types::AnnotatedClause.new(
       id: "annotated-1", text: "The system processes data.",
-      syntactic: clause, ideational: ideational, interpersonal: interpersonal,
+      syntactic: clause, ideational:, interpersonal:,
       document_id: "doc-1", compiled_at: Time.now
     )
   end
@@ -105,7 +105,7 @@ RSpec.describe SFL::Compiler::Pipeline do
 
       it "stores each annotated clause by default" do
         pipeline.compile("Hello world", document_id: "doc-1")
-        expect(clause_repo).to have_received(:store).with(annotated_clause).once
+        expect(clause_repo).to have_received(:store).with(annotated_clause, topic: nil).once
       end
 
       it "does not embed when no embedder is set" do
@@ -241,7 +241,7 @@ RSpec.describe SFL::Compiler::Pipeline do
       let(:annotated_clause_2) do
         SFL::Compiler::Types::AnnotatedClause.new(
           id: "annotated-2", text: "It works.",
-          syntactic: clause_2, ideational: ideational_2, interpersonal: interpersonal,
+          syntactic: clause_2, ideational: ideational_2, interpersonal:,
           document_id: "doc-1", compiled_at: Time.now
         )
       end

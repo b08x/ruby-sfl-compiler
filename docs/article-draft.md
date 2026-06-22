@@ -814,6 +814,8 @@ Unfiltered, the actual account-unlock ticket is outranked by a loosely-related s
 
 **What's still open**: this corpus is small (32 incidents, 598 clauses) and skews toward short, declarative, low-modality tickets — not enough volume or variance to claim a precision percentage (the speculative "30% → 85%" from the original draft was never more than a placeholder, and still is). What's verified is the *mechanism*: the pipeline runs LLM-free at the Pass 1 layer, the LLM layer never silently degrades (zero fallbacks across 598 clauses), and the retrieval filter measurably changes which result lands on top for the same query.
 
+**What this doesn't measure**: none of `InterpersonalPayload`'s fields — `mood`, `modality_weight`, `tenor`, `speaker_attitude` — encode truth value. `modality_weight` captures the speaker's *expressed* certainty ("I think maybe" vs. "this definitely is"), not whether the underlying claim is accurate. A hallucinated sentence stated with total confidence gets scored exactly like a true sentence stated with the same confidence — `mood: declarative`, `modality_weight: 0.95`, same as any other assertive, well-formed claim. The pipeline has no mechanism to check a proposition against reality; it only characterizes the grammar of the assertion. That's a real boundary, not an oversight — SFL is a grammar of stance, not a fact-checker, and nothing in this architecture claims otherwise.
+
 ---
 
 ## The Takeaway

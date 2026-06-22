@@ -43,15 +43,14 @@ module SFL
         create_interpersonal_table
         create_embeddings_table
         create_indices
+        add_clause_topic_columns
         @logger.send_message(
           message: "migrations_completed",
           priority: Journald::LOG_INFO
         )
       end
 
-      private
-
-      def create_clauses_table
+      private def create_clauses_table
         @db.create_table?(:clauses) do
           primary_key :id
           String :external_id, null: false
@@ -60,16 +59,27 @@ module SFL
           Integer :sentence_index
           column :tokens, :jsonb, default: "[]"
           column :root_token, :jsonb
+          Integer :topic_id
+          String :topic_label
           DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 
           index :external_id, unique: true
           index :document_id
           index Sequel.function(:to_tsvector, "simple", :text),
-                type: :gin, name: :idx_clauses_tsv
+            type: :gin, name: :idx_clauses_tsv
         end
       end
 
-      def create_ideational_table
+      # `create_table?` is a no-op against an already-existing `clauses`
+      # table (the topic columns above only apply on a fresh install), so
+      # add them here too for databases migrated before topic tagging existed.
+      private def add_clause_topic_columns
+        existing = @db.schema(:clauses).map(&:first)
+        @db.add_column(:clauses, :topic_id, Integer) unless existing.include?(:topic_id)
+        @db.add_column(:clauses, :topic_label, String) unless existing.include?(:topic_label)
+      end
+
+      private def create_ideational_table
         @db.create_table?(:ideational_payloads) do
           primary_key :id
           String :clause_id, null: false
@@ -84,7 +94,7 @@ module SFL
         end
       end
 
-      def create_interpersonal_table
+      private def create_interpersonal_table
         @db.create_table?(:interpersonal_payloads) do
           primary_key :id
           String :clause_id, null: false
@@ -102,20 +112,20 @@ module SFL
         end
       end
 
-      def create_embeddings_table
+      private def create_embeddings_table
         @db.create_table?(:embeddings) do
           primary_key :id
           String :clause_id, null: false
-          column :embedding, "vector(768)"  # Ollama embeddinggemma:latest
+          column :embedding, "vector(768)" # Ollama embeddinggemma:latest
           String :model, null: false, default: "embeddinggemma:latest"
           DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 
-          index [:clause_id, :model], unique: true
+          index %i[clause_id model], unique: true
           index :embedding, type: :ivfflat, opclass: :vector_cosine_ops
         end
       end
 
-      def create_indices
+      private def create_indices
         # Composite index for scalar filtering + vector search
         @db.execute(<<~SQL)
           CREATE INDEX IF NOT EXISTS idx_interpersonal_scalar_filter

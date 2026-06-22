@@ -47,15 +47,55 @@ module SFL
         #   before training (generic words like "system", "model")
         # @param iterations [Integer] number of training iterations
         # @param seed [Integer] random seed for reproducibility
-        def initialize(k: nil, min_cf: 3, rm_top: 2, iterations: 100, seed: 42)
+        # @param burn_in [Integer, nil] initial training iterations whose
+        #   stats are discarded before topic estimates are counted. Matters
+        #   most for HDP (k: nil), where the live topic count itself is
+        #   still converging during early iterations; nil leaves Tomoto's
+        #   own default (0) in place.
+        def initialize(k: nil, min_cf: 3, rm_top: 2, iterations: 100, seed: 42, burn_in: nil)
           @k = k
           @min_cf = min_cf
           @rm_top = rm_top
           @iterations = iterations
+          @burn_in = burn_in
           @seed = seed
           @model = nil
           @topic_labels = {}
           @fitted = false
+        end
+
+        # Pre-pass fit: trains directly on raw text, with no ConversationTurn
+        # struct required. Lets callers assign a stable topic id/label to
+        # each document *before* clause compilation/storage even runs,
+        # instead of the turn-bound #fit below (which needs turns to exist
+        # first and is used for the report-level topic_evolution/shifts).
+        #
+        # @param texts [Array<String>]
+        # @return [Array<Integer, nil>] dominant topic id per text, parallel
+        #   to +texts+ (nil for texts that tokenize to nothing)
+        def fit_texts(texts)
+          @model = build_model
+          docs = texts.map { |t| tokenize(t) }
+          docs.each { |tokens| @model.add_doc(tokens) unless tokens.empty? }
+
+          train_model
+          build_topic_labels
+
+          docs.map { |tokens| dominant_topic_for(tokens) }
+        end
+
+        private def dominant_topic_for(tokens)
+          return nil if tokens.empty?
+
+          doc = @model.make_doc(tokens)
+          topic_dist, = @model.infer(doc)
+          # A degenerate fit (e.g. no word in the corpus clears min_cf, the
+          # "No valid vocabs in the model!" case) infers NaN for every
+          # topic — max_by's Float#<=> comparison raises on NaN rather
+          # than just losing the comparison, so guard explicitly.
+          return nil if topic_dist.any?(&:nan?)
+
+          topic_dist.each_with_index.max_by { |prob, _idx| prob }&.last
         end
 
         # Train the topic model on an array of ConversationTurn structs.
@@ -67,8 +107,9 @@ module SFL
           docs = turns.map { |t| tokenize(t.message_text) }
 
           @model = build_model
-          docs.each_with_index do |tokens, idx|
+          docs.each_with_index do |tokens, _idx|
             next if tokens.empty?
+
             @model.add_doc(tokens)
           end
 
@@ -144,7 +185,7 @@ module SFL
         end
 
         private def build_model
-          if @k
+          model = if @k
             Tomoto::LDA.new(
               k: @k,
               min_cf: @min_cf,
@@ -158,6 +199,9 @@ module SFL
               seed: @seed
             )
           end
+
+          model.burn_in = @burn_in if @burn_in
+          model
         end
 
         private def train_model

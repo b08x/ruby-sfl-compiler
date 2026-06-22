@@ -17,7 +17,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
       root_index: 0, sentence_index: 0, document_id: doc_id
     )
     SFL::Compiler::Types::AnnotatedClause.new(
-      id: "ann", text: "It works.", syntactic: syntactic,
+      id: "ann", text: "It works.", syntactic:,
       ideational: SFL::Compiler::Types::IdeationalPayload.new(
         clause_id: "syn", process_type: "material",
         participants: [], circumstances: [], raw_transitivity: {}
@@ -64,7 +64,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
 
   it "maps sections onto turns (speaker = heading) and labels the report" do
     Dir.mktmpdir do |dir|
-      result = described_class.new(pipeline: pipeline, clause_repo: clause_repo)
+      result = described_class.new(pipeline:, clause_repo:)
         .analyze(write_doc(dir))
 
       expect(result.turns.size).to eq(2)
@@ -78,7 +78,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
 
   it "compiles without storing by default" do
     Dir.mktmpdir do |dir|
-      described_class.new(pipeline: pipeline, clause_repo: clause_repo)
+      described_class.new(pipeline:, clause_repo:)
         .analyze(write_doc(dir))
 
       expect(pipeline).to have_received(:compile)
@@ -89,7 +89,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
 
   it "with store: true deletes each section's document_id first, then stores" do
     Dir.mktmpdir do |dir|
-      described_class.new(pipeline: pipeline, clause_repo: clause_repo)
+      described_class.new(pipeline:, clause_repo:)
         .analyze(write_doc(dir), store: true)
 
       expect(clause_repo).to have_received(:delete_by_document).with("guide#introduction")
@@ -104,7 +104,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
       write_doc(dir)
       File.write(File.join(dir, "other.md"), markdown)
 
-      result = described_class.new(pipeline: pipeline, clause_repo: clause_repo)
+      result = described_class.new(pipeline:, clause_repo:)
         .analyze(dir)
       expect(result.turns.size).to eq(4)
     end
@@ -113,11 +113,74 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
   it "emits progress events" do
     Dir.mktmpdir do |dir|
       events = []
-      described_class.new(pipeline: pipeline, clause_repo: clause_repo,
-        on_progress: ->(e) { events << e }).analyze(write_doc(dir))
+      described_class.new(pipeline:, clause_repo:,
+        on_progress: -> (e) { events << e }).analyze(write_doc(dir))
 
       expect(events.size).to eq(2)
       expect(events.first).to include(turn_id: 1, total: 2, speaker: "Introduction")
+    end
+  end
+
+  context "with topics: requested" do
+    it "skips the pre-pass and omits :topic when fewer than 3 sections" do
+      Dir.mktmpdir do |dir|
+        described_class.new(pipeline:, clause_repo:)
+          .analyze(write_doc(dir), topics: 2)
+
+        expect(pipeline).to have_received(:compile)
+          .with(anything, document_id: "guide#introduction", store: false, embed: false, resume: false)
+      end
+    end
+
+    it "threads a pre-pass topic id/label into pipeline.compile per section" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "guide.md")
+        File.write(path, <<~MD)
+          # Sandbox
+
+          The sandbox uses WebAssembly isolation for untrusted code execution.
+
+          # Telemetry
+
+          Telemetry pipelines ingest OTLP traces for observability monitoring.
+
+          # Frontend
+
+          The frontend renders virtualized telemetry trace visualizations.
+        MD
+
+        described_class.new(pipeline:, clause_repo:)
+          .analyze(path, topics: 2)
+
+        expect(pipeline).to have_received(:compile).with(
+          anything, document_id: "guide#sandbox", store: false, embed: false, resume: false,
+          topic: { id: be_a(Integer), label: be_a(String) }
+        ).once
+      end
+    end
+
+    it "treats topics: 0 as HDP (k: nil) instead of fixed-k LDA" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "guide.md")
+        File.write(path, <<~MD)
+          # Sandbox
+
+          The sandbox uses WebAssembly isolation for untrusted code execution.
+
+          # Telemetry
+
+          Telemetry pipelines ingest OTLP traces for observability monitoring.
+
+          # Frontend
+
+          The frontend renders virtualized telemetry trace visualizations.
+        MD
+
+        expect(SFL::Compiler::Analysis::TopicModeler).to receive(:new)
+          .with(k: nil).at_least(:once).and_call_original
+
+        described_class.new(pipeline:, clause_repo:).analyze(path, topics: 0)
+      end
     end
   end
 end

@@ -27,7 +27,7 @@ module SFL
         @clause_repo = ClauseRepository.new(db)
         @embedding_repo = EmbeddingRepository.new(db)
         @embedder = embedder
-        @cache = PipelineCache.new(cache_dir: cache_dir) if cache_dir
+        @cache = PipelineCache.new(cache_dir:) if cache_dir
         @logger = Journald::Logger.new("sfl-compiler-pipeline")
       end
 
@@ -38,22 +38,24 @@ module SFL
       # @param store [Boolean] Whether to persist to database
       # @param embed [Boolean] Whether to generate and store embeddings
       # @param resume [Boolean] Use cached Pass 2 results from previous runs
+      # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
+      #   fit, attached to every clause stored from this call
       # @return [Array<Types::AnnotatedClause>]
-      def compile(text, document_id: nil, store: true, embed: true, resume: false)
+      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
         @logger.send_message(
           message: "pipeline_started",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
-          document_id: document_id,
+          correlation_id:,
+          document_id:,
           text_length: text.length,
-          resume: resume
+          resume:
         )
 
         # === PASS 1: Syntactic Extraction ===
-        syntactic_clauses = @pass_one.process(text, document_id: document_id)
+        syntactic_clauses = @pass_one.process(text, document_id:)
 
         # === PASS 1 Post-Processing: Ideational Extraction ===
         ideational_payloads = syntactic_clauses.map do |clause|
@@ -70,10 +72,10 @@ module SFL
         # Timeout watchdog and HTTP reads frozen behind the GVL).
         GC.start
 
-        if resume && @cache
-          annotated = compile_with_cache(document_id, pairs, correlation_id)
+        annotated = if resume && @cache
+          compile_with_cache(document_id, pairs, correlation_id)
         else
-          annotated = @pass_two.annotate_batch(pairs)
+          @pass_two.annotate_batch(pairs)
         end
 
         # === Cache store after successful Pass 2 ===
@@ -86,7 +88,7 @@ module SFL
         # === Storage ===
         if store
           annotated.each do |ac|
-            @clause_repo.store(ac)
+            @clause_repo.store(ac, topic:)
           end
         end
 
@@ -94,9 +96,7 @@ module SFL
         if embed && @embedder
           annotated.each do |ac|
             embedding = @embedder.embed(ac.text)
-            if embedding
-              @embedding_repo.store(ac.id, embedding)
-            end
+            @embedding_repo.store(ac.id, embedding) if embedding
           end
         end
 
@@ -105,12 +105,12 @@ module SFL
         @logger.send_message(
           message: "pipeline_completed",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
-          document_id: document_id,
+          correlation_id:,
+          document_id:,
           clause_count: annotated.length,
           stored: store,
           embedded: embed,
-          resume: resume,
+          resume:,
           latency_ms: elapsed_ms
         )
 
@@ -119,7 +119,7 @@ module SFL
         @logger.send_message(
           message: "pipeline_pass_one_failed",
           priority: Journald::LOG_ERR,
-          correlation_id: correlation_id,
+          correlation_id:,
           error: e.message
         )
         raise
@@ -127,7 +127,7 @@ module SFL
         @logger.send_message(
           message: "pipeline_pass_two_failed",
           priority: Journald::LOG_ERR,
-          correlation_id: correlation_id,
+          correlation_id:,
           error: e.message
         )
         raise
@@ -140,7 +140,7 @@ module SFL
       # @param document_id [String, nil]
       # @return [Array<[Types::SyntacticClause, Types::IdeationalPayload]>]
       def compile_pass_one(text, document_id: nil)
-        clauses = @pass_one.process(text, document_id: document_id)
+        clauses = @pass_one.process(text, document_id:)
         clauses.map do |clause|
           [clause, @ideational_extractor.extract(clause)]
         end
@@ -158,22 +158,18 @@ module SFL
 
       # Access the cache for external operations (clear, stats).
       # @return [Storage::PipelineCache, nil]
-      def cache
-        @cache
-      end
-
-      private
+      attr_reader :cache
 
       # Compile with cache: serve hits from disk, run Pass 2 only for misses.
-      def compile_with_cache(document_id, pairs, correlation_id)
+      private def compile_with_cache(document_id, pairs, correlation_id)
         cached, uncached = @cache.partition(document_id, pairs)
 
         if uncached.empty?
           @logger.send_message(
             message: "pass_two_cache_full_hit",
             priority: Journald::LOG_INFO,
-            correlation_id: correlation_id,
-            document_id: document_id,
+            correlation_id:,
+            document_id:,
             clause_count: cached.size
           )
           return cached
@@ -182,8 +178,8 @@ module SFL
         @logger.send_message(
           message: "pass_two_cache_partial_hit",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
-          document_id: document_id,
+          correlation_id:,
+          document_id:,
           cached_count: cached.size,
           uncached_count: uncached.size
         )
@@ -195,7 +191,7 @@ module SFL
         # We need to rebuild the full list in original order
         result = []
         uncached_idx = 0
-        pairs.each_with_index do |(clause, _ideational), idx|
+        pairs.each_with_index do |(clause, _ideational), _idx|
           hit = @cache.fetch(document_id, clause)
           if hit
             result << hit

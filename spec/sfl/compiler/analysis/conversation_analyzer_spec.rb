@@ -19,14 +19,14 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       root_index: 0, sentence_index: 0, document_id: doc_id
     )
     SFL::Compiler::Types::AnnotatedClause.new(
-      id: "ann-#{doc_id}", text: "It works.", syntactic: syntactic,
+      id: "ann-#{doc_id}", text: "It works.", syntactic:,
       ideational: SFL::Compiler::Types::IdeationalPayload.new(
         clause_id: "syn-#{doc_id}", process_type: "material",
         participants: [], circumstances: [], raw_transitivity: {}
       ),
       interpersonal: SFL::Compiler::Types::InterpersonalPayload.new(
         clause_id: "syn-#{doc_id}", mood: "declarative",
-        modality_weight: 0.6, tenor: tenor,
+        modality_weight: 0.6, tenor:,
         speaker_attitude: nil, reasoning: nil, annotation_source: source
       ),
       document_id: doc_id, compiled_at: Time.now
@@ -44,7 +44,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
     end
 
     it "compiles each turn with store/embed off and returns an AnalysisResult" do
-      result = described_class.new(pipeline: pipeline).analyze(jsonl_path)
+      result = described_class.new(pipeline:).analyze(jsonl_path)
 
       expect(result).to be_a(SFL::Compiler::Types::AnalysisResult)
       expect(result.turns.size).to eq(5)
@@ -53,7 +53,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
     end
 
     it "fills metadata from the file and turns" do
-      result = described_class.new(pipeline: pipeline).analyze(jsonl_path)
+      result = described_class.new(pipeline:).analyze(jsonl_path)
 
       expect(result.metadata[:conversation_id]).to eq("sample")
       expect(result.metadata[:turn_count]).to eq(5)
@@ -62,7 +62,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
 
     it "emits a progress event per turn" do
       events = []
-      described_class.new(pipeline: pipeline, on_progress: ->(e) { events << e })
+      described_class.new(pipeline:, on_progress: -> (e) { events << e })
         .analyze(jsonl_path)
 
       expect(events.size).to eq(5)
@@ -71,11 +71,25 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
     end
 
     it "computes tenor shifts and speaker profiles" do
-      result = described_class.new(pipeline: pipeline).analyze(jsonl_path)
+      result = described_class.new(pipeline:).analyze(jsonl_path)
 
       expect(result.turns[1].tenor_shift).not_to be_nil
       expect(result.speaker_profiles).not_to be_empty
       expect(result.tenor_timeline.size).to eq(5)
+    end
+
+    it "treats topics: 0 as HDP (k: nil) instead of fixed-k LDA" do
+      expect(SFL::Compiler::Analysis::TopicModeler).to receive(:new)
+        .with(k: nil).at_least(:once).and_call_original
+
+      described_class.new(pipeline:).analyze(jsonl_path, topics: 0)
+    end
+
+    it "passes a positive topics count straight through as fixed-k LDA" do
+      expect(SFL::Compiler::Analysis::TopicModeler).to receive(:new)
+        .with(k: 2).at_least(:once).and_call_original
+
+      described_class.new(pipeline:).analyze(jsonl_path, topics: 2)
     end
   end
 
@@ -85,7 +99,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       allow(pipeline).to receive(:compile_pass_one) do |_text, document_id:|
         syntactic = SFL::Compiler::Types::SyntacticClause.new(
           id: "s", text: "It works.", tokens: [token],
-          root_index: 0, sentence_index: 0, document_id: document_id
+          root_index: 0, sentence_index: 0, document_id:
         )
         ideational = SFL::Compiler::Types::IdeationalPayload.new(
           clause_id: "s", process_type: "material",
@@ -96,7 +110,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
     end
 
     it "skips Pass 2 and stubs interpersonal values with provenance" do
-      result = described_class.new(pipeline: pipeline, pass_one_only: true)
+      result = described_class.new(pipeline:, pass_one_only: true)
         .analyze(jsonl_path)
 
       sources = result.turns.flat_map(&:clauses)
@@ -120,7 +134,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
         LINES
         allow(pipeline).to receive(:compile) { |_t, document_id:, **| [annotated_clause(document_id)] }
 
-        result = described_class.new(pipeline: pipeline).analyze(path)
+        result = described_class.new(pipeline:).analyze(path)
         expect(result.turns.size).to eq(2)
       end
     end
@@ -130,7 +144,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
         path = File.join(dir, "empty.jsonl")
         File.write(path, "not json\nalso not json\n")
 
-        result = described_class.new(pipeline: pipeline).analyze(path)
+        result = described_class.new(pipeline:).analyze(path)
         expect(result.turns).to eq([])
         expect(result.insights).to eq([])
       end
