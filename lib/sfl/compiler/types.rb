@@ -18,7 +18,8 @@ module SFL
       TenorValue = Types::Float.constrained(gteq: 0.0, lteq: 1.0)
 
       # Mood types from SFL
-      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "indicative", "minor", "fragment")
+      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "indicative", "minor",
+        "fragment")
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
@@ -46,13 +47,42 @@ module SFL
         attribute :index, Types::Integer       # Position in sentence
       end
 
+      # Group rank (SFL rank scale: Sentence > Clause > Group > Word >
+      # Morpheme) — a nominal/verbal/adverbial/prepositional phrase, one
+      # rank above Word and one below Clause. Not yet populated by Pass 1:
+      # extraction would come from ruby-spacy's `doc.noun_chunks` for
+      # nominal groups and dependency subtrees under verb/prep heads for
+      # the others. `token_indices` refers to a parent SyntacticClause's
+      # `tokens` array by position, the same indexing SyntacticToken#index
+      # and SyntacticClause#root_index already use.
+      class SyntacticGroup < Dry::Struct
+        attribute(:id, Types::String.default { SecureRandom.uuid })
+        attribute :type, Types::String.enum("nominal", "verbal", "adverbial", "prepositional")
+        attribute :text, Types::String
+        attribute :head_token_index, Types::Integer
+        attribute :token_indices, Types::Array.of(Types::Integer)
+      end
+
       # A clause with full syntactic tree from Pass 1
       class SyntacticClause < Dry::Struct
-        attribute :id, Types::String.default { SecureRandom.uuid }
+        attribute(:id, Types::String.default { SecureRandom.uuid })
         attribute :text, Types::String
         attribute :tokens, Types::Array.of(SyntacticToken)
+        attribute :groups, Types::Array.of(SyntacticGroup).default([].freeze)
         attribute :root_index, Types::Integer
         attribute :sentence_index, Types::Integer
+        attribute :document_id, Types::String.optional
+      end
+
+      # Sentence rank — the unit directly above Clause. Reifies what's
+      # currently only an implicit grouping (SyntacticClause#sentence_index)
+      # into its own addressable object, since a sentence can contain
+      # multiple clauses (coordination, subordination).
+      class SyntacticSentence < Dry::Struct
+        attribute(:id, Types::String.default { SecureRandom.uuid })
+        attribute :index, Types::Integer
+        attribute :text, Types::String
+        attribute :clause_ids, Types::Array.of(Types::String)
         attribute :document_id, Types::String.optional
       end
 
@@ -60,7 +90,7 @@ module SFL
       class IdeationalPayload < Dry::Struct
         attribute :clause_id, Types::String
         attribute :process_type, Types::ProcessType
-        attribute :participants, Types::Array.of(Participant)  # Semantic roles
+        attribute :participants, Types::Array.of(Participant) # Semantic roles
         attribute :circumstances, Types::Array.of(Types::String)  # Adjuncts
         attribute :raw_transitivity, Types::Hash                  # Full transitivity parse
       end
@@ -72,7 +102,7 @@ module SFL
         attribute :modality_weight, Types::ModalityWeight
         attribute :tenor, Types::TenorValue
         attribute :speaker_attitude, Types::String.optional
-        attribute :reasoning, Types::String.optional  # DSPy ChainOfThought reasoning
+        attribute :reasoning, Types::String.optional # DSPy ChainOfThought reasoning
         attribute :annotation_source, Types::AnnotationSource
       end
 
@@ -83,7 +113,9 @@ module SFL
         attribute :textual_theme, Types::String.optional
         attribute :interpersonal_theme, Types::String.optional
         attribute :rheme, Types::String.optional
-        attribute :theme_type, Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "topical_unmarked", "simple", "existential", "clausal", "textual", "interjection", "interpersonal").optional
+        attribute :theme_type,
+          Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "topical_unmarked",
+            "simple", "existential", "clausal", "textual", "interjection", "interpersonal").optional
       end
 
       # Combined annotated clause — the full output of the two-pass compiler
@@ -113,7 +145,7 @@ module SFL
         attribute :dspy_api_key_env, Types::String.default("OPENAI_API_KEY")
         attribute :strategy, Types::String.enum("sequential", "parallel")
         attribute :quality_gate, Types::String.enum("sift", "do_and_judge", "none")
-        attribute :correlation_id, Types::String.default { SecureRandom.uuid }
+        attribute(:correlation_id, Types::String.default { SecureRandom.uuid })
       end
 
       # Task result from sub-agent execution
