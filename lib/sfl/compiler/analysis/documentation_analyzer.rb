@@ -13,6 +13,8 @@ module SFL
       # queries; each section's stable document_id is deleted first so
       # re-ingestion is idempotent.
       class DocumentationAnalyzer
+        include Aggregations
+
         # @param pipeline [Pipeline]
         # @param clause_repo [ClauseRepository] needed only for store: true
         # @param on_progress [#call, nil] same event shape as
@@ -264,12 +266,6 @@ module SFL
           end
 
           insights
-        end
-
-        private def mean(values)
-          return 0.5 if values.empty?
-
-          values.sum / values.size.to_f
         end
       end
     end

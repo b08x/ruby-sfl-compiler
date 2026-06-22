@@ -11,6 +11,8 @@ module SFL
       # UI-agnostic: no printing, no exiting, no ENV. Progress is reported
       # through the optional on_progress callback.
       class ConversationAnalyzer
+        include Aggregations
+
         # @param pipeline [Pipeline]
         # @param pass_one_only [Boolean] skip Pass 2; stub interpersonal
         #   values with annotation_source "stub"
@@ -314,12 +316,6 @@ module SFL
           Time.parse(value.to_s)
         rescue ArgumentError
           Time.now
-        end
-
-        private def mean(values)
-          return 0.5 if values.empty?
-
-          values.sum / values.size.to_f
         end
 
         # `topics: 0` requests HDP (auto-discover the topic count) rather

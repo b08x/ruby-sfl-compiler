@@ -5,6 +5,8 @@ module SFL
     module Analysis
       # Builds aggregated profiles for speakers in a conversation
       class SpeakerProfiler
+        include Aggregations
+
         attr_reader :turns
 
         def initialize(turns)
@@ -21,10 +23,10 @@ module SFL
           modalities = turns.map(&:avg_modality)
 
           Types::SpeakerProfile.new(
-            speaker_name: speaker_name,
+            speaker_name:,
             turn_count: turns.count,
             avg_tenor: mean(tenors),
-            tenor_range: [tenors.min, tenors.max],
+            tenor_range: tenors.minmax,
             tenor_variance: variance(tenors),
             avg_modality: mean(modalities),
             mood_distribution: calculate_mood_distribution,
@@ -41,9 +43,7 @@ module SFL
           end
         end
 
-        private
-
-        def calculate_mood_distribution
+        private def calculate_mood_distribution
           mood_counts = turns.each_with_object(Hash.new(0)) do |turn, counts|
             counts[turn.dominant_mood] += 1
           end
@@ -52,7 +52,7 @@ module SFL
           mood_counts.transform_values { |count| (count / total).round(3) }
         end
 
-        def aggregate_process_types
+        private def aggregate_process_types
           turns.each_with_object(Hash.new(0)) do |turn, totals|
             turn.process_types.each do |process_type, count|
               totals[process_type] += count
@@ -60,16 +60,11 @@ module SFL
           end
         end
 
-        def mean(values)
-          return 0.0 if values.empty?
-          (values.sum / values.count.to_f).round(3)
-        end
-
-        def variance(values)
+        private def variance(values)
           return 0.0 if values.count < 2
 
           avg = mean(values)
-          sum_squares = values.sum { |v| (v - avg)**2 }
+          sum_squares = values.sum { |v| (v - avg) ** 2 }
           (sum_squares / values.count.to_f).round(4)
         end
       end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "analysis/aggregations"
 require_relative "analysis/tenor_tracker"
 require_relative "analysis/speaker_profiler"
 require_relative "analysis/correlation_analyzer"
