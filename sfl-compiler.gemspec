@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
   spec.bindir = "exe"
-  spec.executables = ["sfl-analyze", "sfl-tui"]
+  spec.executables = %w[sfl-analyze sfl-tui]
 
   spec.add_dependency "bubbles", "~> 0.1"
   spec.add_dependency "bubbletea", "~> 0.1"
@@ -45,14 +45,15 @@ Gem::Specification.new do |spec|
   spec.add_dependency "gum"
   spec.add_dependency "inkmark", "~> 0.1"
   spec.add_dependency "journald-logger", "~> 3.1"
+  spec.add_dependency "kreuzberg", "~> 4.9"
   spec.add_dependency "lipgloss", "~> 0.2"
+  spec.add_dependency "pastel", "~> 0.8"
   spec.add_dependency "pg", "~> 1.5"
   spec.add_dependency "pgvector", "~> 0.3"
   spec.add_dependency "pragmatic_segmenter", "~> 0.3"
   spec.add_dependency "pragmatic_tokenizer", "~> 3.0"
   spec.add_dependency "ruby_llm", "~> 1.3"
   spec.add_dependency "ruby-spacy", "~> 0.4"
-  spec.add_dependency "pastel", "~> 0.8"
   spec.add_dependency "sequel", "~> 5.88"
   spec.add_dependency "tomoto", "~> 0.3"
   spec.add_dependency "tty-progressbar", "~> 0.18"

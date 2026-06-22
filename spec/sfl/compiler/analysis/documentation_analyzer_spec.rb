@@ -110,6 +110,24 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
     end
   end
 
+  it "dispatches .pdf files in a directory to PdfLoader, not MarkdownLoader" do
+    Dir.mktmpdir do |dir|
+      write_doc(dir)
+      pdf_path = File.join(dir, "report.pdf")
+      File.write(pdf_path, "fake pdf bytes")
+
+      pdf_section = SFL::Compiler::MarkdownLoader::Section.new(
+        document_id: "report#p1-1", file_id: "report", heading: "p1 §1",
+        heading_level: 1, heading_slug: "p1-1",
+        text: "PDF-extracted prose long enough to become a turn.", byte_range: nil
+      )
+      expect(SFL::Compiler::PdfLoader).to receive(:load).with(pdf_path).and_return([pdf_section])
+
+      result = described_class.new(pipeline:, clause_repo:).analyze(dir)
+      expect(result.turns.map(&:speaker)).to include("p1 §1")
+    end
+  end
+
   it "emits progress events" do
     Dir.mktmpdir do |dir|
       events = []

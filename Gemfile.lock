@@ -16,6 +16,7 @@ PATH
       gum
       inkmark (~> 0.1)
       journald-logger (~> 3.1)
+      kreuzberg (~> 4.9)
       lipgloss (~> 0.2)
       pastel (~> 0.8)
       pg (~> 1.5)

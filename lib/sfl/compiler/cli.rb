@@ -18,8 +18,12 @@ module SFL
         Usage: sfl-analyze <subcommand> <input> [options]
 
         Subcommands:
-          conversation <input.jsonl>   Analyze a JSONL conversation
-          documentation <path>         Analyze a markdown file or directory
+          conversation <input.jsonl>   Analyze a JSONL conversation (or a folder of
+                                        them — one report per file, in subdirectories
+                                        of --output-dir named after each file)
+          documentation <path>         Analyze a markdown/PDF file or directory
+                                        (PDFs are chunked into ~paragraph-sized,
+                                        page-anchored sections, not by heading)
           context "<query>"            Query stored clauses, synthesize an answer
           narrate <analysis.json>      Write an LLM narrative from a report JSON
           tui                          Interactive menu (no input argument)
@@ -147,9 +151,24 @@ module SFL
           on_turn_start: progress_starter
         )
 
-        result = analyzer.analyze(input, topics: options[:topics], resume: options[:resume])
-        finish_report(result, options[:output_dir])
-        write_narrative(result, options[:output_dir]) if options[:narrative]
+        # One report per file: ConversationAnalyzer#analyze's single-file
+        # contract is unchanged — batching a folder of .jsonl exports is
+        # purely a CLI-level orchestration concern, not an analyzer one.
+        files = File.directory?(input) ? Dir.glob(File.join(input, "**", "*.jsonl")) : [input]
+        raise UsageError, "No .jsonl files found in #{input}" if files.empty?
+
+        files.each do |file|
+          puts "=== #{File.basename(file)} ===" if files.size > 1
+          result = analyzer.analyze(file, topics: options[:topics], resume: options[:resume])
+          output_dir = if files.size > 1
+            File.join(options[:output_dir],
+              File.basename(file, ".*"))
+          else
+            options[:output_dir]
+          end
+          finish_report(result, output_dir)
+          write_narrative(result, output_dir) if options[:narrative]
+        end
       end
 
       module_function def run_documentation(input, options)

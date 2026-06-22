@@ -150,10 +150,11 @@ module SFL
 
         # @return [Array<[MarkdownLoader::Section, Time]>]
         private def load_sections(path)
-          files = File.directory?(path) ? Dir.glob(File.join(path, "**", "*.md")) : [path]
+          files = File.directory?(path) ? Dir.glob(File.join(path, "**", "*.{md,pdf}")) : [path]
           files.flat_map do |file|
             mtime = File.mtime(file)
-            MarkdownLoader.load(file).map { |section| [section, mtime] }
+            loader = File.extname(file).casecmp(".pdf").zero? ? PdfLoader : MarkdownLoader
+            loader.load(file).map { |section| [section, mtime] }
           end
         end
 
