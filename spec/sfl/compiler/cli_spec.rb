@@ -8,14 +8,26 @@ RSpec.describe SFL::Compiler::CLI do
       parsed = described_class.parse(%w[conversation chat.jsonl])
       expect(parsed).to eq(
         command: :conversation, input: "chat.jsonl",
-        options: { output_dir: "./output/latest", pass1_only: false, resume: false, narrative: false, topics: nil }
+        options: {
+          output_dir: "./output/latest",
+          pass1_only: false,
+          resume: false,
+          narrative: false,
+          topics: nil,
+          live: false,
+        }
       )
     end
 
     it "parses conversation flags" do
       parsed = described_class.parse(%w[conversation chat.jsonl --output-dir ./out --pass1-only])
       expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true, resume: false, narrative: false,
-        topics: nil)
+        topics: nil, live: false)
+    end
+
+    it "parses --live on conversation" do
+      parsed = described_class.parse(%w[conversation chat.jsonl --live])
+      expect(parsed[:options][:live]).to be(true)
     end
 
     it "parses documentation with --store" do

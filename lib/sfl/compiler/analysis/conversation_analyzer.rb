@@ -184,7 +184,7 @@ module SFL
           @on_progress.call(
             turn_id: turn.turn_id, total:, speaker: turn.speaker,
             elapsed: elapsed.round(2), clause_count: turn.clauses.size,
-            defaulted:
+            defaulted:, turn:
           )
         end
 

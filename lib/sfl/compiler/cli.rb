@@ -37,6 +37,10 @@ module SFL
           --topics N                   Number of topics for LDA; 0 = HDP (auto-discover)
           --resume                     Reuse cached Pass 2 results from previous runs
 
+        conversation:
+          --live                       Split-pane Bubbletea dashboard instead of
+                                        plain progress lines (stats left, log right)
+
         documentation:
           --store                      Persist clauses + embeddings for `context`
 
@@ -69,13 +73,21 @@ module SFL
       end
 
       module_function def parse_conversation_options(argv)
-        options = { output_dir: "./output/latest", pass1_only: false, resume: false, narrative: false, topics: nil }
+        options = {
+          output_dir: "./output/latest",
+          pass1_only: false,
+          resume: false,
+          narrative: false,
+          topics: nil,
+          live: false,
+        }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
           opt.on("--pass1-only") { options[:pass1_only] = true }
           opt.on("--resume") { options[:resume] = true }
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
+          opt.on("--live") { options[:live] = true }
         end.parse!(argv)
         options
       end
@@ -142,14 +154,7 @@ module SFL
 
       module_function def run_conversation(input, options)
         ctx = Bootstrap.call(require_llm: !options[:pass1_only])
-        pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
-        pipeline = Pipeline.new(**pipeline_args)
-        analyzer = Analysis::ConversationAnalyzer.new(
-          pipeline:,
-          pass_one_only: options[:pass1_only],
-          on_progress: progress_printer,
-          on_turn_start: progress_starter
-        )
+        pipeline = Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache")
 
         # One report per file: ConversationAnalyzer#analyze's single-file
         # contract is unchanged — batching a folder of .jsonl exports is
@@ -157,12 +162,44 @@ module SFL
         files = File.directory?(input) ? Dir.glob(File.join(input, "**", "*.jsonl")) : [input]
         raise UsageError, "No .jsonl files found in #{input}" if files.empty?
 
+        return run_conversation_live(pipeline, files, options) if options[:live]
+
+        analyzer = Analysis::ConversationAnalyzer.new(
+          pipeline:,
+          pass_one_only: options[:pass1_only],
+          on_progress: progress_printer,
+          on_turn_start: progress_starter
+        )
+
         files.each do |file|
           puts "=== #{File.basename(file)} ===" if files.size > 1
           result = analyzer.analyze(file, topics: options[:topics], resume: options[:resume])
           output_dir = if files.size > 1
             File.join(options[:output_dir],
               File.basename(file, ".*"))
+          else
+            options[:output_dir]
+          end
+          finish_report(result, output_dir)
+          write_narrative(result, output_dir) if options[:narrative]
+        end
+      end
+
+      # `--live`: split-pane Bubbletea dashboard instead of plain stdout
+      # progress lines. Reports are written after the TUI exits (whether
+      # by completing or by the user quitting early — quitting the view
+      # does not stop the in-flight analysis thread, only the rendering).
+      module_function def run_conversation_live(pipeline, files, options)
+        app = TUI::BatchApp.new(
+          pipeline:, files:,
+          pass_one_only: options[:pass1_only], topics: options[:topics], resume: options[:resume]
+        )
+        Bubbletea.run(app)
+
+        app.results.each_with_index do |result, idx|
+          output_dir = if files.size > 1
+            File.join(options[:output_dir],
+              File.basename(files[idx], ".*"))
           else
             options[:output_dir]
           end

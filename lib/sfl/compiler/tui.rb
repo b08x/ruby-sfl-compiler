@@ -6,6 +6,7 @@ require_relative "tui/wizards/documentation_wizard"
 require_relative "tui/wizards/context_wizard"
 require_relative "tui/wizards/narrate_wizard"
 require_relative "tui/menu"
+require_relative "tui/batch_app"
 
 module SFL
   module Compiler
