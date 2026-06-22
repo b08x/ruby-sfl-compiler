@@ -180,9 +180,15 @@ module SFL
           )
         end
 
+        # Skips lines that parse as valid JSON but aren't turn-shaped —
+        # e.g. SillyTavern *group chat* exports prepend a
+        # {chat_metadata:, user_name:, character_name:} header record
+        # before the actual {name:, mes:, send_date:, ...} turns, which
+        # JSON::ParserError can't catch since it's syntactically valid.
         private def load_jsonl(path)
           File.readlines(path).filter_map do |line|
-            JSON.parse(line.strip, symbolize_names: true)
+            turn = JSON.parse(line.strip, symbolize_names: true)
+            turn if turn.is_a?(Hash) && turn[:mes]
           rescue JSON::ParserError
             nil
           end

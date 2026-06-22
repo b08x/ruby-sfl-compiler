@@ -149,5 +149,21 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
         expect(result.insights).to eq([])
       end
     end
+
+    it "skips a SillyTavern group-chat metadata header line (valid JSON, no :mes)" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "group_chat.jsonl")
+        File.write(path, <<~LINES)
+          {"chat_metadata":{},"user_name":"Robert","character_name":"Steve"}
+          {"name":"Robert","is_user":true,"send_date":"2026-01-01 10:00","mes":"Hi.","extra":{}}
+          {"name":"Steve","is_user":false,"send_date":"2026-01-01 10:01","mes":"Hello.","extra":{}}
+        LINES
+        allow(pipeline).to receive(:compile) { |_t, document_id:, **| [annotated_clause(document_id)] }
+
+        result = described_class.new(pipeline:).analyze(path)
+        expect(result.turns.size).to eq(2)
+        expect(result.turns.map(&:speaker)).to eq(%w[Robert Steve])
+      end
+    end
   end
 end
