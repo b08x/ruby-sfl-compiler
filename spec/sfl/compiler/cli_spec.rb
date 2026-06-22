@@ -14,7 +14,8 @@ RSpec.describe SFL::Compiler::CLI do
 
     it "parses conversation flags" do
       parsed = described_class.parse(%w[conversation chat.jsonl --output-dir ./out --pass1-only])
-      expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true, resume: false, narrative: false, topics: nil)
+      expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true, resume: false, narrative: false,
+        topics: nil)
     end
 
     it "parses documentation with --store" do
@@ -67,6 +68,25 @@ RSpec.describe SFL::Compiler::CLI do
     it "raises UsageError when the input argument is missing" do
       expect { described_class.parse(%w[conversation]) }
         .to raise_error(SFL::Compiler::CLI::UsageError, /requires an input/)
+    end
+
+    it "parses tui with no input argument required" do
+      parsed = described_class.parse(%w[tui])
+      expect(parsed).to eq(command: :tui, input: nil, options: {})
+    end
+  end
+
+  describe ".run_tui" do
+    it "builds a TUI::Menu with a deferred chat_session_builder and runs it" do
+      menu = instance_double(SFL::Compiler::TUI::Menu, run: nil)
+      expect(SFL::Compiler::TUI::Menu).to receive(:new) do |chat_session_builder:|
+        expect(chat_session_builder).to respond_to(:call)
+        menu
+      end
+
+      described_class.run_tui(nil, {})
+
+      expect(menu).to have_received(:run)
     end
   end
 end

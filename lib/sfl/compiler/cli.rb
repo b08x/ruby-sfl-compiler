@@ -22,6 +22,7 @@ module SFL
           documentation <path>         Analyze a markdown file or directory
           context "<query>"            Query stored clauses, synthesize an answer
           narrate <analysis.json>      Write an LLM narrative from a report JSON
+          tui                          Interactive menu (no input argument)
 
         Common options:
           --output-dir DIR             Where to write reports [./sfl_output]
@@ -50,9 +51,11 @@ module SFL
       module_function def parse(argv)
         argv = argv.dup
         command = argv.shift&.to_sym
-        unless %i[conversation documentation context narrate].include?(command)
+        unless %i[conversation documentation context narrate tui].include?(command)
           raise UsageError, "Unknown subcommand: #{command}\n\n#{USAGE}"
         end
+
+        return { command:, input: nil, options: {} } if command == :tui
 
         input = argv.shift
         raise UsageError, "#{command} requires an input argument\n\n#{USAGE}" if input.nil? || input.start_with?("--")
@@ -228,6 +231,25 @@ module SFL
         path = File.join(dir, "narrative_report.md")
         Formatters::NarrativeFormatter.new(report).write_to(path)
         puts "Generated:\n  NARRATIVE: #{path}"
+      end
+
+      # Wizards (conversation/documentation/context/narrate) call the
+      # existing CLI.run_* methods directly, each doing its own
+      # Bootstrap/Pipeline wiring exactly like the non-interactive
+      # subcommands — only the chat session needs separate wiring here,
+      # deferred to a builder lambda so it only runs if "Chat with
+      # results" is actually chosen.
+      module_function def run_tui(_input, _options)
+        TUI::Menu.new(chat_session_builder: lambda {
+          ctx = Bootstrap.call(require_llm: true)
+          db = ctx.db
+          embedder = Embedder.new(model: ctx.config.embedding_model, ollama_base_url: ctx.config.ollama_base_url)
+          synthesizer = ContextSynthesizer.new(
+            retriever: HybridRetriever.new(db:, embedder:),
+            clause_repo: ClauseRepository.new(db)
+          )
+          Chat::Session.new(synthesizer:)
+        }).run
       end
 
       module_function def print_evidence(result)
