@@ -9,7 +9,10 @@ module SFL
         # Gum-prompt front end for `sfl-analyze narrate`.
         class NarrateWizard
           def run
-            input = Gum.file(file: true, directory: false)
+            # directory: false omitted — see ConversationWizard for why
+            # passing it explicitly hits a gum gem (0.3.2) bug emitting
+            # an unsupported --no-directory flag.
+            input = Gum.file(file: true)
             return unless input
 
             output_dir = Prompts.blank_to_nil(

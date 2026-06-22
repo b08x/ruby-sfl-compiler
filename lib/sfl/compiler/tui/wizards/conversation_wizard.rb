@@ -13,7 +13,15 @@ module SFL
           FLAGS = %w[pass1-only narrative resume].freeze
 
           def run
-            input = Gum.file(file: true, directory: false)
+            # directory: false is also the gem's documented default — kept
+            # implicit because passing it explicitly hits a bug in the gum
+            # gem (0.3.2): its flag_supports_negation? allowlist claims
+            # `file`'s directory/file/all flags support --no-<flag>, but
+            # the actual installed gum CLI (v0.17.0, verified via
+            # `gum file --help`) only negates --permissions/--size —
+            # passing directory: false emits --no-directory, which the
+            # real binary rejects with "unknown flag --no-directory".
+            input = Gum.file(file: true)
             return unless input
 
             output_dir = Prompts.blank_to_nil(
