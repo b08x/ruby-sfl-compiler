@@ -36,7 +36,7 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
             modality_weight: 0.8,
             tenor: 0.7,
             speaker_attitude: "assertive",
-            reasoning: "Formal declarative with strong certainty"
+            reasoning: "Formal declarative with strong certainty",
           })
 
         result = engine.annotate(clause, ideational)
@@ -111,6 +111,53 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
     end
 
+    describe "#interpersonal_from" do
+      let(:correlation_id) { "test-correlation" }
+
+      it "normalizes 'exclamatory' to 'exclamative'" do
+        result = { mood: "exclamatory", modality_weight: 0.5, tenor: 0.5 }
+        payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+        expect(payload.mood).to eq("exclamative")
+        expect(payload.annotation_source).to eq("llm")
+      end
+
+      it "normalizes 'non-finite' to 'fragment'" do
+        result = { mood: "non-finite", modality_weight: 0.5, tenor: 0.5 }
+        payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+        expect(payload.mood).to eq("fragment")
+      end
+
+      it "normalizes 'none' to 'fragment'" do
+        result = { mood: "none", modality_weight: 0.5, tenor: 0.5 }
+        payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+        expect(payload.mood).to eq("fragment")
+      end
+
+      it "normalizes any '*_phrase' value to 'fragment'" do
+        %w[nominal_phrase prepositional_phrase verbal_phrase].each do |mood|
+          result = { mood:, modality_weight: 0.5, tenor: 0.5 }
+          payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+          expect(payload.mood).to eq("fragment")
+        end
+      end
+
+      it "preserves modality_weight/tenor/reasoning when mood needed normalizing" do
+        result = { mood: "none", modality_weight: 0.9, tenor: 0.3, reasoning: "real LLM reasoning" }
+        payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+        expect(payload.modality_weight).to eq(0.9)
+        expect(payload.tenor).to eq(0.3)
+        expect(payload.reasoning).to eq("real LLM reasoning")
+      end
+
+      it "passes through valid moods unchanged" do
+        SFL::Compiler::Types::MoodType.each_value do |mood|
+          result = { mood:, modality_weight: 0.5, tenor: 0.5 }
+          payload = engine.send(:interpersonal_from, clause, result, correlation_id)
+          expect(payload.mood).to eq(mood)
+        end
+      end
+    end
+
     describe "#textual_from" do
       let(:correlation_id) { "test-correlation" }
 
@@ -133,8 +180,8 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
 
       it "accepts new valid types 'interjection' and 'interpersonal'" do
-        ["interjection", "interpersonal"].each do |theme_type|
-          result = { theme_type: theme_type, topical_theme: "Test", rheme: "clause" }
+        %w[interjection interpersonal].each do |theme_type|
+          result = { theme_type:, topical_theme: "Test", rheme: "clause" }
           payload = engine.send(:textual_from, clause, result, correlation_id)
           expect(payload.theme_type).to eq(theme_type)
         end
@@ -181,8 +228,39 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
 
       it "passes through valid types unchanged" do
-        ["unmarked", "marked", "interrogative", "imperative"].each do |type|
+        %w[unmarked marked interrogative imperative].each do |type|
           expect(engine.send(:normalize_theme_type, type)).to eq(type)
+        end
+      end
+    end
+
+    describe "#normalize_mood" do
+      it "maps 'exclamatory' to 'exclamative'" do
+        expect(engine.send(:normalize_mood, "exclamatory")).to eq("exclamative")
+      end
+
+      it "maps clause-rank/no-mood vocabulary to 'fragment'" do
+        expect(engine.send(:normalize_mood, "non-finite")).to eq("fragment")
+        expect(engine.send(:normalize_mood, "none")).to eq("fragment")
+      end
+
+      it "maps any Group-rank '*_phrase' value to 'fragment'" do
+        expect(engine.send(:normalize_mood, "nominal_phrase")).to eq("fragment")
+        expect(engine.send(:normalize_mood, "prepositional_phrase")).to eq("fragment")
+      end
+
+      it "handles case insensitivity and whitespace" do
+        expect(engine.send(:normalize_mood, "  EXCLAMATORY  ")).to eq("exclamative")
+      end
+
+      it "returns 'declarative' for nil or empty input" do
+        expect(engine.send(:normalize_mood, nil)).to eq("declarative")
+        expect(engine.send(:normalize_mood, "")).to eq("declarative")
+      end
+
+      it "passes through valid moods unchanged" do
+        SFL::Compiler::Types::MoodType.each_value do |mood|
+          expect(engine.send(:normalize_mood, mood)).to eq(mood)
         end
       end
     end

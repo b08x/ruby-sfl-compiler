@@ -32,7 +32,8 @@ module SFL
       DEFAULT_CHUNK_TIMEOUT = ENV.fetch("SFL_CHUNK_TIMEOUT", 180).to_f
 
       def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil,
-                     chunk_timeout: DEFAULT_CHUNK_TIMEOUT)
+        chunk_timeout: DEFAULT_CHUNK_TIMEOUT
+      )
         @provider = provider || SFL::Compiler.config.dspy_provider
         @circuit_breaker = circuit_breaker || default_circuit_breaker
         @batch_annotator = batch_annotator || default_batch_annotator
@@ -54,17 +55,17 @@ module SFL
         correlation_id = SecureRandom.uuid
 
         indexed = pairs.each_with_index.map do |(clause, ideational), index|
-          { index: index, clause: clause, ideational: ideational }
+          { index:, clause:, ideational: }
         end
         chunks = indexed.each_slice([batch_size, 1].max).to_a
 
         @logger.send_message(
           message: "pass_two_batch_started",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_count: pairs.size,
           chunk_count: chunks.size,
-          concurrency: concurrency
+          concurrency:
         )
 
         annotated = parallel_map(chunks, concurrency) do |chunk|
@@ -76,7 +77,7 @@ module SFL
         @logger.send_message(
           message: "pass_two_batch_completed",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_count: annotated.size,
           defaulted_count: annotated.count { |a| a.interpersonal.annotation_source != "llm" },
           latency_ms: elapsed_ms
@@ -97,7 +98,7 @@ module SFL
         @logger.send_message(
           message: "pass_two_started",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_id: clause.id,
           text_length: clause.text.length
         )
@@ -110,7 +111,7 @@ module SFL
         @logger.send_message(
           message: "pass_two_completed",
           priority: Journald::LOG_INFO,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_id: clause.id,
           modality_weight: interpersonal.modality_weight,
           tenor: interpersonal.tenor,
@@ -122,19 +123,19 @@ module SFL
           id: SecureRandom.uuid,
           text: clause.text,
           syntactic: clause,
-          ideational: ideational,
-          interpersonal: interpersonal,
-          textual: textual,
+          ideational:,
+          interpersonal:,
+          textual:,
           document_id: clause.document_id,
           compiled_at: Time.now
         )
-      rescue StandardError => e
+      rescue => e
         elapsed_ms = ((Time.now - start_time) * 1000).round(2)
 
         @logger.send_message(
           message: "pass_two_failed",
           priority: Journald::LOG_ERR,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_id: clause.id,
           error_class: e.class.name,
           error_message: e.message,
@@ -144,11 +145,9 @@ module SFL
         raise PassTwoError, "Semantic annotation failed: #{e.message}"
       end
 
-      private
-
       # Normalize theme_type value from LLM output
       # Handles typos, compound types, and legacy values
-      def normalize_theme_type(type)
+      private def normalize_theme_type(type)
         return "unmarked" if type.nil? || type.to_s.strip.empty?
 
         type = type.to_s.downcase.strip
@@ -169,26 +168,51 @@ module SFL
         type
       end
 
+      # Normalize mood value from LLM output.
+      # Handles near-miss vocabulary the model reaches for when a clause
+      # lacks ordinary Mood structure (no Subject+Finite) instead of
+      # mapping onto the minor/fragment slots that already exist for
+      # exactly that case — observed live: "non-finite" (clause-rank
+      # finiteness), "none" (explicit no-mood-applies), "nominal_phrase"/
+      # "prepositional_phrase" (Group-rank labels), and the spelling
+      # variant "exclamatory" for "exclamative".
+      private def normalize_mood(mood)
+        return "declarative" if mood.nil? || mood.to_s.strip.empty?
+
+        mood = mood.to_s.downcase.strip
+
+        # Known near-miss spelling/register variant
+        mood = "exclamative" if mood == "exclamatory"
+
+        # Clause/group-rank vocabulary leaking in where the model meant
+        # "this clause has no ordinary Mood at all"
+        mood = "fragment" if %w[non-finite none].include?(mood) || mood.end_with?("_phrase")
+
+        mood
+      end
+
       # Returns a transparent callable that simply yields the block.
       # TODO: replace with a proper CircuitBreaker::CircuitHandler once
       #       Pass 2 is in active use and failure rates are monitored.
       # The rescue on CircuitBreaker::OpenError in annotate_interpersonal
       # handles the tripped case when a real handler is substituted in.
-      def default_circuit_breaker
-        lambda { |&block| block.call }
+      private def default_circuit_breaker
+        -> (&block) { block.call }
       end
 
       # items: [{index:, context:}] → [{index:, mood:, modality_weight:, ...}]
-      def default_batch_annotator
-        lambda { |items| SFLBatchAnnotator.new(items).call }
+      private def default_batch_annotator
+        -> (items) { SFLBatchAnnotator.new(items).call }
       end
 
       # Run one chunk through the LLM. A failed call defaults the whole
       # chunk; a missing or invalid annotation defaults only that clause.
-      def annotate_chunk(chunk, correlation_id)
+      private def annotate_chunk(chunk, correlation_id)
         items = chunk.map do |entry|
-          { index: entry[:index],
-            context: format_syntactic_context(entry[:clause], entry[:ideational]) }
+          {
+            index: entry[:index],
+            context: format_syntactic_context(entry[:clause], entry[:ideational]),
+          }
         end
 
         # One retry for transient provider errors; an open circuit means the
@@ -197,7 +221,7 @@ module SFL
           @circuit_breaker.call { call_annotator_with_watchdog(items) }
         rescue CircuitBreaker::CircuitBrokenException
           raise
-        rescue StandardError
+        rescue
           @circuit_breaker.call { call_annotator_with_watchdog(items) }
         end
         by_index = results.to_h { |r| [r[:index], r] }
@@ -220,17 +244,21 @@ module SFL
       rescue CircuitBreaker::CircuitBrokenException
         log_and_warn("pass_two_circuit_open", correlation_id, chunk.first[:clause],
           "Circuit breaker open — defaults applied to #{chunk.size} clauses")
-        chunk.map { |entry| annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id)) }
-      rescue StandardError => e
+        chunk.map do |entry|
+          annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id))
+        end
+      rescue => e
         log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
           "Batch annotation failed: #{e.message} — defaults applied to #{chunk.size} clauses")
-        chunk.map { |entry| annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id)) }
+        chunk.map do |entry|
+          annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id))
+        end
       end
 
       # Timeout::Error is a StandardError, so a hung call flows through the
       # same retry-once-then-default path as any provider exception. A
       # timeout of 0/nil disables the watchdog.
-      def call_annotator_with_watchdog(items)
+      private def call_annotator_with_watchdog(items)
         return @batch_annotator.call(items) if @chunk_timeout.nil? || @chunk_timeout.zero?
 
         Timeout.timeout(@chunk_timeout, Timeout::Error,
@@ -239,10 +267,18 @@ module SFL
         end
       end
 
-      def interpersonal_from(clause, result, correlation_id)
+      private def interpersonal_from(clause, result, correlation_id)
+        mood = normalize_mood(result[:mood])
+
+        unless Types::MoodType.values.include?(mood)
+          log_and_warn("pass_two_invalid_interpersonal", correlation_id, clause,
+            "Invalid mood '#{mood}' normalized to 'declarative'")
+          mood = "declarative"
+        end
+
         Types::InterpersonalPayload.new(
           clause_id: clause.id,
-          mood: (result[:mood] || "declarative").to_s.downcase,
+          mood:,
           modality_weight: clamp01(result[:modality_weight] || 0.5),
           tenor: clamp01(result[:tenor] || 0.5),
           speaker_attitude: result[:speaker_attitude],
@@ -255,15 +291,25 @@ module SFL
         nil
       end
 
-      def textual_from(clause, result, correlation_id)
+      private def textual_from(clause, result, correlation_id)
         # Normalize theme_type
         theme_type = normalize_theme_type(result[:theme_type])
 
         # Validate against known allowed types (from TextualPayload enum)
-        allowed_types = [
-          "unmarked", "marked", "interrogative", "imperative",
-          "multiple", "topical", "topical_unmarked", "simple",
-          "existential", "clausal", "textual", "interjection", "interpersonal"
+        allowed_types = %w[
+          unmarked
+          marked
+          interrogative
+          imperative
+          multiple
+          topical
+          topical_unmarked
+          simple
+          existential
+          clausal
+          textual
+          interjection
+          interpersonal
         ]
 
         unless allowed_types.include?(theme_type)
@@ -278,7 +324,7 @@ module SFL
           textual_theme: result[:textual_theme],
           interpersonal_theme: result[:interpersonal_theme],
           rheme: result[:rheme],
-          theme_type: theme_type
+          theme_type:
         )
       rescue Dry::Struct::Error => e
         log_and_warn("pass_two_invalid_textual", correlation_id, clause,
@@ -286,14 +332,14 @@ module SFL
         nil
       end
 
-      def annotated_clause(entry, interpersonal, textual)
+      private def annotated_clause(entry, interpersonal, textual)
         Types::AnnotatedClause.new(
           id: SecureRandom.uuid,
           text: entry[:clause].text,
           syntactic: entry[:clause],
           ideational: entry[:ideational],
-          interpersonal: interpersonal,
-          textual: textual,
+          interpersonal:,
+          textual:,
           document_id: entry[:clause].document_id,
           compiled_at: Time.now
         )
@@ -302,7 +348,7 @@ module SFL
       # Map chunks to results on a bounded thread pool, preserving order.
       # Worker exceptions can't corrupt results: annotate_chunk rescues
       # StandardError internally, so each slot is always filled.
-      def parallel_map(chunks, concurrency, &block)
+      private def parallel_map(chunks, concurrency, &block)
         workers = [concurrency, chunks.size].min
         return chunks.map(&block) if workers <= 1
 
@@ -323,7 +369,7 @@ module SFL
         results
       end
 
-      def annotate_interpersonal(clause, ideational, correlation_id)
+      private def annotate_interpersonal(clause, ideational, correlation_id)
         # Build the syntactic context for the LLM
         syntactic_context = format_syntactic_context(clause, ideational)
 
@@ -344,42 +390,42 @@ module SFL
         log_and_warn("pass_two_circuit_open", correlation_id, clause,
           "Circuit breaker open — defaults applied")
         [default_interpersonal(clause.id), default_textual(clause.id)]
-      rescue StandardError => e
+      rescue => e
         log_and_warn("pass_two_llm_failed", correlation_id, clause,
           "DSPy annotation failed: #{e.message}")
         [default_interpersonal(clause.id), default_textual(clause.id)]
       end
 
-      def format_syntactic_context(clause, ideational)
+      private def format_syntactic_context(clause, ideational)
         <<~CONTEXT
           Text: #{clause.text}
 
           Root verb: #{root_info(clause)}
           Process type: #{ideational.process_type}
-          Participants: #{ideational.participants.join(", ")}
+          Participants: #{ideational.participants.join(', ')}
           POS tags: #{pos_sequence(clause)}
           Dependencies: #{dep_sequence(clause)}
         CONTEXT
       end
 
-      def root_info(clause)
+      private def root_info(clause)
         root = clause.tokens[clause.root_index]
         return "unknown" if root.nil?
 
         "#{root.text} (lemma: #{root.lemma}, pos: #{root.pos}, tag: #{root.tag})"
       end
 
-      def pos_sequence(clause)
+      private def pos_sequence(clause)
         clause.tokens.map { |t| "#{t.text}/#{t.pos}" }.join(" ")
       end
 
-      def dep_sequence(clause)
+      private def dep_sequence(clause)
         clause.tokens.map { |t| "#{t.text}<#{t.dep}" }.join(" ")
       end
 
-      def default_interpersonal(clause_id)
+      private def default_interpersonal(clause_id)
         Types::InterpersonalPayload.new(
-          clause_id: clause_id,
+          clause_id:,
           mood: "declarative",
           modality_weight: 0.5,
           tenor: 0.5,
@@ -389,9 +435,9 @@ module SFL
         )
       end
 
-      def default_textual(clause_id)
+      private def default_textual(clause_id)
         Types::TextualPayload.new(
-          clause_id: clause_id,
+          clause_id:,
           topical_theme: "unknown",
           textual_theme: nil,
           interpersonal_theme: nil,
@@ -402,7 +448,7 @@ module SFL
 
       # Clamp a numeric value to [0.0, 1.0]. Handles LLMs that output
       # on a 1-5 or 0-10 scale by treating values >1 as needing division.
-      def clamp01(value)
+      private def clamp01(value)
         return 0.0 if value.nil?
         return value.clamp(0.0, 1.0) if value <= 1.0
 
@@ -411,14 +457,14 @@ module SFL
         normalized.clamp(0.0, 1.0)
       end
 
-      def log_and_warn(message, correlation_id, clause, human_message)
+      private def log_and_warn(message, correlation_id, clause, human_message)
         @logger.send_message(
-          message: message,
+          message:,
           priority: Journald::LOG_WARNING,
-          correlation_id: correlation_id,
+          correlation_id:,
           clause_id: clause.id
         )
-        $stderr.puts "[WARN] Pass 2 (#{clause.id}): #{human_message}"
+        warn "[WARN] Pass 2 (#{clause.id}): #{human_message}"
       end
     end
 
@@ -428,29 +474,36 @@ module SFL
     # Textual (Theme/Rheme organization) metafunctions only.
     class SFLSignature < DSPy::Signature
       description "Analyze the interpersonal and textual metafunctions of a clause using " \
-                  "Systemic Functional Linguistics (SFL). " \
-                  "Interpersonal: mood type, modality weight (certainty), tenor (formality), speaker attitude. " \
-                  "Textual: Theme/Rheme structure — Theme is the starting point of the message."
+        "Systemic Functional Linguistics (SFL). " \
+        "Interpersonal: mood type, modality weight (certainty), tenor (formality), speaker attitude. " \
+        "Textual: Theme/Rheme structure — Theme is the starting point of the message."
 
       input do
         const :text, String, description: "The raw clause text"
         const :root_verb, String, description: "The root verb with POS and lemma (from Pass 1 Ideational analysis)"
-        const :process_type, String, description: "Ideational process type (from Pass 1 — for context only, not analyzed here)"
+        const :process_type, String,
+          description: "Ideational process type (from Pass 1 — for context only, not analyzed here)"
         const :participants, String, description: "Semantic roles of participants (from Pass 1 — for context only)"
         const :pos_tags, String, description: "POS tag sequence"
         const :dependencies, String, description: "Dependency relation sequence"
       end
 
       output do
-        const :mood, String, description: "Clause mood: declarative, interrogative, imperative, exclamative, indicative, minor, or fragment"
+        const :mood, String,
+          description: "Clause mood: declarative, interrogative, imperative, exclamative, indicative, minor, or fragment"
         const :modality_weight, Float, description: "Modality strength 0.0-1.0 (0=weak/hedged, 1=strong/certain)"
         const :tenor, Float, description: "Formality level 0.0-1.0 (0=informal, 1=formal)"
-        const :speaker_attitude, String, description: "Speaker attitude: neutral, positive, negative, skeptical, assertive"
-        const :topical_theme, String, description: "Topical Theme: main starting point (Subject, fronted element, or Predicator)"
-        const :textual_theme, String, description: "Textual Theme: conjunctions/connectives at start (e.g., however, therefore, and)"
-        const :interpersonal_theme, String, description: "Interpersonal Theme: modal adjuncts/discourse markers at start (e.g., surely, perhaps, well)"
+        const :speaker_attitude, String,
+          description: "Speaker attitude: neutral, positive, negative, skeptical, assertive"
+        const :topical_theme, String,
+          description: "Topical Theme: main starting point (Subject, fronted element, or Predicator)"
+        const :textual_theme, String,
+          description: "Textual Theme: conjunctions/connectives at start (e.g., however, therefore, and)"
+        const :interpersonal_theme, String,
+          description: "Interpersonal Theme: modal adjuncts/discourse markers at start (e.g., surely, perhaps, well)"
         const :rheme, String, description: "Rheme: everything after the Theme"
-        const :theme_type, String, description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, topical_unmarked, simple, existential, clausal, textual, interjection, or interpersonal"
+        const :theme_type, String,
+          description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, topical_unmarked, simple, existential, clausal, textual, interjection, or interpersonal"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
       end
     end
@@ -478,13 +531,11 @@ module SFL
           interpersonal_theme: result.interpersonal_theme,
           rheme: result.rheme,
           theme_type: result.theme_type,
-          reasoning: result.reasoning
+          reasoning: result.reasoning,
         }
       end
 
-      private
-
-      def parse_context(context)
+      private def parse_context(context)
         lines = context.strip.split("\n")
         lines = lines.map { |l| l.split(":", 2) }
 
@@ -496,16 +547,16 @@ module SFL
         dependencies = extract_field(lines, "Dependencies") || ""
 
         {
-          text: text,
-          root_verb: root_verb,
-          process_type: process_type,
-          participants: participants,
-          pos_tags: pos_tags,
-          dependencies: dependencies
+          text:,
+          root_verb:,
+          process_type:,
+          participants:,
+          pos_tags:,
+          dependencies:,
         }
       end
 
-      def extract_field(lines, key)
+      private def extract_field(lines, key)
         line = lines.find { |l| l[0]&.strip == key }
         line&.[](1)&.strip
       end
@@ -529,17 +580,17 @@ module SFL
     # Batched variant of SFLSignature: annotates many clauses per LLM call.
     class SFLBatchSignature < DSPy::Signature
       description "Analyze the interpersonal and textual metafunctions of EACH numbered clause " \
-                  "using Systemic Functional Linguistics (SFL). " \
-                  "Interpersonal: mood, modality, tenor, speaker attitude. " \
-                  "Textual: Theme/Rheme structure. " \
-                  "Processes (material, mental, relational, etc.) are Ideational — handled in Pass 1. " \
-                  "Return exactly one annotation per clause, carrying over the index."
+        "using Systemic Functional Linguistics (SFL). " \
+        "Interpersonal: mood, modality, tenor, speaker attitude. " \
+        "Textual: Theme/Rheme structure. " \
+        "Processes (material, mental, relational, etc.) are Ideational — handled in Pass 1. " \
+        "Return exactly one annotation per clause, carrying over the index."
 
       input do
         const :clauses, String,
           description: "Numbered clauses, each with text, root verb, process type " \
-                       "(from Pass 1 Ideational — for context only), " \
-                       "participants, POS tags, and dependency relations"
+            "(from Pass 1 Ideational — for context only), " \
+            "participants, POS tags, and dependency relations"
       end
 
       output do
@@ -576,7 +627,7 @@ module SFL
             interpersonal_theme: a.interpersonal_theme,
             rheme: a.rheme,
             theme_type: a.theme_type,
-            reasoning: a.reasoning
+            reasoning: a.reasoning,
           }
         end
       end
