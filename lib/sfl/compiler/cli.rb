@@ -140,7 +140,8 @@ module SFL
         analyzer = Analysis::ConversationAnalyzer.new(
           pipeline:,
           pass_one_only: options[:pass1_only],
-          on_progress: progress_printer
+          on_progress: progress_printer,
+          on_turn_start: progress_starter
         )
 
         result = analyzer.analyze(input, topics: options[:topics], resume: options[:resume])
@@ -161,7 +162,8 @@ module SFL
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline:,
           clause_repo: ClauseRepository.new(ctx.db),
-          on_progress: progress_printer
+          on_progress: progress_printer,
+          on_turn_start: progress_starter
         )
 
         result = analyzer.analyze(input, store: options[:store], topics: options[:topics], resume: options[:resume])
@@ -235,10 +237,21 @@ module SFL
         end
       end
 
+      # Fires immediately, before a turn/section's compilation starts —
+      # a single turn's Pass 1 + Pass 2 can take 20-60s, so without this
+      # the terminal sits static with no signal the run hasn't hung.
+      # No trailing newline: progress_printer completes the same line.
+      module_function def progress_starter
+        lambda do |event|
+          print "  #{event[:turn_id]}/#{event[:total]} (#{event[:speaker]})... "
+          $stdout.flush
+        end
+      end
+
       module_function def progress_printer
         lambda do |event|
           label = event[:defaulted].zero? ? "OK" : "#{event[:defaulted]}/#{event[:clause_count]} DEFAULTED"
-          puts "  #{event[:turn_id]}/#{event[:total]} (#{event[:speaker]}) #{event[:elapsed]}s [#{label}]"
+          puts "#{event[:elapsed]}s [#{label}]"
         end
       end
 

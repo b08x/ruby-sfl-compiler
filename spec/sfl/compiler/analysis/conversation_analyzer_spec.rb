@@ -70,6 +70,22 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       expect(events.first).to include(:speaker, :elapsed, :clause_count, :defaulted)
     end
 
+    it "fires on_turn_start before on_progress, before the expensive compile step" do
+      calls = []
+      allow(pipeline).to receive(:compile) do |_t, document_id:, **|
+        calls << :compiled
+        [annotated_clause(document_id)]
+      end
+
+      described_class.new(
+        pipeline:,
+        on_turn_start: -> (e) { calls << [:start, e[:turn_id], e[:total], e[:speaker]] },
+        on_progress: -> (e) { calls << [:progress, e[:turn_id]] }
+      ).analyze(jsonl_path)
+
+      expect(calls.first(3)).to eq([[:start, 1, 5, "Alice"], :compiled, [:progress, 1]])
+    end
+
     it "computes tenor shifts and speaker profiles" do
       result = described_class.new(pipeline:).analyze(jsonl_path)
 

@@ -19,10 +19,14 @@ module SFL
         # @param clause_repo [ClauseRepository] needed only for store: true
         # @param on_progress [#call, nil] same event shape as
         #   ConversationAnalyzer's callback
-        def initialize(pipeline:, clause_repo: nil, on_progress: nil)
+        # @param on_turn_start [#call, nil] same event shape as
+        #   ConversationAnalyzer's callback — fires before a section's
+        #   compilation starts, not just after
+        def initialize(pipeline:, clause_repo: nil, on_progress: nil, on_turn_start: nil)
           @pipeline = pipeline
           @clause_repo = clause_repo
           @on_progress = on_progress
+          @on_turn_start = on_turn_start
           @resume = pipeline.cache ? true : false
         end
 
@@ -44,6 +48,7 @@ module SFL
           _topic_modeler, section_topics = fit_topics_pre_pass(sections, topics)
 
           turns = sections.each_with_index.map do |(section, mtime), idx|
+            @on_turn_start&.call(turn_id: idx + 1, total:, speaker: section.heading || section.file_id)
             started = Time.now
             turn = compile_section(section, mtime, idx + 1, store, section_topics[idx])
             report_progress(turn, total, Time.now - started)

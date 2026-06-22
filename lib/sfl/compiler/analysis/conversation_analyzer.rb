@@ -16,12 +16,19 @@ module SFL
         # @param pipeline [Pipeline]
         # @param pass_one_only [Boolean] skip Pass 2; stub interpersonal
         #   values with annotation_source "stub"
-        # @param on_progress [#call, nil] receives one Hash per turn:
-        #   {turn_id:, total:, speaker:, elapsed:, clause_count:, defaulted:}
-        def initialize(pipeline:, pass_one_only: false, on_progress: nil)
+        # @param on_progress [#call, nil] receives one Hash per turn,
+        #   after it finishes: {turn_id:, total:, speaker:, elapsed:,
+        #   clause_count:, defaulted:}
+        # @param on_turn_start [#call, nil] receives one Hash per turn,
+        #   before compilation starts: {turn_id:, total:, speaker:} — a
+        #   single turn's Pass 1 + Pass 2 can take 20-60s, so this fires
+        #   immediately rather than leaving the caller with no signal
+        #   until the (much later) on_progress callback
+        def initialize(pipeline:, pass_one_only: false, on_progress: nil, on_turn_start: nil)
           @pipeline = pipeline
           @pass_one_only = pass_one_only
           @on_progress = on_progress
+          @on_turn_start = on_turn_start
           @resume = pipeline.cache ? true : false
         end
 
@@ -36,6 +43,7 @@ module SFL
           total = raw_turns.size
 
           turns = raw_turns.each_with_index.map do |turn_data, idx|
+            @on_turn_start&.call(turn_id: idx + 1, total:, speaker: turn_data[:name])
             started = Time.now
             turn = compile_turn(turn_data, idx + 1)
             report_progress(turn, total, Time.now - started)
