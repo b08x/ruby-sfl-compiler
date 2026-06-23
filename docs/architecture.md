@@ -8,7 +8,7 @@ The sfl-compiler architecture **prioritizes** separation of concerns between syn
 
 ### System Relationship Map
 
-```
+```shell
 [CLI Entry Points] ←→ [Bootstrap & Configuration] ←→ [Pipeline Orchestration]
          ↓                     ↓                         ↓
 [User Input]    ←→  [LLM/Database Setup]     ←→   [Multi-Stage Processing]

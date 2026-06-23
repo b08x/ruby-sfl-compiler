@@ -13,7 +13,7 @@ stored corpus with cited, stance-aware evidence.
 
 ## Architecture
 
-```
+```shell
 Raw Text
    │
    ▼
