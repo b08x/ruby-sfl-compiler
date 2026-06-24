@@ -39,6 +39,26 @@ For semantic search and `context` queries you also need Ollama running with
 in `.env`). Without it, `--store` still persists clauses (no embeddings) and
 retrieval works keyword-only.
 
+### Observability (optional)
+
+Setting `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in `.env` traces every
+LLM call (DSPy modules and RubyLLM embedding calls) to Langfuse via
+OpenTelemetry — no further setup needed. `LANGFUSE_HOST` defaults to
+`https://cloud.langfuse.com`; set it for a self-hosted instance.
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com   # or your self-hosted URL
+```
+
+These vars must be set in `.env` (or already exported) **before** the CLI
+starts — `exe/sfl-analyze` loads `.env` before requiring anything else
+specifically so this works; see `lib/sfl/compiler/bootstrap.rb`'s
+`configure_observability` comments if wiring tracing into a new entry point.
+Every subcommand accepts `--disable-tracing` to skip this regardless of what
+`.env` has set.
+
 ### 2. Run an Analysis
 
 ```bash

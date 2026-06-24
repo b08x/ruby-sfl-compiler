@@ -188,18 +188,26 @@ psql sfl_compiler_development -c "CREATE EXTENSION vector;"
 
 # Configure LLM (Ollama example)
 export OLLAMA_BASE_URL=http://localhost:11434
+
+# Observability (optional): tracing to Langfuse via OpenTelemetry.
+# Set in .env before running — see docs/guides/USAGE.md#observability-optional.
+export LANGFUSE_PUBLIC_KEY=pk-lf-...
+export LANGFUSE_SECRET_KEY=sk-lf-...
 ```
 
 ### Basic Usage
 ```bash
 # Analyze a conversation
-bin/sfl-analyze conversation input.md --output-dir ./output
+bundle exec sfl-analyze conversation input.md --output-dir ./output
 
 # Generate narrative report
-bin/sfl-analyze conversation input.md --output-dir ./output --narrative
+bundle exec sfl-analyze conversation input.md --output-dir ./output --narrative
 
 # Document a codebase
-bin/sfl-analyze documentation ./ --output-dir ./output
+bundle exec sfl-analyze documentation ./ --output-dir ./output
+
+# Skip Langfuse tracing for this run, regardless of .env
+bundle exec sfl-analyze conversation input.md --output-dir ./output --disable-tracing
 ```
 
 ---

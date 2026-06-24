@@ -19,7 +19,7 @@ Get up and running in 5 minutes with **FREE** LLM access!
 
 3. **Run analysis**:
    ```bash
-   /sfl-analyze conversation /path/to/conversation.jsonl
+   bundle exec sfl-analyze conversation /path/to/conversation.jsonl
    ```
 
 **Free tier models on OpenRouter**:
@@ -46,7 +46,7 @@ Get up and running in 5 minutes with **FREE** LLM access!
 
 3. **Run analysis**:
    ```bash
-   /sfl-analyze conversation /path/to/conversation.jsonl
+   bundle exec sfl-analyze conversation /path/to/conversation.jsonl
    ```
 
 ## Option 3: Local Models (No API Key) 🏠
@@ -71,7 +71,7 @@ Get up and running in 5 minutes with **FREE** LLM access!
 
 4. **Run analysis**:
    ```bash
-   /sfl-analyze conversation /path/to/conversation.jsonl
+   bundle exec sfl-analyze conversation /path/to/conversation.jsonl
    ```
 
 ## Test Your Setup
@@ -79,7 +79,7 @@ Get up and running in 5 minutes with **FREE** LLM access!
 Run the sample conversation:
 
 ```bash
-/sfl-analyze conversation /home/b08x/Workspace/Datasets/steve-oliver-2025-08-29@13h25m38s.jsonl
+bundle exec sfl-analyze conversation /home/b08x/Workspace/Datasets/steve-oliver-2025-08-29@13h25m38s.jsonl
 ```
 
 Check the output:
@@ -116,7 +116,7 @@ Once you verify it's working with real LLM values:
 1. **Batch process conversations**:
    ```bash
    for convo in conversations/*.jsonl; do
-     /sfl-analyze conversation "$convo"
+     bundle exec sfl-analyze conversation "$convo"
    done
    ```
 
