@@ -175,8 +175,15 @@ module SFL
       end
 
       module_function def run_conversation(input, options)
+        # Installed before Bootstrap/Pipeline setup (PyCall/spaCy import
+        # alone is a multi-second blocking call) so a Ctrl+C anywhere in
+        # this method — not just inside the turn loop — gets the clean
+        # "stopping" message instead of an uncaught Interrupt backtrace.
+        stop_flag = StopFlag.new
+        install_interrupt_trap(stop_flag)
+
         ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
-        pipeline = Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache")
+        pipeline = with_interrupts_deferred { Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache") }
 
         # One report per file: ConversationAnalyzer#analyze's single-file
         # contract is unchanged — batching a folder of .jsonl exports is
@@ -190,10 +197,13 @@ module SFL
           pipeline:,
           pass_one_only: options[:pass1_only],
           on_progress: progress_printer,
-          on_turn_start: progress_starter
+          on_turn_start: progress_starter,
+          stop_requested: -> { stop_flag.stopped? }
         )
 
         files.each do |file|
+          break if stop_flag.stopped?
+
           puts "=== #{File.basename(file)} ===" if files.size > 1
           result = analyzer.analyze(file, topics: options[:topics], resume: options[:resume])
           output_dir = if files.size > 1
@@ -204,7 +214,10 @@ module SFL
           end
           finish_report(result, output_dir)
           write_narrative(result, output_dir) if options[:narrative]
+          print_interrupt_status(result, file, :conversation) if result.metadata[:interrupted]
         end
+      ensure
+        Signal.trap("INT", "DEFAULT")
       end
 
       # `--live`: split-pane Bubbletea dashboard instead of plain stdout
@@ -231,6 +244,11 @@ module SFL
       end
 
       module_function def run_documentation(input, options)
+        # See run_conversation's comment: installed before any setup work
+        # so an early Ctrl+C doesn't crash with an uncaught Interrupt.
+        stop_flag = StopFlag.new
+        install_interrupt_trap(stop_flag)
+
         ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
         pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
         if options[:store]
@@ -239,17 +257,22 @@ module SFL
             ollama_base_url: ctx.config.ollama_base_url
           )
         end
-        pipeline = Pipeline.new(**pipeline_args)
+        pipeline = with_interrupts_deferred { Pipeline.new(**pipeline_args) }
+
         analyzer = Analysis::DocumentationAnalyzer.new(
           pipeline:,
           clause_repo: ClauseRepository.new(ctx.db),
           on_progress: progress_printer,
-          on_turn_start: progress_starter
+          on_turn_start: progress_starter,
+          stop_requested: -> { stop_flag.stopped? }
         )
 
         result = analyzer.analyze(input, store: options[:store], topics: options[:topics], resume: options[:resume])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
+        print_interrupt_status(result, input, :documentation) if result.metadata[:interrupted]
+      ensure
+        Signal.trap("INT", "DEFAULT")
       end
 
       module_function def run_context(query, options)
@@ -353,6 +376,45 @@ module SFL
           label = event[:defaulted].zero? ? "OK" : "#{event[:defaulted]}/#{event[:clause_count]} DEFAULTED"
           puts "#{event[:elapsed]}s [#{label}]"
         end
+      end
+
+      # "Clean quit": the first Ctrl+C sets the flag so the analyzer
+      # finishes the in-flight turn/section, then stops on its own rather
+      # than this handler tearing anything down directly. A second Ctrl+C
+      # (flag already set) restores the default disposition and re-sends
+      # SIGINT to this process, so a user who wants to hard-kill still can.
+      module_function def install_interrupt_trap(stop_flag)
+        Signal.trap("INT") do
+          if stop_flag.stopped?
+            Signal.trap("INT", "DEFAULT")
+            Process.kill("INT", Process.pid)
+          else
+            stop_flag.stop!
+            warn "\n[INFO] Stopping after the current turn finishes... (Ctrl+C again to force quit)"
+          end
+        end
+      end
+
+      # PyCall's spaCy import (triggered the first time Pipeline.new builds
+      # a PassOneEngine) can raise Interrupt from inside CPython's own
+      # signal-check machinery on SIGINT — that bypasses our Ruby-level
+      # trap entirely (confirmed: install_interrupt_trap's handler still
+      # fires, but the in-flight C call unwinds via a raw Interrupt anyway,
+      # crashing past every rescue in CLI.run). Briefly ignoring INT for
+      # just this one call turns a same-instant Ctrl+C into a no-op
+      # instead of a crash; the real trap resumes immediately after.
+      module_function def with_interrupts_deferred
+        previous = Signal.trap("INT", "IGNORE")
+        yield
+      ensure
+        Signal.trap("INT", previous)
+      end
+
+      module_function def print_interrupt_status(result, input, command)
+        meta = result.metadata
+        puts "\n⏸  Stopped after #{meta[:turn_count]}/#{meta[:total]} in #{File.basename(input.to_s)}."
+        puts "   Resume with: bundle exec sfl-analyze #{command} #{input} --resume " \
+          "(cached turns are skipped; only the rest gets re-analyzed)"
       end
 
       # Best-effort: the analysis trio is already on disk; a narrative

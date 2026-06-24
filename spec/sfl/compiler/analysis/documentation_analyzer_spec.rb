@@ -139,6 +139,31 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
     end
   end
 
+  it "finishes the in-flight section, then stops before starting the next one" do
+    Dir.mktmpdir do |dir|
+      completed = []
+      result = described_class.new(
+        pipeline:, clause_repo:,
+        on_progress: -> (e) { completed << e[:turn_id] },
+        stop_requested: -> { completed.size >= 1 }
+      ).analyze(write_doc(dir))
+
+      expect(result.turns.size).to eq(1)
+      expect(result.metadata[:interrupted]).to be(true)
+      expect(result.metadata[:total]).to eq(2)
+    end
+  end
+
+  it "marks interrupted false on a normal completion" do
+    Dir.mktmpdir do |dir|
+      result = described_class.new(pipeline:, clause_repo:, stop_requested: -> { false })
+        .analyze(write_doc(dir))
+
+      expect(result.metadata[:interrupted]).to be(false)
+      expect(result.metadata[:total]).to eq(2)
+    end
+  end
+
   context "with topics: requested" do
     it "skips the pre-pass and omits :topic when fewer than 3 sections" do
       Dir.mktmpdir do |dir|

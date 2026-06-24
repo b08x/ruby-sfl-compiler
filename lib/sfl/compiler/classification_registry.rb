@@ -19,9 +19,17 @@ module SFL
           "elliptical" => "declarative",
           "nominal" => "fragment",
           "narrative" => "declarative",
+          "continuative" => "declarative",
+          "rhetorical_question" => "interrogative",
+          "rhetorical question" => "interrogative",
         }.freeze,
         transforms: [
           -> (val) { val.end_with?("_phrase") ? "fragment" : val },
+          # Strips a trailing parenthetical qualifier (e.g. "declarative
+          # (elliptical)" -> "declarative") so the bare mood term underneath
+          # still resolves to a canonical/aliased value instead of falling
+          # through to :unknown.
+          -> (val) { val.sub(/\s*\(.*\)\z/, "") },
         ].freeze,
         default: "declarative",
       }.freeze

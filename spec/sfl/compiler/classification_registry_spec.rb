@@ -25,6 +25,20 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:mood, "nominal")).to eq(["fragment", :aliased])
         expect(described_class.normalize(:mood, "narrative")).to eq(["declarative", :aliased])
       end
+
+      it "normalizes 'continuative' to declarative" do
+        expect(described_class.normalize(:mood, "continuative")).to eq(["declarative", :aliased])
+      end
+
+      it "normalizes rhetorical questions to interrogative, not declarative" do
+        expect(described_class.normalize(:mood, "rhetorical_question")).to eq(["interrogative", :aliased])
+        expect(described_class.normalize(:mood, "rhetorical question")).to eq(["interrogative", :aliased])
+      end
+
+      it "strips a trailing parenthetical qualifier before resolving the bare mood term" do
+        expect(described_class.normalize(:mood, "declarative (elliptical)")).to eq(["declarative", :exact])
+        expect(described_class.normalize(:mood, "interrogative (rhetorical)")).to eq(["interrogative", :exact])
+      end
     end
 
     context "with theme_type dimension" do

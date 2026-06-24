@@ -109,6 +109,36 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
     end
   end
 
+  describe "#analyze (stop_requested)" do
+    before do
+      allow(pipeline).to receive(:cache).and_return(nil)
+      allow(pipeline).to receive(:compile) { |_t, document_id:, **| [annotated_clause(document_id)] }
+    end
+
+    it "finishes the in-flight turn, then stops before starting the next one" do
+      completed_turn_ids = []
+      stop_after = 2
+
+      analyzer = described_class.new(
+        pipeline:,
+        on_progress: -> (e) { completed_turn_ids << e[:turn_id] },
+        stop_requested: -> { completed_turn_ids.size >= stop_after }
+      )
+      result = analyzer.analyze(jsonl_path)
+
+      expect(result.turns.size).to eq(2)
+      expect(result.metadata[:interrupted]).to be(true)
+      expect(result.metadata[:total]).to eq(5)
+    end
+
+    it "marks interrupted false and total == turn_count on a normal completion" do
+      result = described_class.new(pipeline:, stop_requested: -> { false }).analyze(jsonl_path)
+
+      expect(result.metadata[:interrupted]).to be(false)
+      expect(result.metadata[:total]).to eq(result.metadata[:turn_count])
+    end
+  end
+
   describe "#analyze (pass_one_only: true)" do
     before do
       allow(pipeline).to receive(:cache).and_return(nil)

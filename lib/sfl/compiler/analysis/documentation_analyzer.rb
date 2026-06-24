@@ -22,11 +22,15 @@ module SFL
         # @param on_turn_start [#call, nil] same event shape as
         #   ConversationAnalyzer's callback — fires before a section's
         #   compilation starts, not just after
-        def initialize(pipeline:, clause_repo: nil, on_progress: nil, on_turn_start: nil)
+        # @param stop_requested [#call, nil] same contract as
+        #   ConversationAnalyzer's callback — polled once per section,
+        #   never mid-section
+        def initialize(pipeline:, clause_repo: nil, on_progress: nil, on_turn_start: nil, stop_requested: nil)
           @pipeline = pipeline
           @clause_repo = clause_repo
           @on_progress = on_progress
           @on_turn_start = on_turn_start
+          @stop_requested = stop_requested
           @resume = pipeline.cache ? true : false
         end
 
@@ -70,17 +74,21 @@ module SFL
             topic_shifts = modeler.detect_topic_shifts
           end
 
-          turns = sections.each_with_index.map do |(section, mtime), idx|
+          turns = []
+          sections.each_with_index do |(section, mtime), idx|
+            break if @stop_requested&.call
+
             turn_id = idx + 1
             @on_turn_start&.call(turn_id:, total:, speaker: section.heading || section.file_id)
             started = Time.now
-            
+
             pre_turn = pre_turns&.[](idx)
             turn = compile_section(section, mtime, turn_id, store, pre_turn:, modeler:)
-            
+
             report_progress(turn, total, Time.now - started)
-            turn
+            turns << turn
           end
+          interrupted = turns.size < total
 
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
@@ -101,6 +109,8 @@ module SFL
               actor_label: "Section",
               actors_list_label: "Headings",
               topics_enabled: !topic_labels.nil?,
+              interrupted:,
+              total:,
             },
             turns:,
             speaker_profiles: profiles,

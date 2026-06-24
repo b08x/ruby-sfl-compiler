@@ -24,11 +24,18 @@ module SFL
         #   single turn's Pass 1 + Pass 2 can take 20-60s, so this fires
         #   immediately rather than leaving the caller with no signal
         #   until the (much later) on_progress callback
-        def initialize(pipeline:, pass_one_only: false, on_progress: nil, on_turn_start: nil)
+        # @param stop_requested [#call, nil] polled once per turn, before
+        #   that turn starts — never mid-turn, so a turn already in
+        #   flight always finishes. When it returns true, #analyze stops
+        #   and returns a partial result covering whatever turns
+        #   completed (metadata[:interrupted] is true, metadata[:total]
+        #   still reflects the full input size).
+        def initialize(pipeline:, pass_one_only: false, on_progress: nil, on_turn_start: nil, stop_requested: nil)
           @pipeline = pipeline
           @pass_one_only = pass_one_only
           @on_progress = on_progress
           @on_turn_start = on_turn_start
+          @stop_requested = stop_requested
           @resume = pipeline.cache ? true : false
         end
 
@@ -71,17 +78,21 @@ module SFL
             topic_shifts = modeler.detect_topic_shifts
           end
 
-          turns = raw_turns.each_with_index.map do |turn_data, idx|
+          turns = []
+          raw_turns.each_with_index do |turn_data, idx|
+            break if @stop_requested&.call
+
             turn_id = idx + 1
             @on_turn_start&.call(turn_id:, total:, speaker: turn_data[:name])
             started = Time.now
-            
+
             pre_turn = pre_turns&.[](idx)
             turn = compile_turn(turn_data, turn_id, pre_turn:, modeler:)
-            
+
             report_progress(turn, total, Time.now - started)
-            turn
+            turns << turn
           end
+          interrupted = turns.size < total
 
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
@@ -100,6 +111,8 @@ module SFL
               speakers: turns.map(&:speaker).uniq,
               analyzed_at: Time.now.iso8601,
               topics_enabled: !topic_labels.nil?,
+              interrupted:,
+              total:,
             },
             turns:,
             speaker_profiles: profiles,

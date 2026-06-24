@@ -45,8 +45,18 @@ RSpec.describe SFL::Compiler::CLI do
 
     it "parses context with stance filters and limit" do
       parsed = described_class.parse(
-        ["context", "how does tenor work", "--mood", "declarative",
-         "--min-tenor", "0.5", "--max-modality", "0.9", "--limit", "5"]
+        [
+          "context",
+          "how does tenor work",
+          "--mood",
+          "declarative",
+          "--min-tenor",
+          "0.5",
+          "--max-modality",
+          "0.9",
+          "--limit",
+          "5",
+]
       )
       expect(parsed[:command]).to eq(:context)
       expect(parsed[:input]).to eq("how does tenor work")
@@ -110,6 +120,30 @@ RSpec.describe SFL::Compiler::CLI do
       described_class.run_tui(nil, {})
 
       expect(menu).to have_received(:run)
+    end
+  end
+
+  describe ".install_interrupt_trap" do
+    after { Signal.trap("INT", "DEFAULT") }
+
+    it "sets the flag on the first SIGINT instead of raising Interrupt" do
+      flag = SFL::Compiler::StopFlag.new
+      described_class.install_interrupt_trap(flag)
+
+      expect { Process.kill("INT", Process.pid) }.not_to raise_error
+      expect(flag.stopped?).to be(true)
+    end
+  end
+
+  describe ".print_interrupt_status" do
+    it "prints the partial progress and a resume command for the given subcommand" do
+      result = instance_double(
+        SFL::Compiler::Types::AnalysisResult,
+        metadata: { turn_count: 2, total: 5 }
+      )
+
+      expect { described_class.print_interrupt_status(result, "chat.jsonl", :conversation) }
+        .to output(%r{Stopped after 2/5 in chat\.jsonl.*\n.*--resume}m).to_stdout
     end
   end
 end
