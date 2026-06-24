@@ -147,13 +147,44 @@ module SFL
 
 
 
-      # Returns a transparent callable that simply yields the block.
-      # TODO: replace with a proper CircuitBreaker::CircuitHandler once
-      #       Pass 2 is in active use and failure rates are monitored.
-      # The rescue on CircuitBreaker::OpenError in annotate_interpersonal
-      # handles the tripped case when a real handler is substituted in.
+      # Returns a CircuitBreaker::CircuitHandler configured from ENV.
+      # The handler exposes a #call(&block) interface so callers can wrap
+      # LLM invocations with the same @circuit_breaker.call { ... } pattern
+      # used elsewhere in this class.
+      #
+      # Circuit state is tracked per-instance (each PassTwoEngine gets its
+      # own breaker), so concurrent or sequential batches share the same
+      # failure count and trip threshold.
       private def default_circuit_breaker
-        -> (&block) { block.call }
+        handler = CircuitBreaker::CircuitHandler.new(@logger)
+        handler.failure_threshold = ENV.fetch("SFL_CIRCUIT_FAILURE_THRESHOLD", 5).to_i
+        handler.failure_timeout = ENV.fetch("SFL_CIRCUIT_RETRY_TIMEOUT", 30).to_i
+
+        # Give the handler a #call interface that wraps a block with the
+        # circuit state.  CircuitHandler#handle expects a bound method, so
+        # we define a unary proc method on the handler instance that runs
+        # the block and delegates through the standard on_success/on_failure
+        # lifecycle.
+        state = handler.new_circuit_state
+        handler.define_singleton_method(:call) do |&block|
+          if handler.is_tripped(state)
+            handler.on_circuit_open(state)
+          end
+
+          begin
+            out = nil
+            Timeout.timeout(handler.invocation_timeout, CircuitBreaker::CircuitBrokenException) do
+              out = block.call
+              handler.on_success(state)
+            end
+            out
+          rescue Exception => e
+            handler.on_failure(state) unless handler.excluded_exceptions.include?(e.class)
+            raise
+          end
+        end
+
+        handler
       end
 
       # items: [{index:, context:}] → [{index:, mood:, modality_weight:, ...}]
