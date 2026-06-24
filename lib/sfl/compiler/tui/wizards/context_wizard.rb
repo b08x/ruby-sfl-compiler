@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "gum"
+require_relative "../../classification_registry"
 
 module SFL
   module Compiler
@@ -8,7 +9,7 @@ module SFL
       module Wizards
         # Gum-prompt front end for `sfl-analyze context`.
         class ContextWizard
-          MOODS = ["(any)", "declarative", "interrogative", "imperative", "exclamative"].freeze
+          MOODS = ["(any)", *ClassificationRegistry.canonical_values(:mood)].freeze
 
           def run
             query = Prompts.blank_to_nil(Gum.input(header: "Query"))

@@ -29,12 +29,13 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
     )
   end
 
-  def turn(id, speaker, sources:, text: "Linearity isn't the enemy here.")
+  def turn(id, speaker, sources:, text: "Linearity isn't the enemy here.", semantic_coherence_score: nil)
     SFL::Compiler::Types::ConversationTurn.new(
       turn_id: id, speaker: speaker, timestamp: Time.at(1_700_000_000 + id),
       message_text: text, clauses: sources.map { |s| annotated_clause(s) },
       avg_tenor: 0.6, avg_modality: 0.7, dominant_mood: "declarative",
-      process_types: { "material" => 1 }, participants: [], tenor_shift: nil
+      process_types: { "material" => 1 }, participants: [], tenor_shift: nil,
+      semantic_coherence_score: semantic_coherence_score
     )
   end
 
@@ -52,6 +53,28 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
     )
   end
 
+  let(:result_with_moments) do
+    SFL::Compiler::Types::AnalysisResult.new(
+      metadata: { conversation_id: "conv-2", turn_count: 2, speakers: %w[A B] },
+      turns: [
+        turn(1, "A", sources: %w[llm llm], semantic_coherence_score: 0.85),
+        turn(2, "B", sources: %w[llm], semantic_coherence_score: nil)
+      ],
+      speaker_profiles: {},
+      tenor_timeline: [], field_evolution: [],
+      correlations: { "material" => { count: 6, avg_tenor: 0.6, avg_modality: 0.7 } },
+      insights: ["A contributed 1 of 2 turns"],
+      key_moments: [
+        SFL::Compiler::Types::KeyMoment.new(
+          turn_id: 1,
+          type: "semantic_anomaly",
+          magnitude: 0.9,
+          description: "A sudden topic shift."
+        )
+      ]
+    )
+  end
+
   describe described_class::Digest do
     describe ".from_result" do
       it "includes per-turn previews and provenance counts in the text" do
@@ -64,6 +87,15 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
         text = described_class.from_result(result).to_text
         expect(text).to match(/turn 2.*UNRELIABLE \(75% fallback\)/i)
         expect(text).not_to match(/turn 1.*UNRELIABLE/i)
+      end
+
+      it "includes semantic coherence score and key moments when present" do
+        text = described_class.from_result(result_with_moments).to_text
+        expect(text).to include("coherence=0.85")
+        expect(text).not_to include("coherence=nil")
+        expect(text).not_to include("turn 2 [B] mood=declarative tenor=0.6 modality=0.7 shift=nil clauses=1 defaulted=0 coherence=")
+        expect(text).to include("== KEY MOMENTS ==")
+        expect(text).to include("[semantic_anomaly] turn 1 (magnitude: 0.9) — A sudden topic shift.")
       end
     end
 
@@ -87,6 +119,13 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
         json = SFL::Compiler::Formatters::JSONFormatter.new(with_profiles).render
         expect(described_class.from_json(JSON.parse(json)).to_text)
           .to eq(described_class.from_result(with_profiles).to_text)
+      end
+
+      it "produces identical text for result with key moments and coherence" do
+        json = SFL::Compiler::Formatters::JSONFormatter.new(result_with_moments).render
+        from_json = described_class.from_json(JSON.parse(json)).to_text
+        from_result = described_class.from_result(result_with_moments).to_text
+        expect(from_json).to eq(from_result)
       end
 
       it "raises NarrativeError when turns are absent" do

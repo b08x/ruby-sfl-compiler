@@ -173,10 +173,10 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         expect(payload.theme_type).to eq("textual")
       end
 
-      it "maps 'topical_unmarked' to 'unmarked'" do
+      it "maps 'topical_unmarked' to 'topical'" do
         result = { theme_type: "topical_unmarked", topical_theme: "Test", rheme: "clause" }
         payload = engine.send(:textual_from, clause, result, correlation_id)
-        expect(payload.theme_type).to eq("unmarked")
+        expect(payload.theme_type).to eq("topical")
       end
 
       it "accepts new valid types 'interjection' and 'interpersonal'" do
@@ -200,80 +200,88 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
     end
 
-    describe "#normalize_theme_type" do
+    describe "SFL::Compiler::ClassificationRegistry.normalize(:theme_type)" do
       it "fixes 'topual' to 'topical'" do
-        expect(engine.send(:normalize_theme_type, "topual")).to eq("topical")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "topual").first).to eq("topical")
       end
 
       it "handles compound types with plus sign" do
-        expect(engine.send(:normalize_theme_type, "textual + topical")).to eq("textual")
-        expect(engine.send(:normalize_theme_type, "interpersonal+marked")).to eq("interpersonal")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "textual + topical").first).to eq("textual")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type,
+          "interpersonal+marked").first).to eq("interpersonal")
       end
 
-      it "maps 'topical_unmarked' to 'unmarked'" do
-        expect(engine.send(:normalize_theme_type, "topical_unmarked")).to eq("unmarked")
+      it "maps 'topical_unmarked' to 'topical'" do
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "topical_unmarked").first).to eq("topical")
       end
 
       it "handles case insensitivity" do
-        expect(engine.send(:normalize_theme_type, "INTERJECTION")).to eq("interjection")
-        expect(engine.send(:normalize_theme_type, "InterPersonal")).to eq("interpersonal")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "INTERJECTION").first).to eq("interjection")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type,
+          "InterPersonal").first).to eq("interpersonal")
       end
 
       it "handles whitespace" do
-        expect(engine.send(:normalize_theme_type, "  interjection  ")).to eq("interjection")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type,
+          "  interjection  ").first).to eq("interjection")
       end
 
-      it "strips the 'theme_' prefix if present" do
-        expect(engine.send(:normalize_theme_type, "theme_unmarked")).to eq("unmarked")
-        expect(engine.send(:normalize_theme_type, "theme_marked")).to eq("marked")
-        expect(engine.send(:normalize_theme_type, "theme_interrogative")).to eq("interrogative")
+      it "strips the 'theme_' prefix and '_theme' suffix if present" do
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "theme_unmarked").first).to eq("unmarked")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "theme_marked").first).to eq("marked")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type,
+          "theme_interrogative").first).to eq("interrogative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "topical_theme").first).to eq("topical")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, "textual theme").first).to eq("textual")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type,
+          "theme_interpersonal_theme").first).to eq("interpersonal")
       end
 
       it "returns 'unmarked' for nil input" do
-        expect(engine.send(:normalize_theme_type, nil)).to eq("unmarked")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, nil).first).to eq("unmarked")
       end
 
       it "passes through valid types unchanged" do
         %w[unmarked marked interrogative imperative].each do |type|
-          expect(engine.send(:normalize_theme_type, type)).to eq(type)
+          expect(SFL::Compiler::ClassificationRegistry.normalize(:theme_type, type).first).to eq(type)
         end
       end
     end
 
-    describe "#normalize_mood" do
+    describe "SFL::Compiler::ClassificationRegistry.normalize(:mood)" do
       it "maps 'exclamatory' to 'exclamative'" do
-        expect(engine.send(:normalize_mood, "exclamatory")).to eq("exclamative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "exclamatory").first).to eq("exclamative")
       end
 
       it "maps question synonyms to 'interrogative'" do
-        expect(engine.send(:normalize_mood, "question")).to eq("interrogative")
-        expect(engine.send(:normalize_mood, "questions")).to eq("interrogative")
-        expect(engine.send(:normalize_mood, "query")).to eq("interrogative")
-        expect(engine.send(:normalize_mood, "queries")).to eq("interrogative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "question").first).to eq("interrogative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "questions").first).to eq("interrogative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "query").first).to eq("interrogative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "queries").first).to eq("interrogative")
       end
 
       it "maps clause-rank/no-mood vocabulary to 'fragment'" do
-        expect(engine.send(:normalize_mood, "non-finite")).to eq("fragment")
-        expect(engine.send(:normalize_mood, "none")).to eq("fragment")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "non-finite").first).to eq("fragment")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "none").first).to eq("fragment")
       end
 
       it "maps any Group-rank '*_phrase' value to 'fragment'" do
-        expect(engine.send(:normalize_mood, "nominal_phrase")).to eq("fragment")
-        expect(engine.send(:normalize_mood, "prepositional_phrase")).to eq("fragment")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "nominal_phrase").first).to eq("fragment")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "prepositional_phrase").first).to eq("fragment")
       end
 
       it "handles case insensitivity and whitespace" do
-        expect(engine.send(:normalize_mood, "  EXCLAMATORY  ")).to eq("exclamative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "  EXCLAMATORY  ").first).to eq("exclamative")
       end
 
       it "returns 'declarative' for nil or empty input" do
-        expect(engine.send(:normalize_mood, nil)).to eq("declarative")
-        expect(engine.send(:normalize_mood, "")).to eq("declarative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, nil).first).to eq("declarative")
+        expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, "").first).to eq("declarative")
       end
 
       it "passes through valid moods unchanged" do
         SFL::Compiler::Types::MoodType.each_value do |mood|
-          expect(engine.send(:normalize_mood, mood)).to eq(mood)
+          expect(SFL::Compiler::ClassificationRegistry.normalize(:mood, mood).first).to eq(mood)
         end
       end
     end

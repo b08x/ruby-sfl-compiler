@@ -145,56 +145,7 @@ module SFL
         raise PassTwoError, "Semantic annotation failed: #{e.message}"
       end
 
-      # Normalize theme_type value from LLM output
-      # Handles typos, compound types, and legacy values
-      private def normalize_theme_type(type)
-        return "unmarked" if type.nil? || type.to_s.strip.empty?
 
-        type = type.to_s.downcase.strip
-
-        # Strip common redundant prefix that LLMs often generate
-        type = type.delete_prefix("theme_")
-
-        # Fix known typos
-        type = "topical" if type == "topual"
-
-        # Normalize compound types (e.g., "textual + topical" → "textual")
-        if type.include?("+")
-          parts = type.split("+").map(&:strip)
-          # Prefer the first non-null part
-          type = parts.find { |p| !p.empty? } || "unmarked"
-          type = type.delete_prefix("theme_")
-        end
-
-        # Map legacy/alternate names
-        type = "unmarked" if type == "topical_unmarked"
-
-        type
-      end
-
-      # Normalize mood value from LLM output.
-      # Handles near-miss vocabulary the model reaches for when a clause
-      # lacks ordinary Mood structure (no Subject+Finite) instead of
-      # mapping onto the minor/fragment slots that already exist for
-      # exactly that case — observed live: "non-finite" (clause-rank
-      # finiteness), "none" (explicit no-mood-applies), "nominal_phrase"/
-      # "prepositional_phrase" (Group-rank labels), and the spelling
-      # variant "exclamatory" for "exclamative".
-      private def normalize_mood(mood)
-        return "declarative" if mood.nil? || mood.to_s.strip.empty?
-
-        mood = mood.to_s.downcase.strip
-
-        # Known near-miss spelling/register variant
-        mood = "exclamative" if mood == "exclamatory"
-        mood = "interrogative" if %w[question questions query queries].include?(mood)
-
-        # Clause/group-rank vocabulary leaking in where the model meant
-        # "this clause has no ordinary Mood at all"
-        mood = "fragment" if %w[non-finite none].include?(mood) || mood.end_with?("_phrase")
-
-        mood
-      end
 
       # Returns a transparent callable that simply yields the block.
       # TODO: replace with a proper CircuitBreaker::CircuitHandler once
@@ -273,12 +224,12 @@ module SFL
       end
 
       private def interpersonal_from(clause, result, correlation_id)
-        mood = normalize_mood(result[:mood])
+        mood, status = ClassificationRegistry.normalize(:mood, result[:mood])
 
-        unless Types::MoodType.values.include?(mood)
-          log_and_warn("pass_two_invalid_interpersonal", correlation_id, clause,
-            "Invalid mood '#{mood}' normalized to 'declarative'")
-          mood = "declarative"
+        if status == :unknown
+          log_and_warn("pass_two_schema_gap", correlation_id, clause,
+            "Invalid mood '#{result[:mood]}' normalized to '#{mood}'. " \
+            "Consider adding it to ClassificationRegistry::MOOD.")
         end
 
         Types::InterpersonalPayload.new(
@@ -297,30 +248,12 @@ module SFL
       end
 
       private def textual_from(clause, result, correlation_id)
-        # Normalize theme_type
-        theme_type = normalize_theme_type(result[:theme_type])
+        theme_type, status = ClassificationRegistry.normalize(:theme_type, result[:theme_type])
 
-        # Validate against known allowed types (from TextualPayload enum)
-        allowed_types = %w[
-          unmarked
-          marked
-          interrogative
-          imperative
-          multiple
-          topical
-          topical_unmarked
-          simple
-          existential
-          clausal
-          textual
-          interjection
-          interpersonal
-        ]
-
-        unless allowed_types.include?(theme_type)
-          log_and_warn("pass_two_invalid_textual", correlation_id, clause,
-            "Invalid theme_type '#{theme_type}' normalized to 'unmarked'")
-          theme_type = "unmarked"
+        if status == :unknown
+          log_and_warn("pass_two_schema_gap", correlation_id, clause,
+            "Invalid theme_type '#{result[:theme_type]}' normalized to '#{theme_type}'. " \
+            "Consider adding it to ClassificationRegistry::THEME_TYPE.")
         end
 
         Types::TextualPayload.new(
@@ -499,7 +432,7 @@ module SFL
 
       output do
         const :mood, String,
-          description: "Clause mood: declarative, interrogative, imperative, exclamative, indicative, minor, or fragment"
+          description: "Clause mood: #{ClassificationRegistry.signature_description(:mood)}"
         const :modality_weight, Float, description: "Modality strength 0.0-1.0 (0=weak/hedged, 1=strong/certain)"
         const :tenor, Float, description: "Formality level 0.0-1.0 (0=informal, 1=formal)"
         const :speaker_attitude, String,
@@ -512,7 +445,7 @@ module SFL
           description: "Interpersonal Theme: modal adjuncts/discourse markers at start (e.g., surely, perhaps, well)"
         const :rheme, String, description: "Rheme: everything after the Theme"
         const :theme_type, String,
-          description: "Theme type: unmarked, marked, interrogative, imperative, multiple, topical, topical_unmarked, simple, existential, clausal, textual, interjection, or interpersonal"
+          description: "Theme type: #{ClassificationRegistry.signature_description(:theme_type)}"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
       end
     end
