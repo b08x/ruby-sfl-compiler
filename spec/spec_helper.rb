@@ -3,6 +3,7 @@
 require "bundler/setup"
 require "sfl/compiler"
 require "active_job"
+require "json"
 
 ActiveJob::Base.queue_adapter = :test
 

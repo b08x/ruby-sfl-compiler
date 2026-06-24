@@ -11,6 +11,47 @@ module SFL
     module Types
       include Dry.Types()
 
+      module_function
+
+      # JSON-round-trippable Hash for any Dry::Struct: nested structs
+      # become nested Hashes via #to_h (already recursive), Time becomes
+      # an ISO8601 string. Gush's `output()` persists payloads to Redis
+      # as JSON, so anything crossing a job boundary must survive a real
+      # JSON round trip, not just sit as a Ruby Hash with Time objects
+      # inside it.
+      def dump(struct)
+        deep_stringify_time(struct.to_h)
+      end
+
+      def deep_stringify_time(value)
+        case value
+        when ::Time then value.iso8601
+        when Hash then value.transform_values { |v| deep_stringify_time(v) }
+        when Array then value.map { |v| deep_stringify_time(v) }
+        else value
+        end
+      end
+
+      # Reconstructs an AnnotatedClause from a Hash produced by `dump`
+      # (after a JSON.generate / JSON.parse(symbolize_names: true) round
+      # trip) — only `compiled_at` needs explicit Time parsing; every
+      # other nested struct (syntactic/ideational/interpersonal) has no
+      # Time-typed attributes, so Dry::Struct's own Hash coercion handles
+      # them.
+      def load_annotated_clause(hash)
+        AnnotatedClause.new(hash.merge(compiled_at: ::Time.parse(hash.fetch(:compiled_at))))
+      end
+
+      # Reconstructs a ConversationTurn from a Hash produced by `dump`.
+      def load_conversation_turn(hash)
+        ConversationTurn.new(
+          hash.merge(
+            timestamp: ::Time.parse(hash.fetch(:timestamp)),
+            clauses: hash.fetch(:clauses).map { |c| load_annotated_clause(c) }
+          )
+        )
+      end
+
       # SFL Metafunction categories
       MetafunctionType = String.enum("ideational", "interpersonal", "textual")
 

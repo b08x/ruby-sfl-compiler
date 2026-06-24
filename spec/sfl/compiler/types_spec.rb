@@ -362,6 +362,59 @@ RSpec.describe SFL::Compiler::Types do
   end
 end
 
+describe "Gush payload round-trip (Types.dump / Types.load_conversation_turn)" do
+  let(:token) do
+    SFL::Compiler::Types::SyntacticToken.new(
+      text: "works", lemma: "work", pos: "VERB", tag: "VBZ",
+      dep: "ROOT", head_index: -1, morphology: {}, index: 0
+    )
+  end
+
+  let(:annotated_clause) do
+    syntactic = SFL::Compiler::Types::SyntacticClause.new(
+      id: "syn-1", text: "It works.", tokens: [token],
+      root_index: 0, sentence_index: 0, document_id: "turn-1"
+    )
+    SFL::Compiler::Types::AnnotatedClause.new(
+      id: "ann-1", text: "It works.", syntactic:,
+      ideational: SFL::Compiler::Types::IdeationalPayload.new(
+        clause_id: "syn-1", process_type: "material",
+        participants: [], circumstances: [], raw_transitivity: {}
+      ),
+      interpersonal: SFL::Compiler::Types::InterpersonalPayload.new(
+        clause_id: "syn-1", mood: "declarative",
+        modality_weight: 0.6, tenor: 0.7,
+        speaker_attitude: nil, reasoning: nil, annotation_source: "llm"
+      ),
+      document_id: "turn-1", compiled_at: Time.now
+    )
+  end
+
+  let(:turn) do
+    SFL::Compiler::Types::ConversationTurn.new(
+      turn_id: 1, speaker: "Alice", timestamp: Time.now,
+      message_text: "It works.", clauses: [annotated_clause],
+      avg_tenor: 0.7, avg_modality: 0.6, dominant_mood: "declarative",
+      process_types: { "material" => 1 }, participants: [], tenor_shift: nil
+    )
+  end
+
+  it "survives a real JSON round trip with the same field values" do
+    json = JSON.generate(SFL::Compiler::Types.dump(turn))
+    hash = JSON.parse(json, symbolize_names: true)
+    reloaded = SFL::Compiler::Types.load_conversation_turn(hash)
+
+    expect(reloaded.turn_id).to eq(turn.turn_id)
+    expect(reloaded.speaker).to eq(turn.speaker)
+    expect(reloaded.timestamp.to_i).to eq(turn.timestamp.to_i)
+    expect(reloaded.avg_tenor).to eq(turn.avg_tenor)
+    expect(reloaded.clauses.size).to eq(1)
+    expect(reloaded.clauses.first.id).to eq(annotated_clause.id)
+    expect(reloaded.clauses.first.compiled_at.to_i).to eq(annotated_clause.compiled_at.to_i)
+    expect(reloaded.clauses.first.syntactic.tokens.first.text).to eq("works")
+  end
+end
+
 RSpec.describe "SFL::Compiler::NarrativeError" do
   it "is an SFL::Compiler::Error" do
     expect(SFL::Compiler::NarrativeError.ancestors).to include(SFL::Compiler::Error)
