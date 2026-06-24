@@ -43,6 +43,10 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:theme_type, "modal")).to eq(["interpersonal", :aliased])
       end
 
+      it "normalizes the adjectival 'interjectional' to the canonical 'interjection'" do
+        expect(described_class.normalize(:theme_type, "interjectional")).to eq(["interjection", :aliased])
+      end
+
       it "normalizes compound theme types containing multiple elements to multiple" do
         expect(described_class.normalize(:theme_type, "textual > interpersonal > topical")).to eq(["multiple", :exact])
         expect(described_class.normalize(:theme_type, "textual_interpersonal")).to eq(["multiple", :exact])

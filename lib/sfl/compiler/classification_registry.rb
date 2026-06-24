@@ -49,6 +49,7 @@ module SFL
           "vocative" => "interpersonal",
           "process" => "predicator",
           "modal" => "interpersonal",
+          "interjectional" => "interjection",
         }.freeze,
         transforms: [
           lambda do |val|
