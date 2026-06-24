@@ -15,9 +15,7 @@ module SFL
           JSON.pretty_generate(build_hash)
         end
 
-        private
-
-        def build_hash
+        private def build_hash
           {
             metadata: format_metadata,
             speaker_profiles: format_speaker_profiles,
@@ -27,18 +25,19 @@ module SFL
             correlations: result.correlations,
             insights: result.insights,
             topic_labels: result.topic_labels,
-            topic_evolution: result.topic_evolution
+            topic_evolution: result.topic_evolution,
+            key_moments: format_key_moments,
           }
         end
 
-        def format_metadata
+        private def format_metadata
           # analyzed_at is already a string (ISO8601) from the script
-          result.metadata.merge(annotation_coverage: annotation_coverage)
+          result.metadata.merge(annotation_coverage:)
         end
 
         # Per-source clause counts so consumers can tell real LLM annotations
         # from fallback/stub defaults (which all sit at 0.5 and bias averages).
-        def annotation_coverage
+        private def annotation_coverage
           clauses = result.turns.flat_map(&:clauses)
           sources = clauses.map { |c| c.interpersonal.annotation_source }.tally
           defaulted = clauses.size - sources.fetch("llm", 0)
@@ -48,14 +47,14 @@ module SFL
             llm: sources.fetch("llm", 0),
             fallback: sources.fetch("fallback", 0),
             stub: sources.fetch("stub", 0),
-            defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1)
+            defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1),
           }
         end
 
         # Per-turn rows with preview text and provenance counts. This makes the
         # JSON report self-contained: `sfl-analyze narrate` grounds its narrative
         # entirely from this file.
-        def format_turns
+        private def format_turns
           result.turns.map do |turn|
             {
               turn_id: turn.turn_id,
@@ -70,12 +69,12 @@ module SFL
               defaulted_count: turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" },
               dominant_topic: turn.dominant_topic,
               topic_distribution: turn.topic_distribution,
-              semantic_coherence_score: turn.semantic_coherence_score
+              semantic_coherence_score: turn.semantic_coherence_score,
             }
           end
         end
 
-        def format_speaker_profiles
+        private def format_speaker_profiles
           result.speaker_profiles.transform_values do |profile|
             {
               turn_count: profile.turn_count,
@@ -84,7 +83,18 @@ module SFL
               tenor_variance: profile.tenor_variance,
               avg_modality: profile.avg_modality,
               mood_distribution: profile.mood_distribution,
-              dominant_processes: profile.dominant_processes
+              dominant_processes: profile.dominant_processes,
+            }
+          end
+        end
+
+        private def format_key_moments
+          result.key_moments.map do |km|
+            {
+              type: km.type,
+              turn_id: km.turn_id,
+              magnitude: km.magnitude,
+              description: km.description,
             }
           end
         end

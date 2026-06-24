@@ -12,14 +12,18 @@ module SFL
       # report JSON (narrate subcommand), producing identical text.
       class NarrativeGenerator
         SECTION_KEYS = %i[
-          overview cast_and_roles interpersonal_dynamics
-          conversational_arc data_quality takeaways
+          overview
+          cast_and_roles
+          interpersonal_dynamics
+          conversational_arc
+          data_quality
+          takeaways
         ].freeze
 
         # @param narrator [#call, nil] (digest_text) → Hash of SECTION_KEYS;
         #   defaults to the DSPy-backed SFLNarrator. Injectable for tests.
         def initialize(narrator: nil)
-          @narrator = narrator || lambda { |text| SFLNarrator.new(text).call }
+          @narrator = narrator || -> (text) { SFLNarrator.new(text).call }
         end
 
         # @param digest [Digest]
@@ -36,7 +40,7 @@ module SFL
           raise NarrativeError, "Narrative output missing or invalid sections: #{e.message}"
         rescue NarrativeError
           raise
-        rescue StandardError => e
+        rescue => e
           raise NarrativeError, "Narrative generation failed: #{e.message}"
         end
 
@@ -44,13 +48,19 @@ module SFL
         # serialization to the exact text block the LLM receives.
         class Digest
           REQUIRED_TURN_KEYS = %w[
-            turn_id speaker preview avg_tenor avg_modality dominant_mood
-            clause_count defaulted_count
+            turn_id
+            speaker
+            preview
+            avg_tenor
+            avg_modality
+            dominant_mood
+            clause_count
+            defaulted_count
           ].freeze
           UNRELIABLE_THRESHOLD = 0.5
           PREVIEW_LENGTH = Formatters::JSONFormatter::PREVIEW_LENGTH
 
-          attr_reader :metadata, :speaker_profiles, :correlations, :insights, :turns
+          attr_reader :metadata, :speaker_profiles, :correlations, :insights, :turns, :key_moments
 
           # @param result [Types::AnalysisResult]
           # @return [Digest]
@@ -65,7 +75,16 @@ module SFL
                 "dominant_mood" => t.dominant_mood,
                 "tenor_shift" => t.tenor_shift,
                 "clause_count" => t.clauses.size,
-                "defaulted_count" => t.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+                "defaulted_count" => t.clauses.count { |c| c.interpersonal.annotation_source != "llm" },
+                "semantic_coherence_score" => t.semantic_coherence_score,
+              }
+            end
+            key_moments = result.key_moments.map do |km|
+              {
+                "type" => km.type,
+                "turn_id" => km.turn_id,
+                "magnitude" => km.magnitude,
+                "description" => km.description,
               }
             end
             new(
@@ -75,7 +94,8 @@ module SFL
               speaker_profiles: deep_stringify(profiles_hash(result.speaker_profiles)),
               correlations: deep_stringify(result.correlations),
               insights: result.insights,
-              turns: turns
+              turns:,
+              key_moments: deep_stringify(key_moments)
             )
           end
 
@@ -87,7 +107,7 @@ module SFL
             if turns.nil?
               raise NarrativeError,
                 "Report JSON has no `turns` array — it predates narrative " \
-                "support. Re-run the analysis to regenerate it."
+                  "support. Re-run the analysis to regenerate it."
             end
             turns.each do |row|
               REQUIRED_TURN_KEYS.each do |key|
@@ -99,7 +119,8 @@ module SFL
               speaker_profiles: parsed.fetch("speaker_profiles", {}),
               correlations: parsed.fetch("correlations", {}),
               insights: parsed.fetch("insights", []),
-              turns: turns.map { |row| row.slice(*REQUIRED_TURN_KEYS, "tenor_shift") }
+              turns: turns.map { |row| row.slice(*REQUIRED_TURN_KEYS, "tenor_shift", "semantic_coherence_score") },
+              key_moments: parsed["key_moments"] || []
             )
           end
 
@@ -114,7 +135,7 @@ module SFL
               llm: sources.fetch("llm", 0),
               fallback: sources.fetch("fallback", 0),
               stub: sources.fetch("stub", 0),
-              defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1)
+              defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1),
             }
           end
 
@@ -132,12 +153,13 @@ module SFL
             end
           end
 
-          def initialize(metadata:, speaker_profiles:, correlations:, insights:, turns:)
+          def initialize(metadata:, speaker_profiles:, correlations:, insights:, turns:, key_moments: [])
             @metadata = metadata
             @speaker_profiles = speaker_profiles
             @correlations = correlations
             @insights = insights
             @turns = turns
+            @key_moments = key_moments
           end
 
           def source
@@ -147,7 +169,7 @@ module SFL
           # The exact LLM input. Stable section order and formatting:
           # from_result and from_json must produce identical text.
           def to_text
-            <<~TEXT
+            text = <<~TEXT
               == METADATA ==
               #{metadata.map { |k, v| "#{k}: #{v}" }.join("\n")}
 
@@ -163,17 +185,25 @@ module SFL
               == TURNS (in order) ==
               #{turns.map { |t| turn_line(t) }.join("\n")}
             TEXT
+
+            if key_moments && !key_moments.empty?
+              km_text = key_moments.map do |km|
+                "[#{km['type']}] turn #{km['turn_id']} (magnitude: #{km['magnitude']}) — #{km['description']}"
+              end.join("\n")
+              text += "\n== KEY MOMENTS ==\n#{km_text}\n"
+            end
+
+            text
           end
 
-          private
-
-          def turn_line(t)
+          private def turn_line(t)
             defaulted_pct =
               t["clause_count"].to_i.positive? ? t["defaulted_count"].to_f / t["clause_count"] : 0.0
             line = "turn #{t['turn_id']} [#{t['speaker']}] mood=#{t['dominant_mood']} " \
-                   "tenor=#{t['avg_tenor']} modality=#{t['avg_modality']} " \
-                   "shift=#{t['tenor_shift'].inspect} " \
-                   "clauses=#{t['clause_count']} defaulted=#{t['defaulted_count']}"
+              "tenor=#{t['avg_tenor']} modality=#{t['avg_modality']} " \
+              "shift=#{t['tenor_shift'].inspect} " \
+              "clauses=#{t['clause_count']} defaulted=#{t['defaulted_count']}"
+            line += " coherence=#{t['semantic_coherence_score']}" if t["semantic_coherence_score"]
             line += " UNRELIABLE (#{(defaulted_pct * 100).round}% fallback)" if defaulted_pct > UNRELIABLE_THRESHOLD
             "#{line}\n  preview: #{t['preview']}"
           end
@@ -183,20 +213,22 @@ module SFL
       # DSPy signature: one call produces all six narrative sections.
       class NarrativeSignature < DSPy::Signature
         description "Write an interpretive analytical narrative of a " \
-                    "conversation analyzed with Systemic Functional Linguistics. " \
-                    "Ground every claim in the supplied statistics; quote message " \
-                    "previews where they illustrate a point. NEVER interpret " \
-                    "tenor/modality values from turns marked UNRELIABLE — " \
-                    "describe those turns as unmeasured. Style exemplar: " \
-                    "'Robert is the only speaker who uses imperatives — in SFL " \
-                    "terms, the only one demanding rather than giving. That " \
-                    "asymmetry is the facilitator role, recovered from grammar " \
-                    "alone.' Write clear analytical prose, not bullet dumps."
+          "conversation analyzed with Systemic Functional Linguistics. " \
+          "Ground every claim in the supplied statistics; quote message " \
+          "previews where they illustrate a point. NEVER interpret " \
+          "tenor/modality values from turns marked UNRELIABLE — " \
+          "describe those turns as unmeasured. Use the KEY MOMENTS entries " \
+          "as explicit evidence when describing pivots and anomalies in " \
+          "the conversational arc. Style exemplar: " \
+          "'Robert is the only speaker who uses imperatives — in SFL " \
+          "terms, the only one demanding rather than giving. That " \
+          "asymmetry is the facilitator role, recovered from grammar " \
+          "alone.' Write clear analytical prose, not bullet dumps."
 
         input do
           const :analysis_digest, String,
             description: "Statistics, speaker profiles, correlations, and " \
-                         "per-turn stance rows with message previews"
+              "per-turn stance rows with message previews"
         end
 
         output do
