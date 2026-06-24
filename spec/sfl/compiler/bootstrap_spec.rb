@@ -90,4 +90,41 @@ RSpec.describe SFL::Compiler::Bootstrap do
       }.to raise_error(SFL::Compiler::BootstrapError, /Database connection failed.*connection refused/m)
     end
   end
+
+  describe SFL::Compiler::SafeOpenAIClientProxy do
+    let(:raw_client) { double("OpenAI::Client") }
+    let(:chat_proxy) { double("ChatProxy") }
+    let(:completions_proxy) { double("CompletionsProxy") }
+    let(:proxy) { described_class.new(raw_client) }
+
+    before do
+      allow(raw_client).to receive(:chat).and_return(chat_proxy)
+      allow(chat_proxy).to receive(:completions).and_return(completions_proxy)
+    end
+
+    it "delegates ordinary completions and returns response if valid" do
+      valid_response = double("Response", error: nil, choices: [double("Choice")])
+      allow(completions_proxy).to receive(:create).and_return(valid_response)
+
+      expect(proxy.chat.completions.create(foo: "bar")).to eq(valid_response)
+    end
+
+    it "raises an error if the response indicates an API error" do
+      error_response = double("Response", error: { "message" => "Rate limit exceeded" })
+      allow(completions_proxy).to receive(:create).and_return(error_response)
+
+      expect {
+        proxy.chat.completions.create(foo: "bar")
+      }.to raise_error(RuntimeError, /OpenAI API error: Rate limit exceeded/)
+    end
+
+    it "raises an error if choices is nil" do
+      nil_choices_response = double("Response", error: nil, choices: nil)
+      allow(completions_proxy).to receive(:create).and_return(nil_choices_response)
+
+      expect {
+        proxy.chat.completions.create(foo: "bar")
+      }.to raise_error(RuntimeError, /Response was empty or missing 'choices'/)
+    end
+  end
 end
