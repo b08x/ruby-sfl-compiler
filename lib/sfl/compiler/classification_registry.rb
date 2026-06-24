@@ -16,6 +16,9 @@ module SFL
           "questions" => "interrogative",
           "query" => "interrogative",
           "queries" => "interrogative",
+          "elliptical" => "declarative",
+          "nominal" => "fragment",
+          "narrative" => "declarative",
         }.freeze,
         transforms: [
           -> (val) { val.end_with?("_phrase") ? "fragment" : val },
@@ -37,16 +40,27 @@ module SFL
           textual
           interjection
           interpersonal
+          predicated
+          predicator
         ].freeze,
         aliases: {
           "topual" => "topical",
           "topical_unmarked" => "topical",
           "vocative" => "interpersonal",
+          "process" => "predicator",
+          "modal" => "interpersonal",
         }.freeze,
         transforms: [
           lambda do |val|
             val = val.split("+").map(&:strip).find { |p| !p.empty? } || "" if val.include?("+")
-            val.delete_prefix("theme_").delete_suffix("_theme").delete_suffix(" theme").strip
+            val = val.delete_prefix("theme_").delete_suffix("_theme").delete_suffix(" theme").strip
+            # Check for multiple theme components separated by >, ,, or _
+            # (excluding known single terms like topical_unmarked)
+            if val.include?(">") || val.include?(",") || (val.include?("_") && val != "topical_unmarked")
+              parts = val.split(/[>,_]/).map(&:strip).reject(&:empty?)
+              val = "multiple" if parts.size > 1
+            end
+            val
           end,
         ].freeze,
         default: "unmarked",
@@ -54,6 +68,7 @@ module SFL
 
       # Normalizes a raw classification string to a canonical value.
       # Returns [canonical_value, status] where status is :exact, :aliased, or :unknown.
+      # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       def self.normalize(dimension, raw)
         config = dimension_config(dimension)
         val = raw.to_s.downcase.strip
@@ -71,6 +86,7 @@ module SFL
           [config[:default], :unknown]
         end
       end
+      # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
       # Returns a duplicate array of the canonical values.
       def self.canonical_values(dimension)
