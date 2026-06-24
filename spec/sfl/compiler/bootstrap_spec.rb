@@ -128,6 +128,44 @@ RSpec.describe SFL::Compiler::Bootstrap do
     end
   end
 
+  describe "job queue wiring (require_jobs: true)" do
+    after { ActiveJob::Base.queue_adapter = :test }
+
+    it "configures the sidekiq queue adapter and gush's redis_url from REDIS_URL" do
+      described_class.call(
+        require_db: false, require_llm: false, require_observability: false,
+        require_jobs: true,
+        env: { "REDIS_URL" => "redis://example.test:6380" },
+        load_dotenv: false
+      )
+
+      expect(ActiveJob::Base.queue_adapter_name).to eq("sidekiq")
+      expect(Gush.configuration.redis_url).to eq("redis://example.test:6380")
+    end
+
+    it "defaults redis_url to redis://localhost:6379 when REDIS_URL is unset" do
+      described_class.call(
+        require_db: false, require_llm: false, require_observability: false,
+        require_jobs: true,
+        env: {},
+        load_dotenv: false
+      )
+
+      expect(Gush.configuration.redis_url).to eq("redis://localhost:6379")
+    end
+
+    it "does not configure jobs when require_jobs is false (the default)" do
+      ActiveJob::Base.queue_adapter = :test
+
+      described_class.call(
+        require_db: false, require_llm: false, require_observability: false,
+        env: {}, load_dotenv: false
+      )
+
+      expect(ActiveJob::Base.queue_adapter_name).to eq("test")
+    end
+  end
+
   describe SFL::Compiler::SafeOpenAIClientProxy do
     let(:raw_client) { double("OpenAI::Client") }
     let(:chat_proxy) { double("ChatProxy") }

@@ -2,6 +2,9 @@
 
 require "bundler/setup"
 require "sfl/compiler"
+require "active_job"
+
+ActiveJob::Base.queue_adapter = :test
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

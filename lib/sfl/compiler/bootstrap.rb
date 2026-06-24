@@ -35,10 +35,11 @@ module SFL
 
       # @param require_db [Boolean] connect + migrate the database
       # @param require_llm [Boolean] configure DSPy (false for --pass1-only)
+      # @param require_jobs [Boolean] configure ActiveJob + Gush
       # @param env [#[]] environment source, injectable for tests
       # @param load_dotenv [Boolean] read .env first (off in tests)
       # @return [Context]
-      def call(require_db: true, require_llm: true, require_observability: true, env: ENV, load_dotenv: true)
+      def call(require_db: true, require_llm: true, require_observability: true, require_jobs: false, env: ENV, load_dotenv: true)
         Dotenv.load if load_dotenv
 
         config = SFL::Compiler.config
@@ -50,6 +51,7 @@ module SFL
 
         configure_llm(config.dspy_provider, env) if require_llm
         configure_observability(env) if require_observability
+        configure_jobs(env) if require_jobs
         db = connect_db(config) if require_db
 
         Context.new(db:, config:)
@@ -98,6 +100,35 @@ module SFL
         OpenTelemetry::Instrumentation::RubyLLM::Instrumentation.instance.install
       rescue => e
         raise BootstrapError, "Observability setup failed: #{e.message}"
+      end
+
+      # Gush workers (Sidekiq processes) are their own entry points, same
+      # as exe/sfl-analyze — each one must wire its own environment via
+      # Bootstrap rather than relying on a shared in-process Gush.configure
+      # call, since a worker may start in a different process entirely.
+      def configure_jobs(env)
+        require "sidekiq"
+        require "sidekiq/job"
+        require "active_job"
+        require "gush"
+
+        # Define Sidekiq::ActiveJob::Wrapper if not already defined (e.g., when Rails is not loaded)
+        unless defined?(Sidekiq::ActiveJob::Wrapper)
+          Sidekiq.const_set(:ActiveJob, Module.new) unless defined?(Sidekiq::ActiveJob)
+          wrapper_class = Class.new do
+            include ::Sidekiq::Job
+
+            def perform(job_data)
+              ::ActiveJob::Base.execute(job_data.merge("provider_job_id" => jid))
+            end
+          end
+          Sidekiq::ActiveJob.const_set(:Wrapper, wrapper_class)
+        end
+
+        ActiveJob::Base.queue_adapter = :sidekiq
+        Gush.configure do |c|
+          c.redis_url = env["REDIS_URL"] || "redis://localhost:6379"
+        end
       end
 
       def api_key_for(provider, env)
