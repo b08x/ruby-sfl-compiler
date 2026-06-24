@@ -35,10 +35,10 @@ module SFL
         chunk_timeout: DEFAULT_CHUNK_TIMEOUT
       )
         @provider = provider || SFL::Compiler.config.dspy_provider
+        @logger = Journald::Logger.new("sfl-compiler-pass-two")
+        @chunk_timeout = chunk_timeout
         @circuit_breaker = circuit_breaker || default_circuit_breaker
         @batch_annotator = batch_annotator || default_batch_annotator
-        @chunk_timeout = chunk_timeout
-        @logger = Journald::Logger.new("sfl-compiler-pass-two")
       end
 
       # Annotate many clauses with batched, concurrent LLM calls.
@@ -159,6 +159,7 @@ module SFL
         handler = CircuitBreaker::CircuitHandler.new(@logger)
         handler.failure_threshold = ENV.fetch("SFL_CIRCUIT_FAILURE_THRESHOLD", 5).to_i
         handler.failure_timeout = ENV.fetch("SFL_CIRCUIT_RETRY_TIMEOUT", 30).to_i
+        handler.invocation_timeout = @chunk_timeout
 
         # Give the handler a #call interface that wraps a block with the
         # circuit state.  CircuitHandler#handle expects a bound method, so
@@ -172,10 +173,10 @@ module SFL
           end
 
           begin
-            out = nil
-            Timeout.timeout(handler.invocation_timeout, CircuitBreaker::CircuitBrokenException) do
-              out = block.call
+            out = Timeout.timeout(handler.invocation_timeout, Timeout::Error) do
+              res = block.call
               handler.on_success(state)
+              res
             end
             out
           rescue Exception => e
