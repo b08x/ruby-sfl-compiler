@@ -152,8 +152,8 @@ module SFL
 
         type = type.to_s.downcase.strip
 
-        # Strip common redundant prefix that LLMs often generate
-        type = type.delete_prefix("theme_")
+        # Strip common redundant prefix/suffix that LLMs often generate
+        type = type.delete_prefix("theme_").delete_suffix("_theme").delete_suffix(" theme").strip
 
         # Fix known typos
         type = "topical" if type == "topual"
@@ -163,13 +163,13 @@ module SFL
           parts = type.split("+").map(&:strip)
           # Prefer the first non-null part
           type = parts.find { |p| !p.empty? } || "unmarked"
-          type = type.delete_prefix("theme_")
+          type = type.delete_prefix("theme_").delete_suffix("_theme").delete_suffix(" theme").strip
         end
 
         # Map legacy/alternate names
-        type = "unmarked" if type == "topical_unmarked"
+        type = "unmarked" if type == "topical_unmarked" || type == "topical unmarked"
 
-        type
+        type.gsub(/\s+/, "_")
       end
 
       # Normalize mood value from LLM output.

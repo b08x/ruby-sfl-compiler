@@ -223,10 +223,13 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         expect(engine.send(:normalize_theme_type, "  interjection  ")).to eq("interjection")
       end
 
-      it "strips the 'theme_' prefix if present" do
+      it "strips the 'theme_' prefix and '_theme' suffix if present" do
         expect(engine.send(:normalize_theme_type, "theme_unmarked")).to eq("unmarked")
         expect(engine.send(:normalize_theme_type, "theme_marked")).to eq("marked")
         expect(engine.send(:normalize_theme_type, "theme_interrogative")).to eq("interrogative")
+        expect(engine.send(:normalize_theme_type, "topical_theme")).to eq("topical")
+        expect(engine.send(:normalize_theme_type, "textual theme")).to eq("textual")
+        expect(engine.send(:normalize_theme_type, "theme_interpersonal_theme")).to eq("interpersonal")
       end
 
       it "returns 'unmarked' for nil input" do
