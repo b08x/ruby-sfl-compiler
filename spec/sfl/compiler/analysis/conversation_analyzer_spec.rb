@@ -182,4 +182,58 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       end
     end
   end
+
+  describe "semantic and deflation anomalies in key moments" do
+    let(:analyzer) { described_class.new(pipeline:) }
+
+    before do
+      allow(pipeline).to receive(:cache).and_return(nil)
+    end
+
+    it "identifies deflation_anomaly when low coherence matches deflation pattern" do
+      turn = SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 3,
+        speaker: "Alice",
+        timestamp: Time.now,
+        message_text: "What do you mean by that?",
+        clauses: [],
+        avg_tenor: 0.3,
+        avg_modality: 0.3,
+        dominant_mood: "interrogative",
+        process_types: {},
+        participants: [],
+        tenor_shift: 0.0,
+        semantic_coherence_score: 0.15
+      )
+
+      moments = analyzer.send(:detect_key_moments, [turn])
+      deflation_moment = moments.find { |m| m.type == "deflation_anomaly" }
+      expect(deflation_moment).not_to be_nil
+      expect(deflation_moment.description).to include("deflation move")
+      expect(deflation_moment.magnitude).to eq(0.15)
+    end
+
+    it "identifies semantic_anomaly when low coherence does not match deflation pattern" do
+      turn = SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 3,
+        speaker: "Bob",
+        timestamp: Time.now,
+        message_text: "cryptography enclave sandbox secure",
+        clauses: [],
+        avg_tenor: 0.8,
+        avg_modality: 0.9,
+        dominant_mood: "declarative",
+        process_types: {},
+        participants: [],
+        tenor_shift: 0.0,
+        semantic_coherence_score: 0.15
+      )
+
+      moments = analyzer.send(:detect_key_moments, [turn])
+      semantic_moment = moments.find { |m| m.type == "semantic_anomaly" }
+      expect(semantic_moment).not_to be_nil
+      expect(semantic_moment.description).to include("semantically anomalous")
+      expect(semantic_moment.magnitude).to eq(0.15)
+    end
+  end
 end

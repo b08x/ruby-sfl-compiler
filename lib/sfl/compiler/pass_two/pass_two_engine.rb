@@ -48,7 +48,7 @@ module SFL
       # @param concurrency [Integer] concurrent LLM calls
       # @return [Array<Types::AnnotatedClause>] in input order; clauses the
       #   LLM missed or returned invalid values for carry fallback defaults
-      def annotate_batch(pairs, batch_size: DEFAULT_BATCH_SIZE, concurrency: DEFAULT_CONCURRENCY)
+      def annotate_batch(pairs, batch_size: DEFAULT_BATCH_SIZE, concurrency: DEFAULT_CONCURRENCY, semantic_coherence_score: nil)
         return [] if pairs.empty?
 
         start_time = Time.now
@@ -69,7 +69,7 @@ module SFL
         )
 
         annotated = parallel_map(chunks, concurrency) do |chunk|
-          annotate_chunk(chunk, correlation_id)
+          annotate_chunk(chunk, correlation_id, semantic_coherence_score)
         end.flatten
 
         elapsed_ms = ((Time.now - start_time) * 1000).round(2)
@@ -91,7 +91,7 @@ module SFL
       # @param clause [Types::SyntacticClause] from Pass 1
       # @param ideational [Types::IdeationalPayload] from Pass 1 post-processing
       # @return [Types::AnnotatedClause]
-      def annotate(clause, ideational)
+      def annotate(clause, ideational, semantic_coherence_score: nil)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
@@ -104,7 +104,7 @@ module SFL
         )
 
         # Run DSPy annotation for Interpersonal features
-        interpersonal, textual = annotate_interpersonal(clause, ideational, correlation_id)
+        interpersonal, textual = annotate_interpersonal(clause, ideational, correlation_id, semantic_coherence_score)
 
         elapsed_ms = ((Time.now - start_time) * 1000).round(2)
 
@@ -207,11 +207,11 @@ module SFL
 
       # Run one chunk through the LLM. A failed call defaults the whole
       # chunk; a missing or invalid annotation defaults only that clause.
-      private def annotate_chunk(chunk, correlation_id)
+      private def annotate_chunk(chunk, correlation_id, semantic_coherence_score = nil)
         items = chunk.map do |entry|
           {
             index: entry[:index],
-            context: format_syntactic_context(entry[:clause], entry[:ideational]),
+            context: format_syntactic_context(entry[:clause], entry[:ideational], semantic_coherence_score),
           }
         end
 
@@ -369,9 +369,9 @@ module SFL
         results
       end
 
-      private def annotate_interpersonal(clause, ideational, correlation_id)
+      private def annotate_interpersonal(clause, ideational, correlation_id, semantic_coherence_score = nil)
         # Build the syntactic context for the LLM
-        syntactic_context = format_syntactic_context(clause, ideational)
+        syntactic_context = format_syntactic_context(clause, ideational, semantic_coherence_score)
 
         # Call DSPy through circuit breaker for resilience
         result = @circuit_breaker.call do
@@ -396,8 +396,8 @@ module SFL
         [default_interpersonal(clause.id), default_textual(clause.id)]
       end
 
-      private def format_syntactic_context(clause, ideational)
-        <<~CONTEXT
+      private def format_syntactic_context(clause, ideational, semantic_coherence_score = nil)
+        context = <<~CONTEXT
           Text: #{clause.text}
 
           Root verb: #{root_info(clause)}
@@ -406,6 +406,8 @@ module SFL
           POS tags: #{pos_sequence(clause)}
           Dependencies: #{dep_sequence(clause)}
         CONTEXT
+        context += "Semantic coherence score: #{semantic_coherence_score}\n" if semantic_coherence_score
+        context
       end
 
       private def root_info(clause)
@@ -486,6 +488,8 @@ module SFL
         const :participants, String, description: "Semantic roles of participants (from Pass 1 — for context only)"
         const :pos_tags, String, description: "POS tag sequence"
         const :dependencies, String, description: "Dependency relation sequence"
+        const :semantic_coherence_score, Float,
+          description: "Semantic coherence score of the parent turn relative to the conversation baseline (0.0 to 1.0, lower means more anomalous/off-topic)"
       end
 
       output do
@@ -545,6 +549,8 @@ module SFL
         participants = extract_field(lines, "Participants") || ""
         pos_tags = extract_field(lines, "POS tags") || ""
         dependencies = extract_field(lines, "Dependencies") || ""
+        semantic_coherence_score_str = extract_field(lines, "Semantic coherence score")
+        semantic_coherence_score = semantic_coherence_score_str ? semantic_coherence_score_str.to_f : 1.0
 
         {
           text:,
@@ -553,6 +559,7 @@ module SFL
           participants:,
           pos_tags:,
           dependencies:,
+          semantic_coherence_score:,
         }
       end
 

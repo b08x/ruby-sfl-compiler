@@ -42,10 +42,43 @@ module SFL
           raw_turns = load_jsonl(jsonl_path)
           total = raw_turns.size
 
+          # Topic modeling (optional pre-pass)
+          modeler = nil
+          pre_turns = nil
+          topic_labels = nil
+          topic_shifts = []
+          if topics && raw_turns.size >= 3
+            stub_turns = raw_turns.each_with_index.map do |turn_data, idx|
+              Types::ConversationTurn.new(
+                turn_id: idx + 1,
+                speaker: turn_data[:name],
+                timestamp: parse_timestamp(turn_data[:send_date]),
+                message_text: turn_data[:mes],
+                clauses: [],
+                avg_tenor: 0.5,
+                avg_modality: 0.5,
+                dominant_mood: "declarative",
+                process_types: {},
+                participants: [],
+                tenor_shift: nil,
+                semantic_coherence_score: nil
+              )
+            end
+            modeler = TopicModeler.new(k: topic_k(topics))
+            modeler.fit(stub_turns)
+            pre_turns = modeler.turns
+            topic_labels = modeler.topic_labels
+            topic_shifts = modeler.detect_topic_shifts
+          end
+
           turns = raw_turns.each_with_index.map do |turn_data, idx|
-            @on_turn_start&.call(turn_id: idx + 1, total:, speaker: turn_data[:name])
+            turn_id = idx + 1
+            @on_turn_start&.call(turn_id:, total:, speaker: turn_data[:name])
             started = Time.now
-            turn = compile_turn(turn_data, idx + 1)
+            
+            pre_turn = pre_turns&.[](idx)
+            turn = compile_turn(turn_data, turn_id, pre_turn:, modeler:)
+            
             report_progress(turn, total, Time.now - started)
             turn
           end
@@ -55,16 +88,6 @@ module SFL
           profiles = SpeakerProfiler.build_profiles(turns)
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
           timeline = tenor_timeline(turns)
-
-          # Topic modeling (optional)
-          topic_labels = nil
-          topic_shifts = []
-          if topics && turns.size >= 3
-            modeler = TopicModeler.new(k: topic_k(topics))
-            modeler.fit(turns)
-            topic_labels = modeler.topic_labels
-            topic_shifts = modeler.detect_topic_shifts
-          end
 
           all_key_moments = detect_key_moments(turns)
           all_key_moments.concat(topic_shifts)
@@ -118,6 +141,37 @@ module SFL
               magnitude: shift,
               description: "Certainty #{direction} significantly (+#{shift}) in #{curr.speaker}'s response"
             )
+          end
+
+          # Semantic/Deflation Anomalies
+          turns.each do |curr|
+            next unless curr.semantic_coherence_score
+            next unless curr.semantic_coherence_score < 0.35
+
+            # deflation move features: interrogative/imperative mood, hedge/low modality, or low tenor
+            is_deflation = curr.dominant_mood == "interrogative" ||
+                           curr.dominant_mood == "imperative" ||
+                           curr.avg_modality < 0.4 ||
+                           curr.avg_tenor < 0.4
+
+            if is_deflation
+              moments << Types::KeyMoment.new(
+                turn_id: curr.turn_id,
+                type: "deflation_anomaly",
+                magnitude: curr.semantic_coherence_score,
+                description: "Turn #{curr.turn_id} by #{curr.speaker} contains a semantically anomalous deflation move " \
+                  "(coherence: #{curr.semantic_coherence_score.round(3)}, mood: #{curr.dominant_mood}, " \
+                  "modality: #{curr.avg_modality.round(3)}, tenor: #{curr.avg_tenor.round(3)})"
+              )
+            else
+              moments << Types::KeyMoment.new(
+                turn_id: curr.turn_id,
+                type: "semantic_anomaly",
+                magnitude: curr.semantic_coherence_score,
+                description: "Turn #{curr.turn_id} by #{curr.speaker} is semantically anomalous " \
+                  "relative to the conversation baseline (coherence: #{curr.semantic_coherence_score.round(3)})"
+              )
+            end
           end
 
           moments
@@ -202,8 +256,21 @@ module SFL
           end
         end
 
-        private def compile_turn(turn_data, turn_id)
-          clauses = compile_clauses(turn_data[:mes], "turn-#{turn_id}")
+        private def compile_turn(turn_data, turn_id, pre_turn: nil, modeler: nil)
+          semantic_coherence_score = pre_turn&.semantic_coherence_score
+          topic_info = if pre_turn && pre_turn.dominant_topic && modeler
+            label = modeler.topic_labels[pre_turn.dominant_topic]&.first
+            { id: pre_turn.dominant_topic, label: label }
+          else
+            nil
+          end
+
+          clauses = compile_clauses(
+            turn_data[:mes],
+            "turn-#{turn_id}",
+            semantic_coherence_score: semantic_coherence_score,
+            topic: topic_info
+          )
 
           avg_tenor = mean(clauses.map { |c| c.interpersonal.tenor })
           avg_modality = mean(clauses.map { |c| c.interpersonal.modality_weight })
@@ -220,13 +287,19 @@ module SFL
             dominant_mood: mood_counts.max_by { |_, count| count }&.first || "declarative",
             process_types: clauses.map { |c| c.ideational.process_type }.tally,
             participants: clauses.flat_map { |c| c.ideational.participants.map(&:text) }.uniq,
-            tenor_shift: nil
+            tenor_shift: nil,
+            topic_distribution: pre_turn&.topic_distribution,
+            dominant_topic: pre_turn&.dominant_topic,
+            semantic_coherence_score: semantic_coherence_score
           )
         end
 
-        private def compile_clauses(text, document_id)
+        private def compile_clauses(text, document_id, semantic_coherence_score: nil, topic: nil)
           unless @pass_one_only
-            return @pipeline.compile(text, document_id:, store: false, embed: false, resume: @resume)
+            kwargs = { document_id:, store: false, embed: false, resume: @resume }
+            kwargs[:topic] = topic unless topic.nil?
+            kwargs[:semantic_coherence_score] = semantic_coherence_score unless semantic_coherence_score.nil?
+            return @pipeline.compile(text, **kwargs)
           end
 
           @pipeline.compile_pass_one(text, document_id:)

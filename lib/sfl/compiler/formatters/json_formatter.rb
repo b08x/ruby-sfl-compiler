@@ -69,7 +69,8 @@ module SFL
               clause_count: turn.clauses.size,
               defaulted_count: turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" },
               dominant_topic: turn.dominant_topic,
-              topic_distribution: turn.topic_distribution
+              topic_distribution: turn.topic_distribution,
+              semantic_coherence_score: turn.semantic_coherence_score
             }
           end
         end

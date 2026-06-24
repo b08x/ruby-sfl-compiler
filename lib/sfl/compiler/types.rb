@@ -177,6 +177,7 @@ module SFL
         attribute :cohesion, CohesionMetrics.optional.default(nil)
         attribute :topic_distribution, Types::Hash.optional.default(nil)
         attribute :dominant_topic, Types::Integer.optional.default(nil)
+        attribute :semantic_coherence_score, Types::Float.constrained(gteq: 0.0, lteq: 1.0).optional.default(nil)
       end
 
       # Aggregated profile for a single speaker across conversation
@@ -194,7 +195,7 @@ module SFL
       # Key moments in a conversation
       class KeyMoment < Dry::Struct
         attribute :turn_id, Types::Integer
-        attribute :type, Types::String.enum("tenor_shift", "modality_shift", "topic_shift")
+        attribute :type, Types::String.enum("tenor_shift", "modality_shift", "topic_shift", "semantic_anomaly", "deflation_anomaly")
         attribute :magnitude, Types::Float
         attribute :description, Types::String
       end

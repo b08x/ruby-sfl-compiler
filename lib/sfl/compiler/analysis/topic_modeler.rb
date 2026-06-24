@@ -116,6 +116,7 @@ module SFL
           train_model
           build_topic_labels
           assign_topics_to_turns
+          assign_coherence_scores_to_turns
 
           @fitted = true
           self
@@ -124,6 +125,10 @@ module SFL
         # Topic labels: top words per topic.
         # @return [Hash{Integer => Array<String>}] topic_id → top words
         attr_reader :topic_labels
+
+        # The processed turns with topic assignment and coherence scores.
+        # @return [Array<Types::ConversationTurn>]
+        attr_reader :turns
 
         # Per-turn topic distribution.
         # @return [Array<Hash{Integer => Float}>] array of { topic_id => probability }
@@ -182,6 +187,66 @@ module SFL
           build_topic_labels
           @fitted = true
           self
+        end
+
+        # Calculates semantic coherence score (cosine similarity) between a turn's
+        # topic distribution and a baseline distribution.
+        #
+        # @param turn_dist [Hash{Integer => Float}, nil]
+        # @param baseline_dist [Hash{Integer => Float}, nil]
+        # @return [Float, nil]
+        def calculate_coherence(turn_dist, baseline_dist)
+          return nil unless @fitted
+          return nil if turn_dist.nil? || baseline_dist.nil?
+          return nil if turn_dist.empty? || baseline_dist.empty?
+
+          distance = cosine_distance(turn_dist, baseline_dist)
+          similarity = 1.0 - distance
+          similarity.clamp(0.0, 1.0).round(4)
+        end
+
+        # Compute the average topic distribution of all turns.
+        # @return [Hash{Integer => Float}]
+        def conversation_baseline
+          return {} unless @fitted && @turns && !@turns.empty?
+
+          sum = Hash.new(0.0)
+          count = 0
+
+          @turns.each do |turn|
+            dist = turn.topic_distribution
+            next if dist.nil? || dist.empty?
+
+            dist.each do |topic_id, prob|
+              sum[topic_id] += prob
+            end
+            count += 1
+          end
+
+          return {} if count.zero?
+
+          sum.transform_values { |v| (v / count).round(4) }
+        end
+
+        private def assign_coherence_scores_to_turns
+          # We temporarily mark @fitted to true during calculation
+          was_fitted = @fitted
+          @fitted = true
+          begin
+            baseline_dist = conversation_baseline
+            @turns = @turns.each_with_index.map do |turn, idx|
+              score = nil
+              # Gracefully degrade: nil if less than 2 preceding turns (idx < 2)
+              # or if the model wasn't fit properly
+              if idx >= 2 && !baseline_dist.empty? && turn.topic_distribution && !turn.topic_distribution.empty?
+                score = calculate_coherence(turn.topic_distribution, baseline_dist)
+              end
+
+              turn.new(semantic_coherence_score: score)
+            end
+          ensure
+            @fitted = was_fitted
+          end
         end
 
         private def build_model

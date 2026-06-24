@@ -41,7 +41,7 @@ module SFL
       # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
       #   fit, attached to every clause stored from this call
       # @return [Array<Types::AnnotatedClause>]
-      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil)
+      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil, semantic_coherence_score: nil)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
@@ -73,9 +73,13 @@ module SFL
         GC.start
 
         annotated = if resume && @cache
-          compile_with_cache(document_id, pairs, correlation_id)
+          compile_with_cache(document_id, pairs, correlation_id, semantic_coherence_score)
         else
-          @pass_two.annotate_batch(pairs)
+          if semantic_coherence_score.nil?
+            @pass_two.annotate_batch(pairs)
+          else
+            @pass_two.annotate_batch(pairs, semantic_coherence_score: semantic_coherence_score)
+          end
         end
 
         # === Cache store after successful Pass 2 ===
@@ -152,8 +156,12 @@ module SFL
       # @param clause [Types::SyntacticClause]
       # @param ideational [Types::IdeationalPayload]
       # @return [Types::AnnotatedClause]
-      def compile_pass_two(clause, ideational)
-        @pass_two.annotate(clause, ideational)
+      def compile_pass_two(clause, ideational, semantic_coherence_score: nil)
+        if semantic_coherence_score.nil?
+          @pass_two.annotate(clause, ideational)
+        else
+          @pass_two.annotate(clause, ideational, semantic_coherence_score: semantic_coherence_score)
+        end
       end
 
       # Access the cache for external operations (clear, stats).
@@ -161,7 +169,7 @@ module SFL
       attr_reader :cache
 
       # Compile with cache: serve hits from disk, run Pass 2 only for misses.
-      private def compile_with_cache(document_id, pairs, correlation_id)
+      private def compile_with_cache(document_id, pairs, correlation_id, semantic_coherence_score = nil)
         cached, uncached = @cache.partition(document_id, pairs)
 
         if uncached.empty?
@@ -185,7 +193,11 @@ module SFL
         )
 
         # Run Pass 2 only on uncached clauses
-        fresh = @pass_two.annotate_batch(uncached)
+        fresh = if semantic_coherence_score.nil?
+          @pass_two.annotate_batch(uncached)
+        else
+          @pass_two.annotate_batch(uncached, semantic_coherence_score: semantic_coherence_score)
+        end
 
         # Merge: cached results first (in order), then fresh results
         # We need to rebuild the full list in original order

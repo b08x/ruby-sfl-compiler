@@ -14,7 +14,8 @@ RSpec.describe SFL::Compiler::Formatters::CSVFormatter do
       dominant_mood: "declarative",
       process_types: { "mental" => 1, "relational" => 1 },
       participants: ["I", "you"],
-      tenor_shift: nil
+      tenor_shift: nil,
+      semantic_coherence_score: 0.85
     )
   end
 
@@ -30,7 +31,8 @@ RSpec.describe SFL::Compiler::Formatters::CSVFormatter do
       dominant_mood: "declarative",
       process_types: { "material" => 1 },
       participants: ["I"],
-      tenor_shift: -0.04
+      tenor_shift: -0.04,
+      semantic_coherence_score: 0.92
     )
   end
 
@@ -55,7 +57,7 @@ RSpec.describe SFL::Compiler::Formatters::CSVFormatter do
       expect(csv.headers).to eq([
         "turn_id", "speaker", "timestamp", "message_preview",
         "avg_tenor", "avg_modality", "dominant_mood",
-        "process_counts", "participants", "tenor_shift"
+        "process_counts", "participants", "tenor_shift", "semantic_coherence_score"
       ])
     end
 
@@ -75,6 +77,7 @@ RSpec.describe SFL::Compiler::Formatters::CSVFormatter do
       expect(row1["process_counts"]).to eq("mental:1 relational:1")
       expect(row1["participants"]).to eq("I you")
       expect(row1["tenor_shift"]).to eq("")
+      expect(row1["semantic_coherence_score"]).to eq("0.85")
     end
 
     it "truncates long messages" do

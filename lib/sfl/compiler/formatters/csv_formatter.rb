@@ -22,7 +22,7 @@ module SFL
           %w[
             turn_id speaker timestamp message_preview
             avg_tenor avg_modality dominant_mood
-            process_counts participants tenor_shift
+            process_counts participants tenor_shift semantic_coherence_score
           ]
         end
 
@@ -37,7 +37,8 @@ module SFL
             turn.dominant_mood,
             format_process_counts(turn.process_types),
             turn.participants.join(" "),
-            turn.tenor_shift ? format("%.2f", turn.tenor_shift) : ""
+            turn.tenor_shift ? format("%.2f", turn.tenor_shift) : "",
+            turn.semantic_coherence_score ? format("%.2f", turn.semantic_coherence_score) : ""
           ]
         end
 

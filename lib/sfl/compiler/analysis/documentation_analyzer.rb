@@ -41,16 +41,43 @@ module SFL
           sections = load_sections(path)
           total = sections.size
 
-          # Pre-pass topic fit: runs on raw section text before any clause
-          # is compiled/stored, so each clause can carry its section's
-          # topic_id/topic_label as stored metadata (not just a post-hoc,
-          # report-only annotation on the in-memory turn).
-          _topic_modeler, section_topics = fit_topics_pre_pass(sections, topics)
+          # Pre-pass topic fit: runs on stub turns before compilation
+          modeler = nil
+          pre_turns = nil
+          topic_labels = nil
+          topic_shifts = []
+          if topics && sections.size >= 3
+            stub_turns = sections.each_with_index.map do |(section, mtime), idx|
+              Types::ConversationTurn.new(
+                turn_id: idx + 1,
+                speaker: section.heading || section.file_id,
+                timestamp: mtime,
+                message_text: section.text,
+                clauses: [],
+                avg_tenor: 0.5,
+                avg_modality: 0.5,
+                dominant_mood: "declarative",
+                process_types: {},
+                participants: [],
+                tenor_shift: nil,
+                semantic_coherence_score: nil
+              )
+            end
+            modeler = TopicModeler.new(k: topic_k(topics))
+            modeler.fit(stub_turns)
+            pre_turns = modeler.turns
+            topic_labels = modeler.topic_labels
+            topic_shifts = modeler.detect_topic_shifts
+          end
 
           turns = sections.each_with_index.map do |(section, mtime), idx|
-            @on_turn_start&.call(turn_id: idx + 1, total:, speaker: section.heading || section.file_id)
+            turn_id = idx + 1
+            @on_turn_start&.call(turn_id:, total:, speaker: section.heading || section.file_id)
             started = Time.now
-            turn = compile_section(section, mtime, idx + 1, store, section_topics[idx])
+            
+            pre_turn = pre_turns&.[](idx)
+            turn = compile_section(section, mtime, turn_id, store, pre_turn:, modeler:)
+            
             report_progress(turn, total, Time.now - started)
             turn
           end
@@ -59,16 +86,6 @@ module SFL
           turns = CohesionAnalyzer.new.analyze(turns)
           profiles = SpeakerProfiler.build_profiles(turns)
           correlations = CorrelationAnalyzer.new(turns).correlate_process_tenor
-
-          # Topic modeling (optional)
-          topic_labels = nil
-          topic_shifts = []
-          if topics && turns.size >= 3
-            modeler = TopicModeler.new(k: topic_k(topics))
-            modeler.fit(turns)
-            topic_labels = modeler.topic_labels
-            topic_shifts = modeler.detect_topic_shifts
-          end
 
           all_key_moments = detect_key_moments(turns)
           all_key_moments.concat(topic_shifts)
@@ -115,6 +132,19 @@ module SFL
             )
           end
 
+          # Semantic anomalies
+          turns.each do |curr|
+            next unless curr.semantic_coherence_score
+            next unless curr.semantic_coherence_score < 0.35
+
+            moments << Types::KeyMoment.new(
+              turn_id: curr.turn_id,
+              type: "semantic_anomaly",
+              magnitude: curr.semantic_coherence_score,
+              description: "Section '#{curr.speaker}' is semantically anomalous relative to the document baseline (coherence: #{curr.semantic_coherence_score.round(3)})"
+            )
+          end
+
           moments
         end
 
@@ -158,26 +188,7 @@ module SFL
           end
         end
 
-        # @param topics [Integer, nil] requested topic count (0 → HDP), or
-        #   nil to skip
-        # @return [[TopicModeler, nil], Array<Hash, nil>]] the fitted modeler
-        #   (nil if skipped) and a per-section { id:, label: } topic (nil
-        #   entries where topic modeling was skipped or a section had no
-        #   tokenizable text)
-        private def fit_topics_pre_pass(sections, topics)
-          return [nil, Array.new(sections.size)] unless topics && sections.size >= 3
 
-          modeler = TopicModeler.new(k: topic_k(topics))
-          dominant_ids = modeler.fit_texts(sections.map { |(section, _mtime)| section.text })
-
-          section_topics = dominant_ids.map do |topic_id|
-            next nil unless topic_id
-
-            { id: topic_id, label: modeler.topic_labels[topic_id]&.first(3)&.join(", ") }
-          end
-
-          [modeler, section_topics]
-        end
 
         # `topics: 0` requests HDP (auto-discover the topic count) rather
         # than a fixed-k LDA — Tomoto's HDP constructor takes no `k:` at
@@ -187,11 +198,20 @@ module SFL
           topics.zero? ? nil : topics
         end
 
-        private def compile_section(section, mtime, turn_id, store, topic = nil)
-          @clause_repo.delete_by_document(section.document_id) if store
+        private def compile_section(section, mtime, turn_id, store, pre_turn: nil, modeler: nil)
+          @clause_repo.delete_by_document(section.document_id) if store && @clause_repo
+
+          semantic_coherence_score = pre_turn&.semantic_coherence_score
+          topic_info = if pre_turn && pre_turn.dominant_topic && modeler
+            label = modeler.topic_labels[pre_turn.dominant_topic]&.first(3)&.join(", ")
+            { id: pre_turn.dominant_topic, label: label }
+          else
+            nil
+          end
 
           compile_kwargs = { document_id: section.document_id, store:, embed: store, resume: @resume }
-          compile_kwargs[:topic] = topic if topic
+          compile_kwargs[:topic] = topic_info if topic_info
+          compile_kwargs[:semantic_coherence_score] = semantic_coherence_score if semantic_coherence_score
 
           clauses = @pipeline.compile(section.text, **compile_kwargs)
 
@@ -207,7 +227,10 @@ module SFL
               .max_by { |_, count| count }&.first || "declarative",
             process_types: clauses.map { |c| c.ideational.process_type }.tally,
             participants: clauses.flat_map { |c| c.ideational.participants.map(&:text) }.uniq,
-            tenor_shift: nil
+            tenor_shift: nil,
+            topic_distribution: pre_turn&.topic_distribution,
+            dominant_topic: pre_turn&.dominant_topic,
+            semantic_coherence_score: semantic_coherence_score
           )
         end
 
