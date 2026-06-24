@@ -4,6 +4,7 @@ require "dry-struct"
 require "dry-types"
 require "dry/monads"
 require "securerandom"
+require_relative "classification_registry"
 
 module SFL
   module Compiler
@@ -18,8 +19,7 @@ module SFL
       TenorValue = Types::Float.constrained(gteq: 0.0, lteq: 1.0)
 
       # Mood types from SFL
-      MoodType = String.enum("declarative", "interrogative", "imperative", "exclamative", "indicative", "minor",
-        "fragment")
+      MoodType = String.enum(*ClassificationRegistry.canonical_values(:mood))
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
@@ -114,8 +114,7 @@ module SFL
         attribute :interpersonal_theme, Types::String.optional
         attribute :rheme, Types::String.optional
         attribute :theme_type,
-          Types::String.enum("unmarked", "marked", "interrogative", "imperative", "multiple", "topical", "topical_unmarked",
-            "simple", "existential", "clausal", "textual", "interjection", "interpersonal").optional
+          Types::String.enum(*ClassificationRegistry.canonical_values(:theme_type)).optional
       end
 
       # Combined annotated clause — the full output of the two-pass compiler

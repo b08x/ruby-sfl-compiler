@@ -63,7 +63,7 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "rejects invalid process types" do
-      expect {
+      expect do
         SFL::Compiler::Types::IdeationalPayload.new(
           clause_id: "c-1",
           process_type: "invalid",
@@ -71,7 +71,7 @@ RSpec.describe SFL::Compiler::Types do
           circumstances: [],
           raw_transitivity: {}
         )
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
   end
 
@@ -92,7 +92,7 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "rejects modality_weight outside 0.0-1.0" do
-      expect {
+      expect do
         SFL::Compiler::Types::InterpersonalPayload.new(
           clause_id: "c-1",
           mood: "declarative",
@@ -101,7 +101,7 @@ RSpec.describe SFL::Compiler::Types do
           speaker_attitude: nil,
           reasoning: nil
         )
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
 
     describe "annotation_source provenance" do
@@ -113,7 +113,7 @@ RSpec.describe SFL::Compiler::Types do
             modality_weight: 0.5,
             tenor: 0.5,
             speaker_attitude: nil,
-            reasoning: nil
+            reasoning: nil,
           }.merge(overrides)
         )
       end
@@ -150,16 +150,25 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "accepts all valid theme_type enum values" do
-      valid_types = [
-        "unmarked", "marked", "interrogative", "imperative",
-        "multiple", "topical", "topical_unmarked", "simple",
-        "existential", "clausal", "textual", "interjection", "interpersonal"
+      valid_types = %w[
+        unmarked
+        marked
+        interrogative
+        imperative
+        multiple
+        topical
+        simple
+        existential
+        clausal
+        textual
+        interjection
+        interpersonal
       ]
 
       valid_types.each do |theme_type|
         payload = SFL::Compiler::Types::TextualPayload.new(
           clause_id: "c-1",
-          theme_type: theme_type,
+          theme_type:,
           topical_theme: "Test",
           textual_theme: nil,
           interpersonal_theme: nil,
@@ -170,7 +179,7 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "rejects invalid theme_type values" do
-      expect {
+      expect do
         SFL::Compiler::Types::TextualPayload.new(
           clause_id: "c-1",
           theme_type: "invalid_type",
@@ -179,7 +188,7 @@ RSpec.describe SFL::Compiler::Types do
           interpersonal_theme: nil,
           rheme: nil
         )
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
 
     it "accepts nil for optional theme_type" do
@@ -219,8 +228,8 @@ RSpec.describe SFL::Compiler::Types do
         id: "ann-1",
         text: "Test.",
         syntactic: clause,
-        ideational: ideational,
-        interpersonal: interpersonal,
+        ideational:,
+        interpersonal:,
         document_id: "doc-1",
         compiled_at: Time.now
       )
@@ -243,7 +252,7 @@ RSpec.describe SFL::Compiler::Types do
         avg_modality: 0.6,
         dominant_mood: "declarative",
         process_types: { "mental" => 2, "material" => 1 },
-        participants: ["Alice", "world"],
+        participants: %w[Alice world],
         tenor_shift: 0.0
       )
 
@@ -253,9 +262,9 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "requires all mandatory fields" do
-      expect {
+      expect do
         SFL::Compiler::Types::ConversationTurn.new(turn_id: 1)
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
   end
 
@@ -278,9 +287,9 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "requires all mandatory fields" do
-      expect {
+      expect do
         SFL::Compiler::Types::SpeakerProfile.new(speaker_name: "Alice")
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
   end
 
@@ -326,8 +335,14 @@ RSpec.describe SFL::Compiler::Types do
 
   describe SFL::Compiler::Types::NarrativeReport do
     let(:sections) do
-      { overview: "o", cast_and_roles: "c", interpersonal_dynamics: "i",
-        conversational_arc: "a", data_quality: "d", takeaways: "t" }
+      {
+        overview: "o",
+        cast_and_roles: "c",
+        interpersonal_dynamics: "i",
+        conversational_arc: "a",
+        data_quality: "d",
+        takeaways: "t",
+      }
     end
 
     it "holds source, generated_at, and six prose sections" do
@@ -339,10 +354,10 @@ RSpec.describe SFL::Compiler::Types do
     end
 
     it "rejects a missing section" do
-      expect {
+      expect do
         described_class.new(source: "conv-1", generated_at: Time.now,
                             **sections.except(:takeaways))
-      }.to raise_error(Dry::Struct::Error)
+      end.to raise_error(Dry::Struct::Error)
     end
   end
 end
