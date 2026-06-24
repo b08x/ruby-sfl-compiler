@@ -112,7 +112,13 @@ module SFL
         require "active_job"
         require "gush"
 
-        # Define Sidekiq::ActiveJob::Wrapper if not already defined (e.g., when Rails is not loaded)
+        # When ActiveJob::Base.queue_adapter = :sidekiq runs outside Rails, it
+        # raises NameError (uninitialized constant Sidekiq::ActiveJob::Wrapper).
+        # The real Wrapper lives in sidekiq's lib/sidekiq/rails.rb, which requires
+        # Rails unconditionally, so we can't require it directly in this non-Rails gem.
+        # We hand-copy its perform body (ActiveJob::Base.execute with provider_job_id).
+        # NOTE: This implementation must be re-verified against sidekiq's source on
+        # any sidekiq major/minor version bump — verified against sidekiq 7.3.9.
         unless defined?(Sidekiq::ActiveJob::Wrapper)
           Sidekiq.const_set(:ActiveJob, Module.new) unless defined?(Sidekiq::ActiveJob)
           wrapper_class = Class.new do
