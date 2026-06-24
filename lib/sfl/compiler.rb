@@ -111,6 +111,7 @@ loader.collapse("#{__dir__}/compiler/pass_one")
 loader.collapse("#{__dir__}/compiler/pass_two")
 loader.collapse("#{__dir__}/compiler/storage")
 loader.collapse("#{__dir__}/compiler/retrieval")
+loader.collapse("#{__dir__}/compiler/jobs")
 # analysis/, formatters/, chat/, tui/, tui/wizards/ define NESTED modules
 # (Analysis::X, Chat::App, ...) loaded eagerly by their sibling manifest file
 # (analysis.rb, chat.rb, ...) via require_relative — Zeitwerk never needs to
