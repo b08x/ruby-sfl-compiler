@@ -223,6 +223,12 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         expect(engine.send(:normalize_theme_type, "  interjection  ")).to eq("interjection")
       end
 
+      it "strips the 'theme_' prefix if present" do
+        expect(engine.send(:normalize_theme_type, "theme_unmarked")).to eq("unmarked")
+        expect(engine.send(:normalize_theme_type, "theme_marked")).to eq("marked")
+        expect(engine.send(:normalize_theme_type, "theme_interrogative")).to eq("interrogative")
+      end
+
       it "returns 'unmarked' for nil input" do
         expect(engine.send(:normalize_theme_type, nil)).to eq("unmarked")
       end
@@ -237,6 +243,13 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
     describe "#normalize_mood" do
       it "maps 'exclamatory' to 'exclamative'" do
         expect(engine.send(:normalize_mood, "exclamatory")).to eq("exclamative")
+      end
+
+      it "maps question synonyms to 'interrogative'" do
+        expect(engine.send(:normalize_mood, "question")).to eq("interrogative")
+        expect(engine.send(:normalize_mood, "questions")).to eq("interrogative")
+        expect(engine.send(:normalize_mood, "query")).to eq("interrogative")
+        expect(engine.send(:normalize_mood, "queries")).to eq("interrogative")
       end
 
       it "maps clause-rank/no-mood vocabulary to 'fragment'" do

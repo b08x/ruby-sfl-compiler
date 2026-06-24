@@ -152,6 +152,9 @@ module SFL
 
         type = type.to_s.downcase.strip
 
+        # Strip common redundant prefix that LLMs often generate
+        type = type.delete_prefix("theme_")
+
         # Fix known typos
         type = "topical" if type == "topual"
 
@@ -160,6 +163,7 @@ module SFL
           parts = type.split("+").map(&:strip)
           # Prefer the first non-null part
           type = parts.find { |p| !p.empty? } || "unmarked"
+          type = type.delete_prefix("theme_")
         end
 
         # Map legacy/alternate names
@@ -183,6 +187,7 @@ module SFL
 
         # Known near-miss spelling/register variant
         mood = "exclamative" if mood == "exclamatory"
+        mood = "interrogative" if %w[question questions query queries].include?(mood)
 
         # Clause/group-rank vocabulary leaking in where the model meant
         # "this clause has no ordinary Mood at all"
