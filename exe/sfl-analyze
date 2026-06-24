@@ -10,6 +10,17 @@ $LOAD_PATH.unshift(lib) if File.directory?(lib) && !$LOAD_PATH.include?(lib)
 # for minutes when stdout is redirected to a file or pipe.
 $stdout.sync = true
 
+# Must run before "sfl-compiler" is required: that require transitively
+# loads "dspy", which auto-configures Langfuse tracing by reading
+# LANGFUSE_PUBLIC_KEY/SECRET_KEY from ENV at that exact moment — a
+# one-shot decision Bootstrap's own (later) Dotenv.load cannot undo.
+require "dotenv"
+begin
+  Dotenv.load
+rescue StandardError => e
+  warn "[WARN] .env failed to load: #{e.message}"
+end
+
 require "sfl-compiler"
 
 exit SFL::Compiler::CLI.run(ARGV)

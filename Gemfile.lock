@@ -11,6 +11,8 @@ PATH
       dry-struct (~> 1.6)
       dry-types (~> 1.7)
       dspy (~> 1.0)
+      dspy-o11y (~> 1.0)
+      dspy-o11y-langfuse (~> 1.1)
       dspy-openai (~> 1.0)
       glamour (~> 0.2)
       gum
@@ -18,6 +20,9 @@ PATH
       journald-logger (~> 3.1)
       kreuzberg (~> 4.9)
       lipgloss (~> 0.2)
+      opentelemetry-exporter-otlp (~> 0.34.0)
+      opentelemetry-instrumentation-ruby_llm (~> 0.6.0)
+      opentelemetry-sdk (~> 1.12)
       pastel (~> 0.8)
       pg (~> 1.5)
       pgvector (~> 0.3)
@@ -145,6 +150,14 @@ GEM
       sorbet-runtime (~> 0.5)
       sorbet-schema (~> 0.3)
       sorbet-toon (~> 0.1)
+    dspy-o11y (1.0.3)
+      concurrent-ruby (~> 1.3)
+      dspy (>= 0.30)
+      opentelemetry-sdk (~> 1.8)
+    dspy-o11y-langfuse (1.1.0)
+      dspy-o11y (>= 0.30)
+      opentelemetry-exporter-otlp (~> 0.30)
+      opentelemetry-sdk (~> 1.8)
     dspy-openai (1.0.3)
       dspy (>= 0.30.1, < 2.0)
       openai (>= 0.57.0, < 1.0)
@@ -198,6 +211,11 @@ GEM
     glamour (0.2.2-x86_64-linux-gnu)
     globalid (1.3.0)
       activesupport (>= 6.1)
+    google-protobuf (4.35.1-x86_64-linux-gnu)
+      bigdecimal
+      rake (~> 13.3)
+    googleapis-common-protos-types (1.23.0)
+      google-protobuf (~> 4.26)
     graphviz (1.3.0)
       process-pipeline
     gum (0.3.2-x86_64-linux)
@@ -259,6 +277,34 @@ GEM
       base64
       cgi
       connection_pool
+    opentelemetry-api (1.10.0)
+      logger
+    opentelemetry-common (0.25.0)
+      opentelemetry-api (~> 1.0)
+    opentelemetry-exporter-otlp (0.34.0)
+      google-protobuf (>= 3.18)
+      googleapis-common-protos-types (~> 1.3)
+      opentelemetry-api (~> 1.1)
+      opentelemetry-common (~> 0.20)
+      opentelemetry-sdk (~> 1.10)
+      opentelemetry-semantic_conventions
+    opentelemetry-instrumentation-base (0.26.1)
+      opentelemetry-api (~> 1.7)
+      opentelemetry-common (~> 0.21)
+      opentelemetry-registry (~> 0.1)
+    opentelemetry-instrumentation-ruby_llm (0.6.0)
+      opentelemetry-api (~> 1.0)
+      opentelemetry-instrumentation-base (~> 0.23)
+    opentelemetry-registry (0.6.0)
+      opentelemetry-api (~> 1.1)
+    opentelemetry-sdk (1.12.0)
+      logger
+      opentelemetry-api (~> 1.1)
+      opentelemetry-common (~> 0.20)
+      opentelemetry-registry (~> 0.2)
+      opentelemetry-semantic_conventions
+    opentelemetry-semantic_conventions (1.41.0)
+      opentelemetry-api (~> 1.0)
     optparse (0.8.1)
     paint (2.3.0)
     parallel (2.1.0)
@@ -468,11 +514,16 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  dspy-o11y (~> 1.0)
+  dspy-o11y-langfuse (~> 1.1)
   git-lint
   gush (~> 5.0)
   informers (~> 1.3)
   kreuzberg (~> 4.9)
   onnxruntime (~> 0.11.3)
+  opentelemetry-exporter-otlp (~> 0.34.0)
+  opentelemetry-instrumentation-ruby_llm (~> 0.6.0)
+  opentelemetry-sdk (~> 1.12)
   pry
   pry-byebug
   rake
@@ -529,6 +580,8 @@ CHECKSUMS
   dry-struct (1.8.1) sha256=033868594c45241540172bf1ebbc8bb76b72b4f0717072325deba38ac13e80f1
   dry-types (1.9.1) sha256=baebeecdb9f8395d6c9d227b62011279440943e3ef2468fe8ccc1ba11467f178
   dspy (1.0.1) sha256=390f53db588d0872c8337da99c782bbc539b12efe04c0eb07eaf9e87ed667d69
+  dspy-o11y (1.0.3) sha256=58bf447f1e9b7043c211ceef69f058488a3719c63acfbe15e4b1c9f5b4889cb4
+  dspy-o11y-langfuse (1.1.0) sha256=e644c146d49c2f4f9c23575c99e3c8d43698179af2d63c12b7a3850d6060642b
   dspy-openai (1.0.3) sha256=441a76edb6e9d0d15ef196f1c778a16c362a44351dc1814b14569bb810d8ad45
   dspy-schema (1.0.2) sha256=d06918855b828c61868435534255468354c13f0eaf56d77b2b2696bd6dab2b0e
   etcher (3.5.0) sha256=20359b9092470809b65d12a50e756effae7f82cac98d312dd7097ec93f33d5c5
@@ -546,6 +599,8 @@ CHECKSUMS
   gitt (4.6.0) sha256=bb7c5f152f51b487b362aa2e6ea28952e05f5d903339bc3e890c9f2b0b353fa6
   glamour (0.2.2-x86_64-linux-gnu) sha256=7324383dded88ce0a6d557cdac03b62008d03c6201de9df52dbb94a460f19adf
   globalid (1.3.0) sha256=05c639ad6eb4594522a0b07983022f04aa7254626ab69445a0e493aa3786ff11
+  google-protobuf (4.35.1-x86_64-linux-gnu) sha256=c786439087512a3fbd199e9897d265b855f951d4027e218ea55e858d45969edd
+  googleapis-common-protos-types (1.23.0) sha256=992e740a523794d9fc5f29a504465d8fc737aaa16c930fe7228e3346860faf0a
   graphviz (1.3.0) sha256=c8a572a2e67ea3e2e681dac7b7c0b871a9a33bf8f7c63b302f7f300029aca0ed
   gum (0.3.2-x86_64-linux) sha256=67904bdf4b5e46473d127d8b5210eaf4b693f5651f98c75f3f286fe43a915d0e
   gush (5.0.0) sha256=b0d0a80dfabab281c5fe6b2225924df82114fcaf37e749493baccee7c5a7bf6c
@@ -578,6 +633,14 @@ CHECKSUMS
   numpy (0.4.0) sha256=323ee49aec21a4776145c7cd7e384d434c204b63efb360321b79777ae495b7c3
   onnxruntime (0.11.3-x86_64-linux) sha256=c46c30610d18c7051ad71f54a95a1518845dc0192384c2dfb54cc273d3c8e816
   openai (0.68.0) sha256=fbb542babd5291b77c286154f015226a2e3bb74495cfc0694044cbefa42e63b3
+  opentelemetry-api (1.10.0) sha256=99ee7c829b18381c31a817ee9bf6a160d737542d99cb8da55d443336d266bfa9
+  opentelemetry-common (0.25.0) sha256=73915362e58d337fc92acbe1abfdaee1f725442527125fdb2af1420417f1149d
+  opentelemetry-exporter-otlp (0.34.0) sha256=3b3cdf4329ba30f4389d849c7f13b8f9f983ecb4a030031c03997dffae1e2a60
+  opentelemetry-instrumentation-base (0.26.1) sha256=49e8d35d565e1a13b4a6b794a4cca4ed8c590d9b33bda5244249bd98c8673775
+  opentelemetry-instrumentation-ruby_llm (0.6.0) sha256=15af2169ed0a15d7644c3d5f2eafb5ebe4e3a259391ff4befa4bde613fd6a118
+  opentelemetry-registry (0.6.0) sha256=5d3ed32ab9eee0fbdb30d4f0d0bb61ad11a4040b267b475ae815b80a8498a728
+  opentelemetry-sdk (1.12.0) sha256=a224abe0c59023d41cb7ac1c634d9d28843907efcd045ed1ae320796c48b864b
+  opentelemetry-semantic_conventions (1.41.0) sha256=3be5e4c141f9c5e9db17ab491ac76826519296ea80994bf7b9ada95c668cc010
   optparse (0.8.1) sha256=42bea10d53907ccff4f080a69991441d611fbf8733b60ed1ce9ee365ce03bd1a
   paint (2.3.0) sha256=327d623e4038619d5bd99ae5db07973859cd78400c7f0329eea283cef8e83be5
   parallel (2.1.0) sha256=b35258865c2e31134c5ecb708beaaf6772adf9d5efae28e93e99260877b09356

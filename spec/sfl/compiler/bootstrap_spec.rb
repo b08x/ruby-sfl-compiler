@@ -5,9 +5,9 @@ require "spec_helper"
 RSpec.describe SFL::Compiler::Bootstrap do
   # Pass env: as a plain Hash and load_dotenv: false so specs never touch
   # the real .env or process ENV.
-  def call(env, require_db: false, require_llm: true)
+  def call(env, require_db: false, require_llm: true, require_observability: false)
     described_class.call(
-      require_db: require_db, require_llm: require_llm,
+      require_db: require_db, require_llm: require_llm, require_observability: require_observability,
       env: env, load_dotenv: false
     )
   end
@@ -77,6 +77,43 @@ RSpec.describe SFL::Compiler::Bootstrap do
                    "DATABASE_URL" => "postgresql:///custom_db" }, require_llm: false)
       expect(ctx.config.spacy_model).to eq("en_core_web_lg")
       expect(ctx.config.database_url).to eq("postgresql:///custom_db")
+    end
+  end
+
+  describe "observability" do
+    let(:instrumentation) { instance_double(OpenTelemetry::Instrumentation::RubyLLM::Instrumentation, install: true) }
+
+    before do
+      allow(OpenTelemetry::Instrumentation::RubyLLM::Instrumentation).to receive(:instance).and_return(instrumentation)
+    end
+
+    it "skips RubyLLM instrumentation when require_observability is false" do
+      call({ "LANGFUSE_PUBLIC_KEY" => "pk", "LANGFUSE_SECRET_KEY" => "sk" },
+        require_llm: false, require_observability: false)
+
+      expect(instrumentation).not_to have_received(:install)
+    end
+
+    it "skips RubyLLM instrumentation when Langfuse keys are absent" do
+      call({}, require_llm: false, require_observability: true)
+
+      expect(instrumentation).not_to have_received(:install)
+    end
+
+    it "installs RubyLLM instrumentation when Langfuse keys are present" do
+      call({ "LANGFUSE_PUBLIC_KEY" => "pk", "LANGFUSE_SECRET_KEY" => "sk" },
+        require_llm: false, require_observability: true)
+
+      expect(instrumentation).to have_received(:install)
+    end
+
+    it "wraps instrumentation install failures in BootstrapError" do
+      allow(instrumentation).to receive(:install).and_raise(StandardError, "boom")
+
+      expect {
+        call({ "LANGFUSE_PUBLIC_KEY" => "pk", "LANGFUSE_SECRET_KEY" => "sk" },
+          require_llm: false, require_observability: true)
+      }.to raise_error(SFL::Compiler::BootstrapError, /Observability setup failed: boom/)
     end
   end
 

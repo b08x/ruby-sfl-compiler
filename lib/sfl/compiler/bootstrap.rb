@@ -2,6 +2,18 @@
 
 require "dotenv"
 require "dspy"
+require "opentelemetry-instrumentation-ruby_llm"
+
+# `require "dspy"` (above) transitively requires dspy-o11y-langfuse (dspy
+# core conditionally pulls it in if the gem is installed) and, at the very
+# bottom of dspy's own load, calls DSPy::Observability.configure! — which
+# reads LANGFUSE_PUBLIC_KEY/SECRET_KEY from ENV right then, one-shot. By
+# the time this method's Dotenv.load runs, that decision has already been
+# made with whatever ENV looked like beforehand. This is harmless ONLY
+# because every entry point (exe/sfl-analyze, scripts/*.rb) loads .env
+# before requiring "sfl-compiler" at all — if a new entry point requires
+# this gem without doing that first, tracing will silently stay disabled
+# no matter what Bootstrap does here.
 
 module SFL
   module Compiler
@@ -16,7 +28,7 @@ module SFL
         "openrouter/" => "OPENROUTER_API_KEY",
         "google/" => "GOOGLE_API_KEY",
         "openai/" => "OPENAI_API_KEY",
-        "anthropic/" => "ANTHROPIC_API_KEY"
+        "anthropic/" => "ANTHROPIC_API_KEY",
       }.freeze
 
       module_function
@@ -26,7 +38,7 @@ module SFL
       # @param env [#[]] environment source, injectable for tests
       # @param load_dotenv [Boolean] read .env first (off in tests)
       # @return [Context]
-      def call(require_db: true, require_llm: true, env: ENV, load_dotenv: true)
+      def call(require_db: true, require_llm: true, require_observability: true, env: ENV, load_dotenv: true)
         Dotenv.load if load_dotenv
 
         config = SFL::Compiler.config
@@ -37,9 +49,10 @@ module SFL
         config.embedding_model = env["EMBEDDING_MODEL"] if env["EMBEDDING_MODEL"]
 
         configure_llm(config.dspy_provider, env) if require_llm
+        configure_observability(env) if require_observability
         db = connect_db(config) if require_db
 
-        Context.new(db: db, config: config)
+        Context.new(db:, config:)
       end
 
       DEFAULT_LLM_TIMEOUT = 120.0
@@ -66,10 +79,25 @@ module SFL
         client = adapter&.instance_variable_get(:@client)
         return unless defined?(::OpenAI::Client) && client.is_a?(::OpenAI::Client)
 
-        args = { api_key: api_key, timeout: timeout_seconds }
+        args = { api_key:, timeout: timeout_seconds }
         args[:base_url] = adapter.class::BASE_URL if adapter.class.const_defined?(:BASE_URL)
         real_client = ::OpenAI::Client.new(**args)
         adapter.instance_variable_set(:@client, SafeOpenAIClientProxy.new(real_client))
+      end
+
+      # By this point dspy-o11y-langfuse has already made its one-shot
+      # decision (see the file-top comment on `require "dspy"`) — this
+      # guard just mirrors that decision so RubyLLM spans (Embedder,
+      # ThemeRhemeExtractor) don't get installed against a no-op tracer.
+      # `.install` attaches to whatever global TracerProvider already
+      # exists; it must NOT be a second OpenTelemetry::SDK.configure call,
+      # which can only run once per process and would raise here.
+      def configure_observability(env)
+        return unless env["LANGFUSE_PUBLIC_KEY"] && env["LANGFUSE_SECRET_KEY"]
+
+        OpenTelemetry::Instrumentation::RubyLLM::Instrumentation.instance.install
+      rescue => e
+        raise BootstrapError, "Observability setup failed: #{e.message}"
       end
 
       def api_key_for(provider, env)
@@ -106,8 +134,8 @@ module SFL
         @client.respond_to?(method_name, include_private) || super
       end
 
-      def method_missing(method_name, *args, &block)
-        res = @client.send(method_name, *args, &block)
+      def method_missing(method_name, *, &)
+        res = @client.send(method_name, *, &)
         if method_name == :chat
           SafeChatProxy.new(res)
         else
@@ -126,8 +154,8 @@ module SFL
         @chat_proxy.respond_to?(method_name, include_private) || super
       end
 
-      def method_missing(method_name, *args, &block)
-        res = @chat_proxy.send(method_name, *args, &block)
+      def method_missing(method_name, *, &)
+        res = @chat_proxy.send(method_name, *, &)
         if method_name == :completions
           SafeCompletionsProxy.new(res)
         else
@@ -146,36 +174,34 @@ module SFL
         @completions_proxy.respond_to?(method_name, include_private) || super
       end
 
-      def method_missing(method_name, *args, &block)
+      def method_missing(method_name, *, &)
         if method_name == :create
-          response = @completions_proxy.send(:create, *args, &block)
+          response = @completions_proxy.send(:create, *, &)
 
-          if response.nil?
-            raise "OpenAI API error: Response was nil"
-          end
+          raise "OpenAI API error: Response was nil" if response.nil?
 
           # Check for API errors in the response hash or object
           err = if response.respond_to?(:error)
-                  response.respond_to?(:dig) ? (response.error || response.dig("error") || response.dig(:error)) : response.error
-                elsif response.is_a?(Hash)
-                  response["error"] || response[:error]
-                end
+            response.respond_to?(:dig) ? (response.error || response.dig("error") || response.dig(:error)) : response.error
+          elsif response.is_a?(Hash)
+            response["error"] || response[:error]
+          end
 
           if err
             message = if err.is_a?(Hash)
-                        err["message"] || err[:message] || err.to_s
-                      else
-                        err.to_s
-                      end
+              err["message"] || err[:message] || err.to_s
+            else
+              err.to_s
+            end
             raise "OpenAI API error: #{message}"
           end
 
           # Verify choices is not nil to prevent NoMethodError (undefined method 'first' for nil)
           choices = if response.respond_to?(:choices)
-                      response.choices
-                    elsif response.is_a?(Hash)
-                      response["choices"] || response[:choices]
-                    end
+            response.choices
+          elsif response.is_a?(Hash)
+            response["choices"] || response[:choices]
+          end
 
           if choices.nil?
             raise "OpenAI API error: Response was empty or missing 'choices'. Response: #{response.inspect}"
@@ -183,7 +209,7 @@ module SFL
 
           response
         else
-          @completions_proxy.send(method_name, *args, &block)
+          @completions_proxy.send(method_name, *, &)
         end
       end
     end

@@ -24,6 +24,15 @@
 #   FILE=lsd-brain-network-collapse.md bundle exec ruby scripts/parse_metacognitive_coprocessor.rb
 
 $LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+
+# Must run before "sfl/compiler" is required — see exe/sfl-analyze for why.
+require "dotenv"
+begin
+  Dotenv.load
+rescue StandardError => e
+  warn "[WARN] .env failed to load: #{e.message}"
+end
+
 require "sfl/compiler"
 
 # ── Configuration ─────────────────────────────────────────────────────────────

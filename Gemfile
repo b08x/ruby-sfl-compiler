@@ -35,3 +35,9 @@ gem "kreuzberg", "~> 4.9"
 gem "informers", "~> 1.3"
 
 gem "onnxruntime", "~> 0.11.3"
+
+gem "opentelemetry-sdk", "~> 1.12"
+gem "opentelemetry-exporter-otlp", "~> 0.34.0"
+gem "opentelemetry-instrumentation-ruby_llm", "~> 0.6.0"
+gem "dspy-o11y", "~> 1.0"
+gem "dspy-o11y-langfuse", "~> 1.1"

@@ -30,6 +30,7 @@ module SFL
 
         Common options:
           --output-dir DIR             Where to write reports [./sfl_output]
+          --disable-tracing            Skip OpenTelemetry/Langfuse tracing setup
 
         conversation/documentation:
           --pass1-only                 Skip LLM annotation (placeholder values)
@@ -63,13 +64,22 @@ module SFL
           raise UsageError, "Unknown subcommand: #{command}\n\n#{USAGE}"
         end
 
-        return { command:, input: nil, options: {} } if command == :tui
+        if command == :tui
+          return { command:, input: nil, options: parse_tui_options(argv) }
+        end
 
         input = argv.shift
         raise UsageError, "#{command} requires an input argument\n\n#{USAGE}" if input.nil? || input.start_with?("--")
 
         options = send(:"parse_#{command}_options", argv)
         { command:, input:, options: }
+      end
+
+      # Shared across every parse_*_options method so `--disable-tracing`
+      # behaves identically everywhere instead of being redefined 5×.
+      module_function def add_tracing_option(opt, options)
+        options[:disable_tracing] = false
+        opt.on("--disable-tracing") { options[:disable_tracing] = true }
       end
 
       module_function def parse_conversation_options(argv)
@@ -88,6 +98,7 @@ module SFL
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
           opt.on("--live") { options[:live] = true }
+          add_tracing_option(opt, options)
         end.parse!(argv)
         options
       end
@@ -108,6 +119,7 @@ module SFL
           opt.on("--store") { options[:store] = true }
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
+          add_tracing_option(opt, options)
         end.parse!(argv)
         options
       end
@@ -122,6 +134,7 @@ module SFL
           opt.on("--max-tenor F", Float) { |v| options[:filters][:max_tenor] = v }
           opt.on("--min-modality F", Float) { |v| options[:filters][:min_modality] = v }
           opt.on("--max-modality F", Float) { |v| options[:filters][:max_modality] = v }
+          add_tracing_option(opt, options)
         end.parse!(argv)
         options
       end
@@ -130,6 +143,15 @@ module SFL
         options = { output_dir: nil }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
+          add_tracing_option(opt, options)
+        end.parse!(argv)
+        options
+      end
+
+      module_function def parse_tui_options(argv)
+        options = {}
+        OptionParser.new do |opt|
+          add_tracing_option(opt, options)
         end.parse!(argv)
         options
       end
@@ -153,7 +175,7 @@ module SFL
       end
 
       module_function def run_conversation(input, options)
-        ctx = Bootstrap.call(require_llm: !options[:pass1_only])
+        ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
         pipeline = Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache")
 
         # One report per file: ConversationAnalyzer#analyze's single-file
@@ -209,7 +231,7 @@ module SFL
       end
 
       module_function def run_documentation(input, options)
-        ctx = Bootstrap.call(require_llm: !options[:pass1_only])
+        ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
         pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
         if options[:store]
           pipeline_args[:embedder] = Embedder.new(
@@ -231,7 +253,7 @@ module SFL
       end
 
       module_function def run_context(query, options)
-        ctx = Bootstrap.call(require_llm: true)
+        ctx = Bootstrap.call(require_llm: true, require_observability: !options[:disable_tracing])
         db = ctx.db
         embedder = Embedder.new(
           model: ctx.config.embedding_model,
@@ -277,7 +299,7 @@ module SFL
           raise UsageError, "#{input} is not valid JSON: #{e.message}"
         end
 
-        Bootstrap.call(require_db: false)
+        Bootstrap.call(require_db: false, require_observability: !options[:disable_tracing])
         digest = Analysis::NarrativeGenerator::Digest.from_json(parsed)
         report = Analysis::NarrativeGenerator.new.generate(digest)
 
@@ -295,9 +317,9 @@ module SFL
       # subcommands — only the chat session needs separate wiring here,
       # deferred to a builder lambda so it only runs if "Chat with
       # results" is actually chosen.
-      module_function def run_tui(_input, _options)
+      module_function def run_tui(_input, options)
         TUI::Menu.new(chat_session_builder: lambda {
-          ctx = Bootstrap.call(require_llm: true)
+          ctx = Bootstrap.call(require_llm: true, require_observability: !options[:disable_tracing])
           db = ctx.db
           embedder = Embedder.new(model: ctx.config.embedding_model, ollama_base_url: ctx.config.ollama_base_url)
           synthesizer = ContextSynthesizer.new(

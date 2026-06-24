@@ -325,6 +325,10 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
 
       let(:cb) { engine.instance_variable_get(:@circuit_breaker) }
 
+      before do
+        allow(ENV).to receive(:fetch).and_call_original
+      end
+
       it "returns a CircuitBreaker::CircuitHandler" do
         expect(cb).to be_a(CircuitBreaker::CircuitHandler)
       end

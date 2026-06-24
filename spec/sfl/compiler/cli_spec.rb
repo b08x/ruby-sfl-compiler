@@ -15,6 +15,7 @@ RSpec.describe SFL::Compiler::CLI do
           narrative: false,
           topics: nil,
           live: false,
+          disable_tracing: false,
         }
       )
     end
@@ -22,7 +23,12 @@ RSpec.describe SFL::Compiler::CLI do
     it "parses conversation flags" do
       parsed = described_class.parse(%w[conversation chat.jsonl --output-dir ./out --pass1-only])
       expect(parsed[:options]).to eq(output_dir: "./out", pass1_only: true, resume: false, narrative: false,
-        topics: nil, live: false)
+        topics: nil, live: false, disable_tracing: false)
+    end
+
+    it "parses --disable-tracing on conversation" do
+      parsed = described_class.parse(%w[conversation chat.jsonl --disable-tracing])
+      expect(parsed[:options][:disable_tracing]).to be(true)
     end
 
     it "parses --live on conversation" do
@@ -84,7 +90,12 @@ RSpec.describe SFL::Compiler::CLI do
 
     it "parses tui with no input argument required" do
       parsed = described_class.parse(%w[tui])
-      expect(parsed).to eq(command: :tui, input: nil, options: {})
+      expect(parsed).to eq(command: :tui, input: nil, options: { disable_tracing: false })
+    end
+
+    it "parses --disable-tracing on tui" do
+      parsed = described_class.parse(%w[tui --disable-tracing])
+      expect(parsed[:options][:disable_tracing]).to be(true)
     end
   end
 
