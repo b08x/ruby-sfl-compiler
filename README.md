@@ -92,6 +92,8 @@ Analysis layer (UI-agnostic, used by the CLI):
 - **PostgreSQL** with the `vector` (pgvector) and `pg_trgm` extensions
 - **Python spaCy** with the `en_core_web_sm` model
 - An **LLM API key** for Pass 2 (OpenRouter, Google, OpenAI, or Anthropic)
+- **Redis** — only if running conversation analysis in parallel via the Gush
+  workflow (see [Parallel Conversation Analysis](#parallel-conversation-analysis-gush--sidekiq)); not needed for the default `sfl-analyze conversation` command
 
 ## Installation
 
@@ -131,6 +133,9 @@ SPACY_MODEL=en_core_web_sm
 # Optional Pass 2 tuning
 # SFL_BATCH_SIZE=12      # clauses per LLM call
 # SFL_CONCURRENCY=4      # concurrent LLM calls
+
+# Optional — only needed for the parallel Gush workflow (see below)
+# REDIS_URL=redis://localhost:6379
 ```
 
 The CLI resolves the API key from the provider prefix and fails fast with a
@@ -224,6 +229,46 @@ takeaways, grounded in the report's statistics and message previews. Add
 `--narrative` to `conversation`/`documentation` to generate it inline right
 after the CSV/JSON/MD trio — that path is best-effort and only warns on
 failure, while `narrate` itself exits 1 on error.
+
+## Parallel Conversation Analysis (Gush / Sidekiq)
+
+`sfl-analyze conversation` compiles turns one at a time on the main thread.
+For long conversations, a [Gush](https://github.com/chaps-io/gush) workflow
+compiles every turn in parallel instead — one `CompileTurnJob` per turn, run
+by Sidekiq worker processes, fanning into one `ReduceTurnsJob` that runs the
+same cross-turn aggregation (tenor tracking, speaker profiles, correlations).
+
+This is a library-level capability today, not yet a `sfl-analyze` flag.
+Requires Redis (`REDIS_URL` in `.env`, defaults to `redis://localhost:6379`)
+and a running worker:
+
+```bash
+bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb
+```
+
+Then, from another process:
+
+```ruby
+require "sfl-compiler"
+
+flow = SFL::Compiler::ConversationAnalysisWorkflow.create("chat.jsonl")
+flow.start!
+
+flow.reload
+flow.status   #=> :pending | :running | :finished | :failed
+```
+
+Each turn's Pass 1 (spaCy) runs in its own Sidekiq **process** rather than a
+Ruby thread — deliberately, since
+[PyCall does not support multi-threaded use](https://github.com/red-data-tools/pycall.rb)
+and calling it from a thread inside one process can segfault. Process-level
+parallelism sidesteps that restriction entirely.
+
+Not yet supported by this workflow: the optional topic-modeling pre-pass, and
+an equivalent for `documentation`. `ReduceTurnsJob`'s output currently
+forwards only `metadata`/`insights`, not the full per-speaker profiles or
+correlations — fine for confirming the workflow ran, not yet a drop-in
+replacement for `ConversationAnalyzer#analyze`'s return value.
 
 ## Library Usage
 

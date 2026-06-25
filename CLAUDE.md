@@ -115,6 +115,12 @@ progress via injectable `on_progress` callback) so a TUI can reuse them.
 ### MarkdownLoader
 - `lib/sfl/compiler/markdown_loader.rb`: Chunks by ATX heading via Inkmark. Strips YAML frontmatter, drops fenced code blocks, renders to HTML then strips tags, normalizes through PragmaticTokenizer. Emits `Section` structs with `document_id` = `"file_id#heading_slug"`.
 
+### Parallel Conversation Analysis (Gush/Sidekiq) — library-level, no CLI wiring yet
+- `lib/sfl/compiler/workflows/conversation_analysis_workflow.rb`: a `Gush::Workflow` that decomposes the same work `ConversationAnalyzer#analyze` does sequentially into a parallel DAG — one `CompileTurnJob` per turn (no dependency between them, so they run concurrently across however many Sidekiq workers are up), fanning into one `ReduceTurnsJob`.
+- **Why this exists**: Pass 1 calls spaCy through PyCall, and [PyCall's own docs state it does not support multi-threaded use](https://github.com/red-data-tools/pycall.rb) — calling it from a `Thread.new` inside one process segfaults (this is exactly what's wrong with the TUI's `--live` flag today, see `lib/sfl/compiler/tui/batch_app.rb` / `.claude/skills/sfl-tui/references/known-issues.md`). Running each turn in its own Sidekiq **process** instead of a thread sidesteps the restriction entirely — each worker process gets its own Python interpreter.
+- **Scope today**: only the `topics: nil` path (no topic-modeling pre-pass); `DocumentationAnalyzer` has no equivalent workflow yet; `ReduceTurnsJob#output` forwards `metadata`/`insights` only, not the full `speaker_profiles`/`tenor_timeline`/`correlations`/`key_moments` — none of this is wired into `sfl-analyze`'s CLI/TUI yet. See the trackboi track `tui-overhaul-gush-sidekiq-backed-pycall-safe` for the rebuild-the-TUI-on-this follow-up work.
+- **Running it**: needs Redis (`REDIS_URL`, defaults to `redis://localhost:6379`) and a Sidekiq worker (`bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb`) — see Essential Commands. `ConversationAnalysisWorkflow.create(jsonl_path); flow.start!; flow.reload; flow.status` per Gush's own API.
+
 ## Key File Map
 
 ```
@@ -149,6 +155,12 @@ lib/sfl/compiler/formatters/
 lib/sfl/compiler/markdown_loader.rb  # ATX-heading chunks → clean prose sections
 lib/sfl/compiler/llm_tools/
   theme_rheme_extractor.rb           # RubyLLM Tool for Theme/Rheme (experimental)
+lib/sfl/compiler/jobs/
+  compile_turn_job.rb                # Gush::Job: one turn's Pass 1+2 compile, runs in a Sidekiq worker process
+  reduce_turns_job.rb                # Gush::Job: fan-in — rebuilds turns from payloads, runs ConversationAnalyzer#build_result
+lib/sfl/compiler/workflows/
+  conversation_analysis_workflow.rb  # Gush::Workflow: fans out CompileTurnJob per turn, fans into ReduceTurnsJob
+lib/sfl/compiler/sidekiq_boot.rb     # `-r` target for `bundle exec sidekiq -q gush`; wires Bootstrap(require_jobs: true)
 lib/sfl-compiler.rb                  # Top-level require
 exe/sfl-analyze                      # CLI binstub (gemspec executable)
 scripts/parse_metacognitive_coprocessor.rb  # NotebookLM batch processing script
@@ -186,7 +198,7 @@ DSPy.configure do |c|
 end
 ```
 
-Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTER_API_KEY` / `GOOGLE_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`, `SPACY_MODEL`, `LOG_LEVEL`.
+Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTER_API_KEY` / `GOOGLE_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`, `SPACY_MODEL`, `LOG_LEVEL`, `REDIS_URL` (Gush workflow state; only read when `Bootstrap.call(require_jobs: true)`).
 
 ## Gotchas & Non-Obvious Patterns
 
@@ -211,6 +223,10 @@ Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTE
 10. **CLI keyword search ANDs all terms**: `plainto_tsquery('simple', ...)` keeps stopwords and requires every word to match, so `context` queries phrased as full questions often miss; without stored embeddings (no `OPENAI_API_KEY`), retrieval is keyword-only.
 
 11. **`bundle exec` and exe/**: the Gemfile doesn't use `gemspec`, so `bundle exec` alone doesn't put `lib/` on the load path — `exe/sfl-analyze` unshifts its sibling `lib/` itself. Run specs with `bin/rspec` if the `bundle exec rspec` binstub misbehaves.
+
+12. **PyCall is single-thread only — never call Pass 1 from a `Thread.new`**: any code path that runs `PassOneEngine`/spaCy off the main thread of a process that's also doing other things on other threads risks a real `[BUG] Segmentation fault` (confirmed in the TUI's `--live` flag — see `.claude/skills/sfl-tui/references/known-issues.md`). The Gush-based `jobs/`/`workflows/` files exist specifically to get parallelism via separate OS *processes* instead — don't "fix" a slow Pass 1 by wrapping it in a Ruby thread.
+
+13. **`jobs/`/`workflows/` collapse like `pass_one/`/`pass_two/`**: same flat-constant Zeitwerk convention as gotcha #9 (`SFL::Compiler::CompileTurnJob`, not `SFL::Compiler::Jobs::CompileTurnJob`) — `lib/sfl/compiler.rb` has a `loader.collapse` line for each. `sidekiq -r` loads files via `Kernel#require`, which doesn't search `cwd` for a bare relative path — `bundle exec sidekiq -q gush -r lib/sfl/compiler/sidekiq_boot.rb` (no `./`) raises `LoadError` even though the file is right there; always pass `-r ./lib/...`.
 
 ## Test Structure
 
