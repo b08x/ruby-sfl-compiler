@@ -70,8 +70,31 @@ module SFL
               dominant_topic: turn.dominant_topic,
               topic_distribution: turn.topic_distribution,
               semantic_coherence_score: turn.semantic_coherence_score,
+              clauses: format_clauses(turn.clauses),
             }
           end
+        end
+
+        # Per-clause reasoning_trace, the only clause-level field this
+        # report exposes today. `nil` for fallback/stub clauses (no trace
+        # was ever computed) as well as for llm clauses where the trace
+        # itself failed Dry::Struct validation (PassTwoEngine leaves
+        # reasoning_trace nil in that case without defaulting the rest of
+        # the clause — see `safe_reasoning_trace_from`).
+        private def format_clauses(clauses)
+          clauses.map do |clause|
+            {
+              id: clause.id,
+              annotation_source: clause.interpersonal.annotation_source,
+              reasoning_trace: serialize_reasoning_trace(clause.interpersonal.reasoning_trace),
+            }
+          end
+        end
+
+        private def serialize_reasoning_trace(trace)
+          return nil unless trace
+
+          Types.deep_stringify_time(trace.to_h)
         end
 
         private def format_speaker_profiles
