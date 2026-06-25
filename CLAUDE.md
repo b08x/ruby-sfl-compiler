@@ -45,8 +45,11 @@ bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
 
 # Sidekiq worker for the Gush conversation analysis workflow (requires Redis)
 # Not a Rails app, so -r must point at a boot file or Sidekiq exits immediately
-# asking for one.
-bundle exec sidekiq -q gush -r lib/sfl/compiler/sidekiq_boot.rb
+# asking for one. The leading ./ is required — Sidekiq's -r loads the path via
+# Kernel#require, which (unlike #load) does not search cwd for a bare relative
+# path, only $LOAD_PATH. Without ./ this fails with LoadError from inside
+# sidekiq/cli.rb, even though the file exists right there.
+bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb
 ```
 
 ## Architecture
