@@ -20,11 +20,9 @@ module SFL
         jsonl_path = params.fetch(:jsonl_path)
         total = params.fetch(:total)
 
-        turns = payloads
-          .map { |p| Types.load_conversation_turn(p.fetch(:output)) }
-          .sort_by(&:turn_id)
-
-        result = Analysis::ConversationAnalyzer.new.build_result(turns, jsonl_path:, total:)
+        result = Analysis::ConversationAnalyzer.new.build_result(
+          compiled_turns, jsonl_path:, total:, topic_labels:, topic_shifts:
+        )
 
         output(
           jsonl_path:,
@@ -32,6 +30,29 @@ module SFL
           metadata: result.metadata,
           insights: result.insights
         )
+      end
+
+      private def compiled_turns
+        payloads
+          .select { |p| p[:class] == CompileTurnJob.to_s }
+          .map { |p| Types.load_conversation_turn(p.fetch(:output)) }
+          .sort_by(&:turn_id)
+      end
+
+      # Only present when the workflow ran a TopicModelJob (topics: was
+      # requested) — payloads only ever held CompileTurnJob output before
+      # TopicModelJob existed, so this is nil/[] (the build_result
+      # defaults) for every workflow run without topic modeling.
+      private def topic_labels
+        topic_payload&.[](:topic_labels)&.transform_keys { |k| k.to_s.to_i }
+      end
+
+      private def topic_shifts
+        topic_payload&.[](:topic_shifts) || []
+      end
+
+      private def topic_payload
+        @topic_payload ||= Array(payloads).find { |p| p[:class] == TopicModelJob.to_s }&.fetch(:output)
       end
     end
   end

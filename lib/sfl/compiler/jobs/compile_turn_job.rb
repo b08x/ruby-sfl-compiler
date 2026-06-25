@@ -21,14 +21,9 @@ module SFL
       def perform
         turn_data = params.fetch(:turn_data)
         turn_id = params.fetch(:turn_id)
+        pre_turn = pre_turn_for(turn_id)
 
-        clauses = pipeline.compile(
-          turn_data[:mes],
-          document_id: "turn-#{turn_id}",
-          store: false,
-          embed: false,
-          resume: false
-        )
+        clauses = pipeline.compile(turn_data[:mes], **compile_kwargs(turn_id, pre_turn))
 
         avg_tenor = mean(clauses.map { |c| c.interpersonal.tenor })
         avg_modality = mean(clauses.map { |c| c.interpersonal.modality_weight })
@@ -45,10 +40,49 @@ module SFL
           dominant_mood: mood_counts.max_by { |_, count| count }&.first || "declarative",
           process_types: clauses.map { |c| c.ideational.process_type }.tally,
           participants: clauses.flat_map { |c| c.ideational.participants.map(&:text) }.uniq,
-          tenor_shift: nil
+          tenor_shift: nil,
+          topic_distribution: pre_turn&.[](:topic_distribution),
+          dominant_topic: pre_turn&.[](:dominant_topic),
+          semantic_coherence_score: pre_turn&.[](:semantic_coherence_score)
         )
 
         output(Types.dump(turn))
+      end
+
+      # Same conditional-kwargs shape as ConversationAnalyzer#compile_clauses
+      # — only forwarded when present, so a run with no TopicModelJob
+      # dependency calls Pipeline#compile exactly as it did before this
+      # job supported topic modeling at all.
+      private def compile_kwargs(turn_id, pre_turn)
+        kwargs = { document_id: "turn-#{turn_id}", store: false, embed: false, resume: false }
+        topic = topic_info_for(pre_turn)
+        kwargs[:topic] = topic unless topic.nil?
+        score = pre_turn&.[](:semantic_coherence_score)
+        kwargs[:semantic_coherence_score] = score unless score.nil?
+        kwargs
+      end
+
+      private def topic_info_for(pre_turn)
+        dominant_topic = pre_turn&.[](:dominant_topic)
+        return nil unless dominant_topic
+
+        { id: dominant_topic, label: topic_labels[dominant_topic]&.first }
+      end
+
+      private def pre_turn_for(turn_id)
+        topic_payload&.[](:pre_turns)&.find { |t| t[:turn_id] == turn_id }
+      end
+
+      # Topic ids round-trip through Gush's JSON-backed payloads as hash
+      # *keys*, which JSON always serializes as strings — unlike values
+      # (e.g. dominant_topic itself), which stay Integers. Restore the
+      # Integer keys TopicModeler's own topic_labels uses.
+      private def topic_labels
+        @topic_labels ||= (topic_payload&.[](:topic_labels) || {}).transform_keys { |k| k.to_s.to_i }
+      end
+
+      private def topic_payload
+        @topic_payload ||= Array(payloads).find { |p| p[:class] == TopicModelJob.to_s }&.fetch(:output)
       end
 
       private def pipeline

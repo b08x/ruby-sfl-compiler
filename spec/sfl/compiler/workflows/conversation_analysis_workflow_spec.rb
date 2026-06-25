@@ -63,4 +63,29 @@ RSpec.describe SFL::Compiler::ConversationAnalysisWorkflow do
     expect(reduce_job.output_payload[:turn_count]).to eq(5)
     expect(reduce_job.output_payload[:metadata][:total]).to eq(5)
   end
+
+  describe "topics:" do
+    it "runs a TopicModelJob before the fan-out and forwards topics_enabled to the reduced result" do
+      flow = described_class.create(jsonl_path, topics: 2)
+      flow.start!
+      flow.reload
+
+      expect(flow.status).to eq(:finished)
+
+      topic_job = flow.jobs.find { |j| j.klass.to_s == "SFL::Compiler::TopicModelJob" }
+      expect(topic_job).not_to be_nil
+      expect(topic_job.output_payload[:pre_turns].size).to eq(5)
+
+      reduce_job = flow.jobs.find { |j| j.klass.to_s == "SFL::Compiler::ReduceTurnsJob" }
+      expect(reduce_job.output_payload[:metadata][:topics_enabled]).to be(true)
+    end
+
+    it "does not run a TopicModelJob when topics: is nil (default, unchanged behavior)" do
+      flow = described_class.create(jsonl_path)
+      flow.start!
+      flow.reload
+
+      expect(flow.jobs.map { |j| j.klass.to_s }).not_to include("SFL::Compiler::TopicModelJob")
+    end
+  end
 end
