@@ -43,7 +43,7 @@ module SFL
         create_interpersonal_table
         create_embeddings_table
         create_indices
-        add_clause_topic_columns
+        backfill_columns
         @logger.send_message(
           message: "migrations_completed",
           priority: Journald::LOG_INFO
@@ -70,13 +70,11 @@ module SFL
         end
       end
 
-      # `create_table?` is a no-op against an already-existing `clauses`
-      # table (the topic columns above only apply on a fresh install), so
-      # add them here too for databases migrated before topic tagging existed.
-      private def add_clause_topic_columns
-        existing = @db.schema(:clauses).map(&:first)
-        @db.add_column(:clauses, :topic_id, Integer) unless existing.include?(:topic_id)
-        @db.add_column(:clauses, :topic_label, String) unless existing.include?(:topic_label)
+      private def backfill_columns
+        ColumnBackfill.new(@db).call(
+          clauses: { topic_id: Integer, topic_label: String },
+          interpersonal_payloads: { annotation_source: [String, { default: "llm", null: false }] }
+        )
       end
 
       private def create_ideational_table
@@ -103,6 +101,7 @@ module SFL
           Float :tenor, null: false, default: 0.5
           String :speaker_attitude
           String :reasoning
+          String :annotation_source, null: false, default: "llm"
           DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 
           index :clause_id, unique: true
@@ -143,6 +142,31 @@ module SFL
           priority: Journald::LOG_WARNING,
           error: e.message
         )
+      end
+    end
+
+    # Adds columns introduced after a table's first release to databases
+    # migrated before they existed (create_table? is a no-op against an
+    # already-existing table, so Migrator can't reach them that way).
+    class ColumnBackfill
+      def initialize(db)
+        @db = db
+      end
+
+      # @param table_columns [Hash{Symbol => Hash{Symbol => Class, Array}}]
+      #   table name => { column name => type, or [type, options] }
+      def call(table_columns)
+        table_columns.each { |table, columns| backfill_table(table, columns) }
+      end
+
+      private def backfill_table(table, columns)
+        existing = @db.schema(table).map(&:first)
+        columns.each do |name, spec|
+          next if existing.include?(name)
+
+          type, opts = spec.is_a?(Array) ? spec : [spec, {}]
+          @db.add_column(table, name, type, **opts)
+        end
       end
     end
   end

@@ -55,6 +55,7 @@ module SFL
             tenor: annotated.interpersonal.tenor,
             speaker_attitude: annotated.interpersonal.speaker_attitude,
             reasoning: annotated.interpersonal.reasoning,
+            annotation_source: annotated.interpersonal.annotation_source,
             created_at: Time.now
           )
         end
