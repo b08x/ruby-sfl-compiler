@@ -116,11 +116,11 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       expect(sources).to eq(%w[fallback fallback fallback llm llm])
     end
 
-    it "retries a failed chunk once before falling back" do
+    it "retries a failed chunk up to batch_attempts times before falling back" do
       attempts = 0
       annotator = lambda do |items|
         attempts += 1
-        raise StandardError, "transient" if attempts == 1
+        raise StandardError, "transient" if attempts < 2
 
         items.map { |item| annotation_for(item[:index]) }
       end
@@ -130,6 +130,36 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
 
       expect(attempts).to eq(2)
       expect(annotated.map { |a| a.interpersonal.annotation_source }.uniq).to eq(["llm"])
+    end
+
+    it "falls back only after exhausting every configured attempt" do
+      attempts = 0
+      annotator = lambda do |_items|
+        attempts += 1
+        raise StandardError, "persistently transient"
+      end
+
+      annotated = nil
+      expect {
+        annotated = described_class.new(batch_annotator: annotator)
+          .annotate_batch(pairs, batch_size: 5, concurrency: 1)
+      }.to output(/\[WARN\]/).to_stderr
+
+      expect(attempts).to eq(SFL::Compiler::PassTwoEngine::DEFAULT_BATCH_ATTEMPTS)
+      expect(annotated.map { |a| a.interpersonal.annotation_source }.uniq).to eq(["fallback"])
+    end
+
+    it "honors a custom batch_attempts count" do
+      attempts = 0
+      annotator = lambda do |_items|
+        attempts += 1
+        raise StandardError, "boom"
+      end
+
+      described_class.new(batch_annotator: annotator, batch_attempts: 5)
+        .annotate_batch(pairs, batch_size: 5, concurrency: 1)
+
+      expect(attempts).to eq(5)
     end
 
     it "preserves clause order when chunks run concurrently" do
@@ -158,7 +188,7 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         elapsed = Time.now - start
       }.to output(/\[WARN\]/).to_stderr
 
-      expect(elapsed).to be < 2 # two attempts × 0.1s, not forever
+      expect(elapsed).to be < 2 # DEFAULT_BATCH_ATTEMPTS × 0.1s, not forever
       expect(annotated.map { |a| a.interpersonal.annotation_source }.uniq).to eq(["fallback"])
     end
 

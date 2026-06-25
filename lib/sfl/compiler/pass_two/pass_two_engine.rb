@@ -31,12 +31,25 @@ module SFL
       # thread gets a hard Timeout that the retry/fallback ladder catches.
       DEFAULT_CHUNK_TIMEOUT = ENV.fetch("SFL_CHUNK_TIMEOUT", 180).to_f
 
+      # Total attempts per chunk before falling back to defaults. Raised
+      # from 2 (one retry) after a live reproduction against the real
+      # provider found ~15-20% of batch calls fail with a truncated/
+      # incomplete JSON response (DSPy::LM::AdapterError) — independent
+      # of batch_size, so this isn't a token-budget problem to fix by
+      # shrinking chunks, it's provider-side flakiness to absorb with
+      # more attempts. With ~15% independent failure probability, 2
+      # attempts still fails ~2-4% of chunks; 3 attempts cuts that to
+      # ~0.3%, which is what actually stops a long run from flooding
+      # stderr with repeated chunk-failure warnings.
+      DEFAULT_BATCH_ATTEMPTS = ENV.fetch("SFL_BATCH_ATTEMPTS", 3).to_i
+
       def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil,
-        chunk_timeout: DEFAULT_CHUNK_TIMEOUT
+        chunk_timeout: DEFAULT_CHUNK_TIMEOUT, batch_attempts: DEFAULT_BATCH_ATTEMPTS
       )
         @provider = provider || SFL::Compiler.config.dspy_provider
         @logger = Journald::Logger.new("sfl-compiler-pass-two")
         @chunk_timeout = chunk_timeout
+        @batch_attempts = batch_attempts
         @circuit_breaker = circuit_breaker || default_circuit_breaker
         @batch_annotator = batch_annotator || default_batch_annotator
       end
@@ -203,15 +216,12 @@ module SFL
           }
         end
 
-        # One retry for transient provider errors; an open circuit means the
+        # @batch_attempts attempts for transient provider errors, all
+        # within one circuit_breaker.call — so the breaker's own failure
+        # count records one outcome per chunk (success or exhausted),
+        # not one per internal attempt. An open circuit means the
         # provider is known-bad, so don't hammer it again.
-        results = begin
-          @circuit_breaker.call { call_annotator_with_watchdog(items) }
-        rescue CircuitBreaker::CircuitBrokenException
-          raise
-        rescue
-          @circuit_breaker.call { call_annotator_with_watchdog(items) }
-        end
+        results = @circuit_breaker.call { call_annotator_with_retries(items) }
         by_index = results.to_h { |r| [r[:index], r] }
 
         chunk.map do |entry|
@@ -253,6 +263,20 @@ module SFL
           "LLM call exceeded #{@chunk_timeout}s chunk timeout") do
           @batch_annotator.call(items)
         end
+      end
+
+      # Up to @batch_attempts independent tries at the same chunk. Each
+      # try gets its own watchdog window; the last error propagates once
+      # every attempt is exhausted, for annotate_chunk's own rescue to
+      # default the chunk.
+      private def call_annotator_with_retries(items)
+        last_error = nil
+        @batch_attempts.times do
+          return call_annotator_with_watchdog(items)
+        rescue => e
+          last_error = e
+        end
+        raise last_error
       end
 
       private def interpersonal_from(clause, result, correlation_id)
