@@ -4,6 +4,62 @@ Extracted from inline comments (`# NOTE:`, `# WHY:`, `# HACK:`, `# TODO:`) and d
 
 ---
 
+## Parallel Turn Processing with Gush
+
+**Extracted from**: `lib/sfl/compiler/jobs/compile_turn_job.rb`, `lib/sfl/compiler/cli.rb` *(INFERRED)*
+
+**Decision**: Process large conversation turns in parallel via Gush/Sidekiq using per-turn jobs.
+
+**Rationale**: Pass 1 uses spaCy through PyCall, Pass 2 uses the Ruby LLM. Both paths can contend on the GIL and trigger GC deadlocks when run in threads inside the same Ruby process. Forking each turn into its own `CompileTurnJob` isolates Python interpreter state, avoids the GIL deadlock, and keeps `--live` semantics simple for users.
+
+**Trade-offs**: Requires Redis; adds operational surface (worker processes); failure reporting moves from inline exceptions to job-level `DEFAULTED` counts and per-turn warnings.
+
+**Confidence**: INFERRED from `CompileTurnJob` implementation, the `--live` flag wiring, and AGENTS.md note on PyCall GC deadlock.
+
+---
+
+## Langfuse Reachability Pre-Flight
+
+**Extracted from**: `lib/sfl/compiler/langfuse_reachability.rb`, `lib/sfl/compiler/bootstrap.rb` *(INFERRED)*
+
+**Decision**: Verify the Langfuse endpoint is reachable before enabling OpenTelemetry tracing.
+
+**Rationale**: Tracing failures manifest as noisy warning spam or broken spans that are hard to distinguish from analysis failures. A fast pre-flight check lets the CLI fail gracefully: skip tracing silently when keys are unset, prompt interactively when the endpoint is down, and continue silently in non-TTY mode. This preserves the "works out of the box" experience while avoiding surprise observability outages.
+
+**Trade-offs**: Adds one network round-trip at startup; interactive mode now blocks on user input if Langfuse is unreachable.
+
+**Confidence**: INFERRED from `LangfuseReachability` class and `Bootstrap` usage.
+
+---
+
+## Cross-Document Graph Querying
+
+**Extracted from**: `lib/sfl/compiler/cross_document_graph.rb` *(INFERRED)*
+
+**Decision**: Build a query-time entity/clause graph over stored documents instead of synthesizing each document independently.
+
+**Rationale**: `context` answers from a single blended result set. Questions that compare documents — "how does the API guide differ from the web guide?" — benefit from explicit document-level nodes and relationships. The graph resolves entities across documents, ranks evidence with the same RRF scorer as `HybridRetriever`, and then synthesizes an answer.
+
+**Trade-offs**: More complex than flat retrieval; currently library-only, no dedicated CLI subcommand.
+
+**Confidence**: INFERRED from `CrossDocumentGraph` implementation.
+
+---
+
+## Sprint Workflow for Batch Runs
+
+**Extracted from**: `lib/sfl/compiler/workflows/sprint_workflow.rb` *(INFERRED)*
+
+**Decision**: Wrap batch analysis in a workflow object that collects reports and failures rather than failing fast on the first bad file.
+
+**Rationale**: Operations teams often need to process dozens of conversations produced by cron or ingestion. Failing fast on one malformed JSONL aborts the whole batch. `SprintWorkflow.run` processes each path, captures per-item errors in `result.failures`, and returns a summary useful for downstream dashboards.
+
+**Trade-offs**: Callers must inspect `result.failures` explicitly; a fully successful run still returns a structured result object rather than a plain array.
+
+**Confidence**: INFERRED from `SprintWorkflow` implementation.
+
+---
+
 ## Circuit Breaker Implementation
 
 **Extracted from**: `lib/sfl/compiler/pass_two/pass_two_engine.rb:173` *(EXTRACTED)*

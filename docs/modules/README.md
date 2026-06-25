@@ -6,22 +6,31 @@ This directory contains detailed documentation for each major module in the sfl-
 
 ## Module Index
 
-| Module | Location | God Node Rank | Description |
-|--------|----------|---------------|-------------|
-| **PassTwoEngine** | `lib/sfl/compiler/pass_two/pass_two_engine.rb` | #1 (21 edges) | Core LLM annotation engine for interpersonal and textual metafunctions |
-| **PipelineCache** | `lib/sfl/compiler/storage/pipeline_cache.rb` | #2 (19 edges) | Disk-based cache enabling resume after partial failures |
-| **ConversationAnalyzer** | `lib/sfl/compiler/analysis/conversation_analyzer.rb` | #3 (15 edges) | Aggregates annotations into turn-level metrics and insights |
+| Module | Location | Description |
+|--------|----------|-------------|
+| **PassTwoEngine** | `lib/sfl/compiler/pass_two/pass_two_engine.rb` | Core LLM annotation engine for interpersonal and textual metafunctions |
+| **PipelineCache** | `lib/sfl/compiler/storage/pipeline_cache.rb` | Disk-based cache enabling resume after partial failures |
+| **ConversationAnalyzer** | `lib/sfl/compiler/analysis/conversation_analyzer.rb` | Aggregates annotations into turn-level metrics and insights |
+| **CompileTurnJob** | `lib/sfl/compiler/jobs/compile_turn_job.rb` | Sidekiq/Gush job that compiles one conversation turn in isolation |
+| **LangfuseReachability** | `lib/sfl/compiler/langfuse_reachability.rb` | Pre-flight check that verifies Langfuse is reachable before enabling tracing |
+| **CrossDocumentGraph** | `lib/sfl/compiler/cross_document_graph.rb` | Query-time graph across stored documents for multi-source synthesis |
+| **SprintWorkflow** | `lib/sfl/compiler/workflows/sprint_workflow.rb` | Batch workflow that runs analyses and collects per-item failures |
 
 ---
 
 ## Community Map
 
-The modules are organized by their functional communities as identified by graphify:
+The modules are organized by their functional communities:
 
 ### Core Pipeline
 - PassTwoEngine
 - PassOneEngine
 - SFLAnnotator / SFLBatchAnnotator
+- Pipeline
+
+### Parallel Processing
+- CompileTurnJob
+- SprintWorkflow
 
 ### Storage & Caching
 - PipelineCache
@@ -40,6 +49,7 @@ The modules are organized by their functional communities as identified by graph
 ### Retrieval
 - Embedder
 - HybridRetriever
+- CrossDocumentGraph
 
 ### Formatting & Output
 - CSVFormatter

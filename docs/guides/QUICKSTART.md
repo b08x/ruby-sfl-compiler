@@ -76,16 +76,20 @@ Get up and running in 5 minutes with **FREE** LLM access!
 
 ## Test Your Setup
 
-Run the sample conversation:
+Run the sample conversation (replace the path with any JSONL file on your
+machine):
 
 ```bash
-bundle exec sfl-analyze conversation /home/b08x/Workspace/Datasets/steve-oliver-2025-08-29@13h25m38s.jsonl
+bundle exec sfl-analyze conversation ./sample_conversation.jsonl --output-dir ./output
 ```
+
+If the repo contains a sample file, the bundled `spec/fixtures/files/short_chat.jsonl`
+works for a quick smoke test.
 
 Check the output:
 
 ```bash
-cat sfl_output/conversation_analysis.md
+cat ./output/conversation_analysis.md
 ```
 
 **Success indicators**:
@@ -108,6 +112,20 @@ cat sfl_output/conversation_analysis.md
 | OpenRouter Mistral 7B | $0.001 | ~15 sec |
 | Google Gemini (native) | **FREE** | ~30 sec |
 | Ollama Llama 3.1 | **FREE** | ~2 min |
+
+## Batch Conversations Faster
+
+For many conversations, the default sequential run is fine. To process a single
+large conversation across Sidekiq/Gush workers, make sure Redis is running and
+add `--live`:
+
+```bash
+redis-server
+bundle exec sfl-analyze conversation ./large_conversation.jsonl --output-dir ./output --live
+```
+
+Each turn is compiled in its own `CompileTurnJob` process. Misidentifies and
+`DEFAULTED` counts are printed per turn just like the sequential run.
 
 ## Next Steps
 

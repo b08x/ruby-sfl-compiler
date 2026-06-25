@@ -1,8 +1,9 @@
 # SFL Compiler Usage Guide
 
-The `sfl-analyze` CLI has three subcommands forming one workflow: analyze
+The `sfl-analyze` CLI has four subcommands forming one workflow: analyze
 conversations or documentation, optionally **ingest** documentation into
-PostgreSQL, then **query** the stored corpus with stance filters.
+PostgreSQL, then **query** the stored corpus with stance filters, and finally
+**narrate** the result.
 
 ## Quick Start
 
@@ -14,19 +15,19 @@ provider prefixes and resolves the key automatically:
 ```bash
 # OpenRouter (one key, many models)
 DSPY_PROVIDER=openrouter/mistralai/mistral-7b-instruct
-OPENROUTER_API_KEY=sk-or-your-key-here
+OPENROUTER_API_KEY=your-openrouter-key-here
 
 # OR Google Gemini
 DSPY_PROVIDER=google/gemini-2.0-flash-exp
-GOOGLE_API_KEY=your-key-here
+GOOGLE_API_KEY=your-google-key-here
 
 # OR OpenAI
 DSPY_PROVIDER=openai/gpt-4o-mini
-OPENAI_API_KEY=sk-your-key-here
+OPENAI_API_KEY=your-openai-key-here
 
 # OR Anthropic
 DSPY_PROVIDER=anthropic/claude-3-5-sonnet-20241022
-ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_API_KEY=your-anthropic-key-here
 ```
 
 Any other prefix makes the CLI exit with
@@ -47,8 +48,8 @@ OpenTelemetry — no further setup needed. `LANGFUSE_HOST` defaults to
 `https://cloud.langfuse.com`; set it for a self-hosted instance.
 
 ```bash
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=your-public-key
+LANGFUSE_SECRET_KEY=your-secret-key
 LANGFUSE_HOST=https://cloud.langfuse.com   # or your self-hosted URL
 ```
 
@@ -56,14 +57,26 @@ These vars must be set in `.env` (or already exported) **before** the CLI
 starts — `exe/sfl-analyze` loads `.env` before requiring anything else
 specifically so this works; see `lib/sfl/compiler/bootstrap.rb`'s
 `configure_observability` comments if wiring tracing into a new entry point.
+
+Before opening a real trace session, the CLI runs `LangfuseReachability`
+to verify the endpoint is reachable:
+
+- keys unset → tracing silently skipped (no network call)
+- reachable → tracing enabled
+- unreachable + interactive TTY → prompt to skip or cancel
+- unreachable + non-TTY → tracing skipped, run continues
+
 Every subcommand accepts `--disable-tracing` to skip this regardless of what
 `.env` has set.
 
 ### 2. Run an Analysis
 
 ```bash
-# Conversation
+# Conversation (sequential by default)
 bundle exec sfl-analyze conversation /path/to/conversation.jsonl --output-dir ./output
+
+# Conversation (parallel via Sidekiq/Gush)
+bundle exec sfl-analyze conversation /path/to/conversation.jsonl --output-dir ./output --live
 
 # Documentation (file or directory), ingesting for later queries
 bundle exec sfl-analyze documentation docs/ --store --output-dir ./output
@@ -112,7 +125,7 @@ retrieved evidence; clauses the model actually cited are marked `*`. Notes:
 - Re-ingesting a document with `--store` replaces its previous clauses
   (idempotent per document) — counts don't grow on re-runs.
 
-### 5. Narrative reports
+### 5. Narrative Reports
 
 Generate an LLM-written interpretive narrative — overview, cast & roles,
 interpersonal dynamics, conversational arc, data quality, and takeaways —
@@ -143,98 +156,31 @@ Failure semantics differ by form:
   trio (already written) is unaffected and the command still exits 0.
 
 Report JSONs written before this feature don't have a `turns` array.
-`narrate`ing one of those fails fast with `[ERROR] Report JSON has no
-`turns` array — it predates narrative support. Re-run the analysis to
-regenerate it.` — re-run `conversation`/`documentation` to produce a JSON
-with `turns`, then `narrate` that.
+`narrate`ing one of those fails fast with `[ERROR] Report JSON has no turns
+array — it predates narrative support. Re-run the analysis to regenerate it.`
+Re-run `conversation`/`documentation` to produce a JSON with `turns`, then
+`narrate` that.
 
-## Input Format (conversation)
+## Parallel Conversation Processing
 
-JSONL, one turn per line:
-
-```json
-{"name":"Alice","is_user":true,"send_date":"June 10, 2026 2:30pm","mes":"Hello, how are you?","extra":{}}
-{"name":"Bob","is_user":false,"send_date":"June 10, 2026 2:31pm","mes":"I'm doing great, thanks!","extra":{}}
-```
-
-**Required fields**: `name` (speaker), `send_date` (flexible format), `mes`
-(message text). Other fields are ignored. Unparseable lines are skipped.
-
-## Understanding the Output
-
-### Tenor (Formality)
-
-- **0.0–0.3**: casual/informal (chat, DMs)
-- **0.3–0.6**: mixed (email, Slack)
-- **0.6–1.0**: formal/technical (docs, papers)
-
-### Modality (Certainty)
-
-- **0.0–0.3**: hedged/uncertain ("might", "could", "perhaps")
-- **0.3–0.6**: moderate ("should", "would", "likely")
-- **0.6–1.0**: certain/assertive ("will", "must", "definitely")
-
-### Process Types
-
-- **Material**: actions ("run", "build", "deploy")
-- **Mental**: thoughts/feelings ("think", "want", "know")
-- **Verbal**: communication ("say", "tell", "ask")
-- **Relational**: states/attributes ("is", "has", "becomes")
-- **Behavioral**: physiological ("laugh", "sigh", "breathe")
-- **Existential**: existence ("there is", "exists")
-
-### Annotation provenance
-
-Every clause records where its interpersonal values came from:
-
-- `llm` — real Pass 2 annotation
-- `fallback` — the LLM call failed for this clause; defaults substituted
-  (tenor 0.5, modality 0.5, declarative)
-- `stub` — Pass 2 was skipped (`--pass1-only`)
-
-Reports aggregate this into the Data Quality section so placeholder-heavy
-results are never mistaken for findings.
-
-## Pass 2 Performance Tuning
-
-Pass 2 batches clauses into LLM calls and runs calls concurrently. Defaults
-work for most cases; override via environment:
+For large conversations, the `conversation --live` command distributes turns
+across Sidekiq workers via Gush instead of compiling each turn in-process. Each
+`CompileTurnJob` runs in its own process with its own Python interpreter, which
+avoids the PyCall GIL deadlock that can occur when spaCy and Ruby threads share
+runtime state.
 
 ```bash
-SFL_BATCH_SIZE=12      # clauses per LLM call
-SFL_CONCURRENCY=4      # concurrent in-flight calls
+# Start Redis first, then run with --live
+redis-server
+bundle exec sfl-analyze conversation chat.jsonl --output-dir ./output --live
 ```
 
-A chunk that fails transiently is retried once before its clauses fall back
-to defaults.
-
-## Troubleshooting
-
-### "Unsupported DSPY_PROVIDER"
-
-The CLI only maps `openrouter/`, `google/`, `openai/`, and `anthropic/`
-prefixes to keys. Fix the provider string or use the library directly with
-your own `DSPy.configure`.
-
-### "OPENROUTER_API_KEY is not set (required by DSPY_PROVIDER=...)"
-
-Set the key matching your provider prefix in `.env`.
-
-### "[ERROR] LLM provider error: ..."
-
-The provider rejected the call (rate limit, upstream outage). These are
-transient — retry shortly or switch `DSPY_PROVIDER` to another model.
-
-### "[ERROR] Database connection failed for ..."
-
-Update `DATABASE_URL` in `.env`:
+If `REDIS_URL` is unset, it defaults to `redis://localhost:6379/0`. A typical
+full local configuration might look like:
 
 ```bash
-# Default (Unix socket)
+REDIS_URL=redis://localhost:6379/0
 DATABASE_URL=postgresql:///sfl_compiler_dev
-
-# With host/port
-DATABASE_URL=postgresql://user@localhost:5432/sfl_compiler_dev
 ```
 
 ### All tenor values are 0.5
@@ -249,6 +195,71 @@ fallback/stub, Pass 2 didn't run (missing key, failing provider, or
 Either nothing has been ingested (`sfl-analyze documentation <path> --store`
 first), or the query/filters are too restrictive — try a shorter query with
 content words that actually appear in the corpus, and loosen stance filters.
+
+### "Redis connection refused" with `--live`
+
+The parallel workflow needs Redis. Start it (`redis-server`) or set
+`REDIS_URL` to a reachable instance. Omit `--live` to run the conversation
+sequentially without Redis.
+
+### "Langfuse unreachable"
+
+If you set Langfuse keys but the endpoint is not reachable, the CLI prompts in
+interactive mode. Answer `y` to continue without tracing, or `n` to cancel. In
+non-interactive mode it continues silently without tracing. Use
+`--disable-tracing` to skip the prompt entirely.
+
+## Cross-Document Reasoning
+
+`SFL::Compiler::CrossDocumentGraph` builds a small query-time graph across stored
+documents so you can ask questions that span more than one source. It works
+like `ContextSynthesizer`, but before generating an answer it resolves entity
+and clause nodes across documents and ranks them by combined semantic +
+keyword relevance.
+
+```ruby
+require "sfl/compiler/bootstrap"
+Bootstrap.call
+
+graph = SFL::Compiler::CrossDocumentGraph.new
+answer = graph.answer(
+  "How do deployment practices differ between the API and web docs?",
+  min_modality: 0.6,
+  limit: 8
+)
+puts answer.text
+puts answer.confidence
+```
+
+Returned answers include the same confidence score and cited clause list as the
+`context` CLI command; clauses actually used in the synthesis are marked `*`.
+
+## Sprint Workflow
+
+`SFL::Compiler::Workflows::SprintWorkflow` lets you plan and execute a batch of
+analyses as one unit. Give it a list of paths; it runs the pipeline for each,
+collects reports, and returns a single summary.
+
+```ruby
+require "sfl/compiler/bootstrap"
+require "sfl/compiler/workflows/sprint_workflow"
+Bootstrap.call(require_jobs: true)   # omit for inline execution
+
+workflow = SFL::Compiler::Workflows::SprintWorkflow.new
+result = workflow.run(
+  paths: Dir["sprint-*.jsonl"],
+  command: :conversation,
+  output_dir: "./output/sprint-#{Date.today}",
+  narrative: true
+)
+
+puts "#{result.reports.size} reports written"
+result.failures.each { |f| warn "#{f[:path]}: #{f[:error]}" }
+```
+
+Failures are captured per item so one bad file does not abort the whole batch.
+Use `Bootstrap.call(require_jobs: true)` to distribute work across Sidekiq/Gush
+when Redis is available.
 
 ## Advanced Usage
 
@@ -278,3 +289,7 @@ For bespoke analyses, compose the same objects the CLI uses —
 `Analysis::DocumentationAnalyzer` / `ContextSynthesizer` →
 `Formatters::ReportWriter`. See `lib/sfl/compiler/cli.rb` for the wiring and
 README's Library Usage section for examples.
+
+When you need Sidekiq/Gush, `Bootstrap.call(require_jobs: true)` wires the
+queue adapter and Redis. Without that, workflows enqueue jobs inline for
+local testing.

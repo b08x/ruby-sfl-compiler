@@ -1,339 +1,287 @@
 # Architecture
 
-The sfl-compiler architecture **prioritizes** separation of concerns between syntactic parsing, semantic annotation, and analysis aggregation **through** a clean layered design **while** acknowledging the tight coupling between LLM configuration and pipeline execution.
+The sfl-compiler follows a **layered pipeline** with strict separation between syntactic extraction (Pass 1), semantic annotation (Pass 2), and analysis. Today's additions introduce **parallel execution** (Gush workflows), **cross-document reasoning** (CrossDocumentGraph), and **pre-flight observability** (LangfuseReachability).
 
 ---
 
-## Component Relationship Map *(Relational Processes — High Certainty)*
+## System Overview
 
-### System Relationship Map
-
-```shell
-[CLI Entry Points] ←→ [Bootstrap & Configuration] ←→ [Pipeline Orchestration]
-         ↓                     ↓                         ↓
-[User Input]    ←→  [LLM/Database Setup]     ←→   [Multi-Stage Processing]
-                                ↓
-                    [Pass 1: Syntactic Parsing]
-                                ↓
-                    [Pass 2: Semantic Annotation]
-                                ↓
-                    [Analysis Aggregation]
-                                ↓
-                    [Output Formatters]
+```
+                          ┌─────────────────────────────────────┐
+                          │          Entry Points               │
+                          │  exe/sfl-analyze  │  TUI │  Chat    │
+                          └────────┬──────────┴──────┴────┬─────┘
+                                   │                      │
+                          ┌────────┴────────┐    ┌───────┴────────┐
+                          │    Bootstrap    │    │  Bubbletea TUI │
+                          │ (ENV → config) │    │  (interactive) │
+                          └────────┬────────┘    └────────────────┘
+                                   │
+              ┌────────────────────┼────────────────────┐
+              ▼                    ▼                    ▼
+     ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+     │   Workflow     │  │   Workflow     │  │   Workflow     │
+     │ (parallel Gush)│  │ (parallel Gush)│  │  (in-process)  │
+     │                │  │                │  │                │
+     │ Conversation   │  │    Sprint      │  │  Documentation │
+     │ Analysis       │  │  (4-stage)     │  │  Analysis      │
+     └───────┬────────┘  └───────┬────────┘  └───────┬────────┘
+             │                   │                   │
+             ▼                   ▼                   ▼
+     ┌─────────────────────────────────────────────────────────┐
+     │                    Pipeline Core                         │
+     │  Pass 1 (spaCy) → GC → Pass 2 (LLM) → Store → Embed   │
+     └─────────────────────────────────────────────────────────┘
+             │                                       │
+             ▼                                       ▼
+     ┌────────────────┐                    ┌────────────────┐
+     │   Analysis     │                    │   Retrieval    │
+     │  Layer         │                    │   Layer        │
+     │                │                    │                │
+     │ • TenorTracker │                    │ • Embedder     │
+     │ • SpeakerProf  │                    │ • HybridRetr.  │
+     │ • Cohesion     │                    │   (RRF)        │
+     │ • TopicModel   │                    └────────────────┘
+     │ • Correlation  │
+     │ • Narrative    │
+     │ • QuestionGraph│
+     │ • CrossDocGraph│
+     └────────────────┘
 ```
 
-### Primary Architectural Relationships
-
-| Relationship | Type | Confidence | Description |
-|-------------|------|------------|-------------|
-| **Bootstrap → PassOneEngine** | Configuration flow | EXTRACTED | Bootstrap **provides** LLM and database configuration **enabling** syntactic parsing |
-| **Bootstrap → PassTwoEngine** | Configuration flow | EXTRACTED | Bootstrap **provides** LLM setup **enabling** semantic annotation |
-| **PassOneEngine → ClauseRepository** | Data flow | EXTRACTED | PassOneEngine **stores** parsed clauses **in** ClauseRepository |
-| **ClauseRepository → PassTwoEngine** | Data flow | EXTRACTED | ClauseRepository **provides** clauses **for** interpersonal annotation |
-| **PassTwoEngine → ConversationAnalyzer** | Processing flow | EXTRACTED | PassTwoEngine **produces** annotated clauses **for** aggregation |
-| **PassTwoEngine → PipelineCache** | Caching flow | EXTRACTED | PassTwoEngine **uses** PipelineCache **for** resume capability |
-| **ConversationAnalyzer → Analysis Modules** | Aggregation flow | EXTRACTED | ConversationAnalyzer **coordinates** CohesionAnalyzer, SpeakerProfiler, TenorTracker, TopicModeler |
-| **ConversationAnalyzer → Formatters** | Output flow | EXTRACTED | ConversationAnalyzer **generates** analysis results **for** CSV/JSON/Markdown formatting |
-| **Embedder → EmbeddingRepository** | Storage flow | EXTRACTED | Embedder **generates** vectors **stored in** EmbeddingRepository via pgvector |
-| **HybridRetriever → EmbeddingRepository** | Retrieval flow | EXTRACTED | HybridRetriever **queries** EmbeddingRepository **using** semantic + keyword search |
-
-### Design Philosophy
-
-This architecture **prioritizes** modularity and testability **through** clear separation between extraction stages **while** accepting the complexity of LLM dependency management. The approach **enables** precise linguistic analysis at scale **at the cost of** requiring careful configuration and resource management.
-
 ---
 
-## Data Flow Architecture *(Material Processes)*
+## Execution Models
 
-### Sequence Diagram of Primary Operation
+### 1. Parallel Conversation Workflow (Gush + Sidekiq)
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant Bootstrap as Bootstrap
-    participant PassOne as PassOneEngine
-    participant PassTwo as PassTwoEngine
-    participant Cache as PipelineCache
-    participant Storage as ClauseRepository
-    participant Aggregator as ConversationAnalyzer
-    participant Output as Formatters
-    
-    User->>CLI: sfl-analyze conversation input.md
-    CLI->>Bootstrap: Initialize (LLM, DB config)
-    Bootstrap-->>CLI: Configuration ready
-    CLI->>PassOne: Parse input file
-    PassOne->>Storage: Store syntactic clauses
-    Storage-->>PassOne: Clause IDs
-    
-    alt Resume from cache
-        PassOne->>Cache: Check cached Pass 1 results
-        Cache-->>PassOne: Cached clauses (if exist)
-    else Full parsing
-        PassOne->>PassOne: spaCy syntactic analysis
-        PassOne->>PassOne: Ideational extraction
-    end
-    
-    PassOne-->>CLI: Pass 1 complete
-    CLI->>PassTwo: Annotate interpersonalafunction
-    
-    alt Resume from cache
-        PassTwo->>Cache: Check cached Pass 2 results
-        Cache-->>PassTwo: Cached annotations (if exist)
-    else Full annotation
-        PassTwo->>PassTwo: LLM interpersonal analysis
-        PassTwo->>PassTwo: Textual theme/rheme extraction
-        PassTwo->>Storage: Store embeddings (optional)
-    end
-    
-    PassTwo-->>Aggregator: Annotated clauses
-    Aggregator->>Aggregator: Cohesion metrics
-    Aggregator->>Aggregator: Speaker profiling
-    Aggregator->>Aggregator: Tenor tracking
-    Aggregator->>Aggregator: Topic modeling
-    Aggregator->>Output: Analysis results
-    Output->>Output: Format as CSV/JSON/Markdown
-    Output-->>User: Analysis complete
+```
+  CLI ──► ConversationAnalysisWorkflow.configure()
+              │
+              ├──[topics≥3]──► TopicModelJob ─────────────────────┐
+              │                    (fit LDA/HDP)                  │
+              │                                                    │
+              ├──► CompileTurnJob #1 ──┐                         │
+              ├──► CompileTurnJob #2 ──┤  (parallel workers)     ├──► ReduceTurnsJob
+              ├──► CompileTurnJob #3 ──┤  (own Python interp.)   │    (cross-turn aggreg.)
+              └──► CompileTurnJob #N ──┘    ▲                    │
+                                             │                    │
+                              topic_job ──────┘ (dependency)      │
+                                                            ┌─────┴──────┐
+                                                            │AnalysisResult│
+                                                            └─────────────┘
 ```
 
-### Transformation Pipeline
+**Why Gush?** Each `CompileTurnJob` runs in its own Sidekiq worker process with its own Python interpreter. Pass 1's PyCall/spaCy is **not shared across threads** — the old Bubbletea `--live` TUI deadlocked because of this. Gush gives true process isolation.
 
-1. **Input Stage**: CLI **provides** markdown files **through** argument parsing **at** user request
-2. **Bootstrap Stage**: Bootstrap **configures** LLM endpoints and database connections **using** environment variables and defaults **for** subsequent pipeline stages
-3. **Pass 1 Processing**: PassOneEngine **transforms** raw text **into** syntactic clauses **using** spaCy dependency parsing **producing** IdeationalPayload (process types, participants, circumstances)
-4. **Storage Stage**: ClauseRepository **persists** syntactic clauses **as** PostgreSQL records **with** document and sentence metadata **enabling** resume and retrieval
-5. **Pass 2 Processing**: PassTwoEngine **transforms** syntactic clauses **into** fully annotated clauses **using** LLM prompts **producing** InterpersonalPayload (mood, modality, tenor, attitude) and TextualPayload (theme, rheme)
-6. **Caching Stage**: PipelineCache **stores** intermediate results **on** disk **as** JSON files **keyed by** document_id + sentence_index + clause_text **enabling** resume after failures
-7. **Aggregation Stage**: ConversationAnalyzer **aggregates** annotated clauses **into** turn-level metrics **including** CohesionMetrics, SpeakerProfile, KeyMoments, ExamplePassages
-8. **Output Stage**: Formatters **serialize** analysis results **as** CSV (spreadsheet), JSON (API), or Markdown (human-readable) **for** various consumers
+### 2. Sprint Workflow (4-Stage Sequential)
 
----
-
-## Module Dependency Graph *(Relational Processes)*
-
-```mermaid
-flowchart LR
-    subgraph Core["Core Pipeline"]
-        direction TB
-        Bootstrap --> PassOne
-        Bootstrap --> PassTwo
-        PassOne --> ClauseRepo
-        ClauseRepo --> PassTwo
-        PassTwo --> Cache
-        PassTwo --> ConvAnalyzer
-    end
-    
-    subgraph Storage["Storage Layer"]
-        direction TB
-        ClauseRepo --> DB
-        EmbeddingRepo --> DB
-        Cache --> Disk
-    end
-    
-    subgraph Analysis["Analysis Layer"]
-        direction TB
-        ConvAnalyzer --> Cohesion
-        ConvAnalyzer --> Speaker
-        ConvAnalyzer --> Tenor
-        ConvAnalyzer --> Topic
-        ConvAnalyzer --> Narrative
-    end
-    
-    subgraph Retrieval["Retrieval Layer"]
-        direction TB
-        HybridRetriever --> Embedder
-        Embedder --> EmbeddingRepo
-        EmbeddingRepo --> DB
-        HybridRetriever --> ClauseRepo
-    end
-    
-    subgraph Output["Output Layer"]
-        direction TB
-        ConvAnalyzer --> CSVFormatter
-        ConvAnalyzer --> JSONFormatter
-        ConvAnalyzer --> MarkdownFormatter
-        Narrative --> NarrativeFormatter
-    end
-    
-    CLI --> Bootstrap
-    CLI --> ConvAnalyzer
-    
-    DB[(PostgreSQL\n+ pgvector)]
-    Disk[(Disk Cache\n.sfl-cache/)]
-    
-    classDef core fill:#1e40af,stroke:#3b82f6,color:#fff
-    classDef storage fill:#064e3b,stroke:#10b981,color:#fff
-    classDef analysis fill:#7c2d12,stroke:#f59e0b,color:#fff
-    classDef retrieval fill:#581c87,stroke:#8b5cf6,color:#fff
-    classDef output fill:#1e293b,stroke:#64748b,color:#fff
-    classDef db fill:#334155,stroke:#475569,color:#fff
-    
-    class Bootstrap,PassOne,PassTwo,ConvAnalyzer core
-    class ClauseRepo,EmbeddingRepo,DB,Cache storage
-    class Cohesion,Speaker,Tenor,Topic,Narrative analysis
-    class HybridRetriever,Embedder retrieval
-    class CSVFormatter,JSONFormatter,MarkdownFormatter,NarrativeFormatter output
-    class DB,Disk db
+```
+  SprintWorkflow.configure(domain_payload)
+       │
+       ├──► SprintRoleJob(:achilles) ──► proposes
+       │
+       ├──► SprintRoleJob(:tortoise) ──► challenges (after achilles)
+       │
+       ├──► CrabConstraintJob ──► pins invariants (after tortoise)
+       │
+       └──► SprintRoleJob(:genie) ──► synthesizes (after crab)
 ```
 
-### Critical Dependencies
+### 3. In-Process Documentation Pipeline
 
-| Dependency | Provides | Failure Impact | Mitigation |
-|------------|----------|----------------|------------|
-| **PostgreSQL + pgvector** | Vector storage and retrieval | Semantic retrieval and embedding storage unavailable | Falls back to keyword-only retrieval; warning logged |
-| **Ollama/OpenAI API** | LLM annotation capabilities | Pass 2 annotation fails; system hangs | Circuit breaker pattern with timeout and retry; graceful degradation |
-| **spaCy + en_core_web_lg** | Syntactic parsing | Pass 1 extraction produces fallback/stub values | Warning in output; data quality section flags affected clauses |
-| **Ruby 3.2+** | Runtime environment | Pipeline execution fails | Version check in bootstrap; clear error message |
-| **Bundler** | Dependency management | Gem loading fails | Standard Ruby dependency management |
+```
+  CLI ──► DocumentationAnalyzer ──► Pipeline (synchronous)
+                                            │
+                                            ├── Pass 1 → Ideational
+                                            ├── Pass 2 → Interpersonal + Textual
+                                            └── Store + Embed
+```
 
 ---
 
-## Layered Architecture Details
+## Layer Responsibilities
 
 ### Input Layer
-**Components**: `CLI`, `MarkdownLoader`, `Bootstrap`
 
-**Responsibilities**:
-- Parse command-line arguments
-- Load and chunk input files
-- Configure LLM endpoints and database connections
-- Validate environment setup
-
-**Transformation Contract**:
-Input Layer **transforms** user commands and file paths **into** validated configuration and loaded text **through** argument parsing and file I/O **when** all dependencies are satisfied.
+| Component | Responsibility |
+|-----------|---------------|
+| `CLI` | Argv parsing, exit codes — pure function `.parse` |
+| `MarkdownLoader` | Chunk + segment markdown/PDF into sections |
+| `Bootstrap` | ENV → Configuration + DB + DSPy + Observability |
+| `LangfuseReachability` | Pre-flight TCP check; prompts continue/cancel |
 
 ### Extraction Layer (Pass 1)
-**Components**: `PassOneEngine`, `IdeationalExtractor`, `ClauseRepository`
 
-**Responsibilities**:
-- Parse text into syntactic clauses using spaCy
-- Extract ideational metafunction: process types, participants, circumstances
-- Store clauses with metadata for downstream processing
-
-**Transformation Contract**:
-Pass 1 **transforms** raw text **into** syntactic clauses with ideational annotations **through** spaCy dependency parsing and rule-based extraction **when** text is syntactically valid.
+| Component | Responsibility |
+|-----------|---------------|
+| `PassOneEngine` | spaCy tokenization, POS, dependency parsing |
+| `IdeationalExtractor` | Rule-based transitivity classification |
 
 ### Annotation Layer (Pass 2)
-**Components**: `PassTwoEngine`, `SFLAnnotator`, `SFLBatchAnnotator`, `ThemeRhemeExtractor`
 
-**Responsibilities**:
-- Annotate interpersonal metafunction: mood, modality weight, tenor, speaker attitude
-- Extract textual metafunction: theme types, textual/theme/interpersonal themes, rheme
-- Generate embeddings for semantic retrieval
-- Cache intermediate results for resume capability
+| Component | Responsibility |
+|-----------|---------------|
+| `PassTwoEngine` | LLM interpersonal + textual annotation |
+| `SFLAnnotator` | Single-clause DSPy ChainOfThought |
+| `SFLBatchAnnotator` | Batched multi-clause DSPy |
+| `ThemeRhemeExtractor` | Experimental theme/rheme via LLM |
 
-**Transformation Contract**:
-Pass 2 **transforms** syntactic clauses **into** fully annotated SFL clauses **through** LLM prompts and normalization **when** LLM endpoint is available and configured.
+### Analysis Layer
 
-### Aggregation Layer
-**Components**: `ConversationAnalyzer`, `CohesionAnalyzer`, `SpeakerProfiler`, `TenorTracker`, `TopicModeler`, `CorrelationAnalyzer`
-
-**Responsibilities**:
-- Aggregate clause-level annotations to turn-level metrics
-- Calculate cohesion metrics (repetition, conjunction, pronoun density)
-- Profile speakers by linguistic patterns
-- Track tenor and modality shifts
-- Model topics across conversation
-- Correlate process types with interpersonal features
-
-**Transformation Contract**:
-Aggregation Layer **transforms** annotated clauses **into** analysis insights **through** statistical aggregation and pattern detection **when** sufficient data is available.
+| Component | Responsibility |
+|-----------|---------------|
+| `ConversationAnalyzer` | Turn-level aggregation |
+| `TenorTracker` | Formality shift detection (mutates in-place) |
+| `SpeakerProfiler` | Per-speaker linguistic patterns |
+| `CohesionAnalyzer` | Repetition, conjunction, pronoun density |
+| `TopicModeler` | LDA/HDP topic clustering |
+| `CorrelationAnalyzer` | Process type × tenor/modality correlation |
+| `NarrativeGenerator` | LLM prose from structured analysis |
+| `QuestionGraph` | Gödel-encoded dependency DAG |
+| `CrossDocumentGraph` | Multi-document question merging |
 
 ### Storage Layer
-**Components**: `ClauseRepository`, `EmbeddingRepository`, `PipelineCache`, `Database`, `Migrator`
 
-**Responsibilities**:
-- Persist clauses, embeddings, and analysis results
-- Provide pgvector-backed vector search
-- Cache intermediate pipeline results
-- Manage database schema migrations
-
-**Transformation Contract**:
-Storage Layer **transforms** in-memory data structures **into** durable storage **through** PostgreSQL operations and JSON serialization **when** database connection is established.
+| Component | Responsibility |
+|-----------|---------------|
+| `ClauseRepository` | CRUD with payload separation |
+| `EmbeddingRepository` | pgvector encode/decode/store |
+| `PipelineCache` | Disk-based JSON cache (resume) |
+| `Database` | Connection + schema + migrations |
 
 ### Retrieval Layer
-**Components**: `Embedder`, `HybridRetriever`, `EmbeddingRepository`
 
-**Responsibilities**:
-- Generate embedding vectors using Ollama
-- Retrieve similar clauses using RRF (Reciprocal Rank Fusion) of semantic + keyword scores
-- Encode/decode vectors using pgvector
+| Component | Responsibility |
+|-----------|---------------|
+| `Embedder` | Text → 768-dim vector (Ollama embeddinggemma) |
+| `HybridRetriever` | RRF fusion of semantic + keyword + scalar filters |
 
-**Transformation Contract**:
-Retrieval Layer **transforms** text queries **into** relevant clause results **through** vectorization and hybrid search **when** embeddings are available.
+### Orchestration Layer
 
-### Output Layer
-**Components**: `CSVFormatter`, `JSONFormatter`, `MarkdownFormatter`, `NarrativeFormatter`, `NarrativeGenerator`
+| Component | Responsibility |
+|-----------|---------------|
+| `Pipeline` | Pass 1 → GC → Pass 2 → Store → Embed |
+| `ConversationAnalysisWorkflow` | Gush: fan-out CompileTurnJob, fan-in ReduceTurnsJob |
+| `SprintWorkflow` | Gush: Achilles → Tortoise → Crab → Genie |
 
-**Responsibilities**:
-- Serialize analysis results to CSV for spreadsheet analysis
-- Format as JSON for API consumption
-- Render as Markdown for human reading
-- Generate narrative reports with key insights
+### Jobs Layer
 
-**Transformation Contract**:
-Output Layer **transforms** analysis results **into** consumable formats **through** template-based serialization **when** all upstream stages complete successfully.
-
----
-
-## Design Rationale *(Mental Processes)*
-
-### Two-Pass Architecture
-
-**Context**: Linguistic analysis requires both syntactic structure (precisely extractable) and semantic interpretation (LLM-dependent).
-
-**Decision**: Split processing into Pass 1 (spaCy) and Pass 2 (LLM).
-
-**Rationale**: Syntax trees are deterministic and fast; interpersonal features require LLM inference. Separation **enables** caching, resume, and independent testing of each stage. The design **typically produces** higher quality results than single-pass approaches **while** requiring more complex orchestration.
-
-**Trade-offs**: Added complexity in pipeline coordination; need to handle partial failures gracefully.
-
-**Confidence**: EXTRACTED from code structure and comments.
+| Component | Responsibility |
+|-----------|---------------|
+| `CompileTurnJob` | Per-turn Pass 1 + Pass 2 (Gush job) |
+| `ReduceTurnsJob` | Cross-turn aggregation (Gush job) |
+| `TopicModelJob` | Topic modeling pre-pass (Gush job) |
+| `SprintRoleJob` | Generic Achilles/Tortoise/Genie role (Gush job) |
+| `CrabConstraintJob` | Rule-based invariant pinning (Gush job) |
 
 ---
 
-### Pipeline Caching
+## Critical Dependencies
 
-**Context**: Pass 2 LLM calls are expensive and may timeout.
-
-**Decision**: Implement disk-based caching of intermediate results.
-
-**Rationale**: Clauses with identical text at the same document position **produce** identical annotations. Cache keys include document_id, sentence_index, and clause_text to prevent collisions.
-
-**Trade-offs**: Disk I/O overhead; cache invalidation complexity when prompts change.
-
-**Confidence**: EXTRACTED from PipelineCache implementation.
-
----
-
-### pgvector Integration
-
-**Context**: PostgreSQL supports vector similarity search via pgvector extension.
-
-**Decision**: Use pgvector for embedding storage and retrieval.
-
-**Rationale**: **Enables** efficient nearest-neighbor search without external vector database. Native PostgreSQL integration **simplifies** infrastructure.
-
-**Trade-offs**: Tight coupling to PostgreSQL; pgvector extension must be installed.
-
-**Confidence**: EXTRACTED from EmbeddingRepository implementation.
-
----
-
-### Hybrid Retrieval (RRF)
-
-**Context**: Keyword and semantic search have complementary strengths.
-
-**Decision**: Combine both using Reciprocal Rank Fusion.
-
-**Rationale**: Keyword search **excels** at exact matches; semantic search **captures** conceptual similarity. RRF **typically produces** better results than either alone.
-
-**Trade-offs**: Increased query complexity; need to tune fusion parameters.
-
-**Confidence**: EXTRACTED from HybridRetriever implementation.
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                    Failure Mode Map                                │
+├──────────────────┬────────────────┬───────────────────────────────┤
+│ Dependency       │ Failure Impact │ Mitigation                    │
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ LLM (Ollama/    │ Pass 2 fails   │ Circuit breaker → 3 retries  │
+│ OpenAI/etc)      │                │ → fallback defaults (0.5)     │
+│                  │                │ → annotation_source="fallback"│
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ spaCy            │ Pass 1 fails   │ PassOneError raised →         │
+│                  │                │ pipeline aborts cleanly       │
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ PostgreSQL       │ No storage     │ Sequel::DatabaseError →       │
+│                  │                │ clear error message           │
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ pgvector         │ No embeddings  │ Falls back to keyword-only    │
+│                  │                │ retrieval; warning logged     │
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ Redis (Gush)      │ No parallel    │ Workflow cannot run;          │
+│                  │ execution      │ falls back to sequential      │
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ Langfuse         │ No tracing     │ Pre-flight check prompts;     │
+│                  │                │ --disable-tracing always works│
+└──────────────────┴────────────────┴───────────────────────────────┘
+```
 
 ---
 
-## Ruby Pragmatist Architecture Insight
+## Gödel Numbering in QuestionGraph
 
-The sfl-compiler architecture works like a **tiered linguistics laboratory** — it **separates the microscopy (spaCy's precise syntactic lenses) from the interpretation (LLM's semantic insights) with clean glass slides between each station**, much like a well-organized research lab where each instrument has its place and purpose, **while the final synthesis requires a human researcher to connect the observations into meaningful conclusions**. The caching layer is the lab notebook, allowing work to resume after interruptions, **but** the quality of results still depends on the clarity of the input specimens and the calibration of the instruments.
+```
+  Question: "Does modality hold across doc types?"
+  Dependencies: [doc0.modality, doc1.modality]
+       │
+       ▼
+  Assign primes in topological order:
+    doc0.modality → 2 (axiomatic)
+    doc1.modality → 3 (axiomatic)
+    this_question  → 5 × (2 × 3) = 30  (derived)
+       │
+       ▼
+  gödel_number = 2 × 3 × 30 = 180
+  factor(180) = {2=>1, 3=>1, 5→2}  ← verifies encoding
+  decode(180) → all questions whose value divides 180
+  consistent? → decode.keys.sort == questions.keys.sort
+```
+
+---
+
+## Cross-Document Reasoning
+
+```
+  Sprint A (doc0)          Sprint B (doc1)
+  ┌──────────────┐         ┌──────────────┐
+  │ QuestionGraph│         │ QuestionGraph│
+  │  modality=2  │         │  modality=3  │
+  │  tenor=5     │         │  tenor=7     │
+  └──────┬───────┘         └──────┬───────┘
+         │                        │
+         └──────────┬─────────────┘
+                    ▼
+         ┌─────────────────────┐
+         │ CrossDocumentGraph  │
+         │ .aggregate([A, B])  │
+         │                     │
+         │ • namespace ids     │
+         │ • detect new        │
+         │   derived questions │
+         │ • reconcile numeric │
+         │   findings (≥0.3    │
+         │   threshold)        │
+         └─────────────────────┘
+```
+
+---
+
+## Observability Flow
+
+```
+  exe/sfl-analyze
+       │
+       ├── Dotenv.load (before require "sfl-compiler")
+       │
+       ├── LangfuseReachability.decide(env:, tty:)
+       │       │
+       │       ├── keys missing → :traced (no tracing)
+       │       ├── reachable    → :traced (proceed)
+       │       ├── unreachable + tty → prompt → :skip or :cancel
+       │       └── unreachable + non-tty → :skip
+       │
+       ├── require "sfl-compiler"
+       │       │
+       │       └── dspy-o11y-langfuse checks ENV (one-shot)
+       │               │
+       │               ├── keys present + reachable → tracing ON
+       │               └── keys absent or unset → tracing OFF
+       │
+       └── Journald::Logger on every operation (correlation_id)
+```
+
+---
+
+## Design Philosophy
+
+> **"Developer happiness, expressiveness, and craft"** — the project mirrors Ruby's own DNA. The two-pass architecture separates what is deterministic (syntax) from what requires judgment (semantics). The parallel execution model respects process isolation. The analysis layer treats data quality as a first-class concern, not an afterthought.
