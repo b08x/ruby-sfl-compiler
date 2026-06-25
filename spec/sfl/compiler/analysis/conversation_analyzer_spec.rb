@@ -266,4 +266,37 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       expect(semantic_moment.magnitude).to eq(0.15)
     end
   end
+
+  describe ".load_jsonl (class method)" do
+    it "is callable without instantiating an analyzer" do
+      raw = described_class.load_jsonl(jsonl_path)
+      expect(raw.size).to eq(5)
+      expect(raw.first).to include(:name, :mes, :send_date)
+    end
+  end
+
+  describe "#build_result" do
+    let(:turn) do
+      SFL::Compiler::Types::ConversationTurn.new(
+        turn_id: 1, speaker: "Alice", timestamp: Time.now,
+        message_text: "It works.", clauses: [annotated_clause("turn-1")],
+        avg_tenor: 0.7, avg_modality: 0.6, dominant_mood: "declarative",
+        process_types: { "material" => 1 }, participants: [], tenor_shift: nil
+      )
+    end
+
+    it "builds an AnalysisResult from pre-compiled turns without a pipeline" do
+      analyzer = described_class.new
+      result = analyzer.build_result([turn], jsonl_path:, total: 1)
+
+      expect(result).to be_a(SFL::Compiler::Types::AnalysisResult)
+      # CohesionAnalyzer#analyze (always run inside #build_result) returns
+      # new turn structs with `cohesion` populated, so the result turns
+      # are turn.new(cohesion: ...), not the literal input struct.
+      expect(result.turns.map(&:turn_id)).to eq([turn.turn_id])
+      expect(result.turns.first.message_text).to eq(turn.message_text)
+      expect(result.metadata[:turn_count]).to eq(1)
+      expect(result.metadata[:total]).to eq(1)
+    end
+  end
 end

@@ -30,13 +30,27 @@ module SFL
         #   and returns a partial result covering whatever turns
         #   completed (metadata[:interrupted] is true, metadata[:total]
         #   still reflects the full input size).
-        def initialize(pipeline:, pass_one_only: false, on_progress: nil, on_turn_start: nil, stop_requested: nil)
+        def initialize(pipeline: nil, pass_one_only: false, on_progress: nil, on_turn_start: nil, stop_requested: nil)
           @pipeline = pipeline
           @pass_one_only = pass_one_only
           @on_progress = on_progress
           @on_turn_start = on_turn_start
           @stop_requested = stop_requested
-          @resume = pipeline.cache ? true : false
+          @resume = pipeline&.cache ? true : false
+        end
+
+        # Skips lines that parse as valid JSON but aren't turn-shaped —
+        # e.g. SillyTavern *group chat* exports prepend a
+        # {chat_metadata:, user_name:, character_name:} header record
+        # before the actual {name:, mes:, send_date:, ...} turns, which
+        # JSON::ParserError can't catch since it's syntactically valid.
+        def self.load_jsonl(path)
+          File.readlines(path).filter_map do |line|
+            turn = JSON.parse(line.strip, symbolize_names: true)
+            turn if turn.is_a?(Hash) && turn[:mes]
+          rescue JSON::ParserError
+            nil
+          end
         end
 
         # @param jsonl_path [String]
@@ -46,7 +60,7 @@ module SFL
         # @return [Types::AnalysisResult]
         def analyze(jsonl_path, topics: nil, resume: false)
           @resume = resume
-          raw_turns = load_jsonl(jsonl_path)
+          raw_turns = self.class.load_jsonl(jsonl_path)
           total = raw_turns.size
 
           # Topic modeling (optional pre-pass)
@@ -94,6 +108,15 @@ module SFL
           end
           interrupted = turns.size < total
 
+          build_result(turns, jsonl_path:, total:, interrupted:, topic_labels:, topic_shifts:)
+        end
+
+        # Builds the final AnalysisResult from already-compiled turns —
+        # the cross-turn aggregation tail shared with Jobs::ReduceTurnsJob,
+        # which reconstructs `turns` from Gush job payloads instead of
+        # compiling them inline via #analyze's loop.
+        # @param turns [Array<Types::ConversationTurn>]
+        def build_result(turns, jsonl_path:, total:, interrupted: false, topic_labels: nil, topic_shifts: [])
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
           profiles = SpeakerProfiler.build_profiles(turns)
@@ -253,20 +276,6 @@ module SFL
             elapsed: elapsed.round(2), clause_count: turn.clauses.size,
             defaulted:, turn:
           )
-        end
-
-        # Skips lines that parse as valid JSON but aren't turn-shaped —
-        # e.g. SillyTavern *group chat* exports prepend a
-        # {chat_metadata:, user_name:, character_name:} header record
-        # before the actual {name:, mes:, send_date:, ...} turns, which
-        # JSON::ParserError can't catch since it's syntactically valid.
-        private def load_jsonl(path)
-          File.readlines(path).filter_map do |line|
-            turn = JSON.parse(line.strip, symbolize_names: true)
-            turn if turn.is_a?(Hash) && turn[:mes]
-          rescue JSON::ParserError
-            nil
-          end
         end
 
         private def compile_turn(turn_data, turn_id, pre_turn: nil, modeler: nil)
