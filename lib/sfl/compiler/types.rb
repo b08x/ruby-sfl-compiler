@@ -174,6 +174,7 @@ module SFL
         attribute :speaker_attitude, Types::String.optional
         attribute :reasoning, Types::String.optional # DSPy ChainOfThought reasoning
         attribute :annotation_source, Types::AnnotationSource
+        attribute :reasoning_trace, ReasoningTrace.optional.default(nil)
       end
 
       # Textual metafunction payload (from Pass 2)

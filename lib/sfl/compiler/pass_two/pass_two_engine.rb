@@ -5,6 +5,8 @@ require "dspy"
 require "timeout"
 require "dry/monads"
 require "journald/logger"
+require "digest"
+require "json"
 
 module SFL
   module Compiler
@@ -264,19 +266,54 @@ module SFL
             "Consider adding it to ClassificationRegistry::MOOD.")
         end
 
+        modality_weight = clamp01(result[:modality_weight] || 0.5)
+        tenor = clamp01(result[:tenor] || 0.5)
+        conclusion = { mood:, modality_weight:, tenor:, speaker_attitude: result[:speaker_attitude] }
+
         Types::InterpersonalPayload.new(
           clause_id: clause.id,
           mood:,
-          modality_weight: clamp01(result[:modality_weight] || 0.5),
-          tenor: clamp01(result[:tenor] || 0.5),
+          modality_weight:,
+          tenor:,
           speaker_attitude: result[:speaker_attitude],
           reasoning: result[:reasoning],
-          annotation_source: "llm"
+          annotation_source: "llm",
+          reasoning_trace: reasoning_trace_from(result, conclusion)
         )
       rescue Dry::Struct::Error => e
         log_and_warn("pass_two_invalid_interpersonal", correlation_id, clause,
           "Invalid interpersonal values: #{e.message} — defaults applied")
         nil
+      end
+
+      # Bridges a DSPy result hash's premises/inference_rule into the
+      # internal Types::ReasoningTrace. derivation_hash is computed here
+      # from the actual returned values, never read from an LLM output
+      # field — an LLM-emitted hash would verify nothing, since the model
+      # could emit any string it wants.
+      private def reasoning_trace_from(result, conclusion)
+        premises = (result[:premises] || []).map do |p|
+          Types::Premise.new(type: p.type, source: p.source, value: p.value, weight: p.weight)
+        end
+        inference_rule = result[:inference_rule] || "unknown"
+
+        Types::ReasoningTrace.new(
+          premises:,
+          inference_rule:,
+          conclusion:,
+          confidence: clamp01(result[:confidence] || 0.5),
+          derivation_hash: compute_derivation_hash(premises, inference_rule, conclusion),
+          generated_at: ::Time.now
+        )
+      end
+
+      private def compute_derivation_hash(premises, inference_rule, conclusion)
+        canonical = JSON.generate(
+          premises: premises.map(&:to_h).sort_by { |p| [p[:type], p[:source]] },
+          inference_rule:,
+          conclusion: conclusion.sort.to_h
+        )
+        Digest::SHA256.hexdigest(canonical)
       end
 
       private def textual_from(clause, result, correlation_id)

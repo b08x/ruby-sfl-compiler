@@ -111,6 +111,80 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
     end
 
+    describe "reasoning_trace bridge" do
+      def dspy_response(premises:, inference_rule: "tenor_high_formal_register")
+        {
+          mood: "declarative", modality_weight: 0.8, tenor: 0.7,
+          speaker_attitude: "assertive", reasoning: "formal register",
+          premises:, inference_rule:,
+        }
+      end
+
+      let(:premises) do
+        [
+          SFL::Compiler::PremiseOutput.new(type: "token", source: "unanimously", value: "ADV", weight: 0.7),
+          SFL::Compiler::PremiseOutput.new(type: "pos", source: "DET+VERB", value: "formal_pattern", weight: nil),
+        ]
+      end
+
+      it "attaches a reasoning_trace to llm-sourced annotations" do
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises:))
+
+        result = engine.annotate(clause, ideational)
+
+        trace = result.interpersonal.reasoning_trace
+        expect(trace).to be_a(SFL::Compiler::Types::ReasoningTrace)
+        expect(trace.premises.size).to eq(2)
+        expect(trace.inference_rule).to eq("tenor_high_formal_register")
+      end
+
+      it "leaves reasoning_trace nil for fallback-sourced (non-LLM) annotations" do
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_raise(StandardError, "boom")
+
+        result = nil
+        expect { result = engine.annotate(clause, ideational) }.to output(/\[WARN\]/).to_stderr
+
+        expect(result.interpersonal.annotation_source).to eq("fallback")
+        expect(result.interpersonal.reasoning_trace).to be_nil
+      end
+
+      it "produces a byte-identical derivation_hash for two calls with identical DSPy responses" do
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises:))
+
+        first = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+        second = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+
+        expect(first).to eq(second)
+      end
+
+      it "produces a different derivation_hash when the conclusion differs, same premises" do
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises:))
+        hash_a = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises:).merge(tenor: 0.1))
+        hash_b = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+
+        expect(hash_a).not_to eq(hash_b)
+      end
+
+      it "is order-independent: premises in a different array order still hash the same" do
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises:))
+        hash_a = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises: premises.reverse))
+        hash_b = engine.annotate(clause, ideational).interpersonal.reasoning_trace.derivation_hash
+
+        expect(hash_a).to eq(hash_b)
+      end
+    end
+
     describe "SFL::Compiler::SFLAnnotator#call" do
       it "passes structured premises and inference_rule through as PremiseOutput instances" do
         premises = [
