@@ -201,6 +201,55 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
     end
   end
 
+  describe "clause-count threshold" do
+    let(:single_section_markdown) do
+      <<~MD
+        # Section
+
+        This single section has enough prose to clear MarkdownLoader's minimum length threshold for chunking.
+      MD
+    end
+
+    def write_single_section_doc(dir)
+      path = File.join(dir, "doc.md")
+      File.write(path, single_section_markdown)
+      path
+    end
+
+    it "flags low_confidence at 29 clauses (just under the 30 minimum)" do
+      allow(pipeline).to receive(:compile) { |_text, document_id:, **| Array.new(29) { annotated_clause(document_id) } }
+
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_single_section_doc(dir))
+
+        expect(result.metadata[:clause_count]).to eq(29)
+        expect(result.metadata[:low_confidence]).to be(true)
+        expect(result.metadata[:low_confidence_threshold]).to eq(30)
+      end
+    end
+
+    it "does not flag low_confidence at 31 clauses (above the 30 minimum)" do
+      allow(pipeline).to receive(:compile) { |_text, document_id:, **| Array.new(31) { annotated_clause(document_id) } }
+
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_single_section_doc(dir))
+
+        expect(result.metadata[:clause_count]).to eq(31)
+        expect(result.metadata[:low_confidence]).to be(false)
+      end
+    end
+
+    it "raises InsufficientDataError when the document produces 0 clauses" do
+      allow(pipeline).to receive(:compile).and_return([])
+
+      Dir.mktmpdir do |dir|
+        path = write_single_section_doc(dir)
+        expect { described_class.new(pipeline:, clause_repo:).analyze(path) }
+          .to raise_error(SFL::Compiler::InsufficientDataError, /insufficient data/i)
+      end
+    end
+  end
+
   context "with topics: requested" do
     it "skips the pre-pass and omits :topic when fewer than 3 sections" do
       Dir.mktmpdir do |dir|

@@ -11,6 +11,7 @@ module SFL
 
             **Generated**: #{result.metadata[:analyzed_at]}
             **#{unit_label}s**: #{result.metadata[:turn_count]} | **#{actors_list_label}**: #{result.metadata[:speakers]&.join(', ')}
+            #{low_confidence_banner}
             #{data_quality_warning}
             ---
 
@@ -57,6 +58,21 @@ module SFL
             **Modality Scale**: 0.0 (hedged/uncertain) ↔ 1.0 (certain/assertive)
             #{sprint_footer}
           MD
+        end
+
+        # More prominent than #data_quality_warning: this is about sample
+        # size, not annotation provenance — even a 100% LLM-annotated
+        # report is unreliable in aggregate if it's only a few clauses.
+        private def low_confidence_banner
+          return "" unless result.metadata[:low_confidence]
+
+          count = result.metadata[:clause_count]
+          threshold = result.metadata[:low_confidence_threshold]
+          <<~BANNER.chomp
+
+            > ## 🚨 LOW CONFIDENCE: #{count} clauses (minimum #{threshold} recommended)
+            > Aggregate modality/tenor scores below this sample size are statistically unreliable. Treat every finding in this report as provisional.
+          BANNER
         end
 
         # Clauses whose interpersonal values came from the Pass 2 fallback or

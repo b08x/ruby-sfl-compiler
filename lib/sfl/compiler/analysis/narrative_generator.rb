@@ -169,7 +169,8 @@ module SFL
           # The exact LLM input. Stable section order and formatting:
           # from_result and from_json must produce identical text.
           def to_text
-            text = <<~TEXT
+            text = low_confidence_notice
+            text += <<~TEXT
               == METADATA ==
               #{metadata.map { |k, v| "#{k}: #{v}" }.join("\n")}
 
@@ -196,6 +197,19 @@ module SFL
             text
           end
 
+          # Mirrors the markdown formatter's "Low Confidence" banner — a
+          # small-sample analysis needs the same caveat carried into the
+          # narrative's own text, not just buried as a metadata field.
+          private def low_confidence_notice
+            return "" unless metadata["low_confidence"]
+
+            count = metadata["clause_count"]
+            threshold = metadata["low_confidence_threshold"]
+            "== LOW CONFIDENCE WARNING ==\n" \
+              "This analysis is based on only #{count} clauses (minimum #{threshold} recommended). " \
+              "Explicitly caveat the narrative as a small-sample, provisional analysis.\n\n"
+          end
+
           private def turn_line(t)
             defaulted_pct =
               t["clause_count"].to_i.positive? ? t["defaulted_count"].to_f / t["clause_count"] : 0.0
@@ -219,7 +233,10 @@ module SFL
           "tenor/modality values from turns marked UNRELIABLE — " \
           "describe those turns as unmeasured. Use the KEY MOMENTS entries " \
           "as explicit evidence when describing pivots and anomalies in " \
-          "the conversational arc. Style exemplar: " \
+          "the conversational arc. If the digest opens with a LOW " \
+          "CONFIDENCE WARNING, state plainly in data_quality (and " \
+          "takeaways) that the analysis rests on a small sample and " \
+          "findings are provisional. Style exemplar: " \
           "'Robert is the only speaker who uses imperatives — in SFL " \
           "terms, the only one demanding rather than giving. That " \
           "asymmetry is the facilitator role, recovered from grammar " \

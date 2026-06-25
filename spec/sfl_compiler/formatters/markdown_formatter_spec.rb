@@ -309,6 +309,27 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
     end
   end
 
+  describe "low confidence banner" do
+    it "omits the banner when low_confidence is absent from metadata" do
+      expect(output).not_to include("LOW CONFIDENCE")
+    end
+
+    it "omits the banner when low_confidence is explicitly false" do
+      not_low = result.new(metadata: result.metadata.merge(low_confidence: false, clause_count: 31))
+      out = described_class.new(not_low).render
+      expect(out).not_to include("LOW CONFIDENCE")
+    end
+
+    it "renders the banner with clause count and threshold when low_confidence is true" do
+      low = result.new(metadata: result.metadata.merge(
+        low_confidence: true, clause_count: 29, low_confidence_threshold: 30
+      ))
+      out = described_class.new(low).render
+
+      expect(out).to include("LOW CONFIDENCE: 29 clauses (minimum 30 recommended)")
+    end
+  end
+
   describe "sprint footer" do
     it "omits the footer when no sprint_id is in metadata" do
       expect(output).not_to include("Sprint G_N")

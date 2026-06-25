@@ -97,6 +97,21 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
         expect(text).to include("== KEY MOMENTS ==")
         expect(text).to include("[semantic_anomaly] turn 1 (magnitude: 0.9) — A sudden topic shift.")
       end
+
+      it "omits the low-confidence warning when metadata carries no such flag" do
+        text = described_class.from_result(result).to_text
+        expect(text).not_to include("LOW CONFIDENCE WARNING")
+      end
+
+      it "opens with a low-confidence warning naming the clause count and threshold when flagged" do
+        low_confidence_result = result.new(metadata: result.metadata.merge(
+          low_confidence: true, clause_count: 29, low_confidence_threshold: 30
+        ))
+        text = described_class.from_result(low_confidence_result).to_text
+
+        expect(text).to start_with("== LOW CONFIDENCE WARNING ==")
+        expect(text).to include("only 29 clauses (minimum 30 recommended)")
+      end
     end
 
     describe ".from_json" do

@@ -15,6 +15,11 @@ module SFL
       class DocumentationAnalyzer
         include Aggregations
 
+        # Below this many total clauses, aggregate modality/tenor scoring
+        # is statistically unreliable — see the "Low Confidence" banner in
+        # MarkdownFormatter and the digest warning in NarrativeGenerator.
+        MIN_CLAUSE_THRESHOLD = 30
+
         # @param pipeline [Pipeline]
         # @param clause_repo [ClauseRepository] needed only for store: true
         # @param on_progress [#call, nil] same event shape as
@@ -92,6 +97,12 @@ module SFL
             turns << turn
           end
           interrupted = turns.size < total
+          total_clauses = turns.sum { |t| t.clauses.size }
+          if total_clauses.zero?
+            raise InsufficientDataError,
+              "#{path} produced 0 clauses across #{turns.size} section(s) — insufficient data to analyze. " \
+                "Check that the source contains parseable prose."
+          end
 
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
@@ -114,6 +125,9 @@ module SFL
               topics_enabled: !topic_labels.nil?,
               interrupted:,
               total:,
+              clause_count: total_clauses,
+              low_confidence: total_clauses < MIN_CLAUSE_THRESHOLD,
+              low_confidence_threshold: MIN_CLAUSE_THRESHOLD,
             }.merge(sprint_metadata(sprint_id)),
             turns:,
             speaker_profiles: profiles,
