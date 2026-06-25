@@ -55,6 +55,7 @@ module SFL
 
             **Tenor Scale**: 0.0 (informal/casual) ↔ 1.0 (formal/technical)
             **Modality Scale**: 0.0 (hedged/uncertain) ↔ 1.0 (certain/assertive)
+            #{sprint_footer}
           MD
         end
 
@@ -231,6 +232,23 @@ module SFL
             "| #{p.source} | #{p.type} | #{p.value} | #{p.weight.nil? ? '—' : p.weight} |"
           end
           ["| Premise | Type | Value | Weight |", "|---|---|---|---|", *rows, ""]
+        end
+
+        # Renders only when the analyzer attached sprint metadata
+        # (sprint_id was passed in) — backward compatible omission
+        # otherwise, per the card's requirement #3.
+        private def sprint_footer
+          sprint_id = result.metadata[:sprint_id]
+          return "" unless sprint_id
+
+          questions = result.metadata[:sprint_question_ids] || []
+          [
+            "",
+            "---",
+            "",
+            "**Sprint ID**: #{sprint_id} | **Sprint G_N = #{result.metadata[:sprint_godel_number]}** | " \
+              "**Questions**: #{questions.join(', ')}",
+          ].join("\n")
         end
 
         private def tenor_label(tenor)

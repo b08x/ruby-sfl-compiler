@@ -44,6 +44,8 @@ module SFL
 
         documentation:
           --store                      Persist clauses + embeddings for `context`
+          --sprint-id ID               Attach a Gödel-encoded question-graph
+                                        footer ("Sprint G_N = ...") to the report
 
         context:
           --mood MOOD                  declarative|interrogative|imperative|exclamative
@@ -111,6 +113,7 @@ module SFL
           store: false,
           narrative: false,
           topics: nil,
+          sprint_id: nil,
         }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
@@ -119,6 +122,7 @@ module SFL
           opt.on("--store") { options[:store] = true }
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
+          opt.on("--sprint-id ID") { |v| options[:sprint_id] = v }
           add_tracing_option(opt, options)
         end.parse!(argv)
         options
@@ -267,7 +271,8 @@ module SFL
           stop_requested: -> { stop_flag.stopped? }
         )
 
-        result = analyzer.analyze(input, store: options[:store], topics: options[:topics], resume: options[:resume])
+        result = analyzer.analyze(input, store: options[:store], topics: options[:topics], resume: options[:resume],
+          sprint_id: options[:sprint_id])
         finish_report(result, options[:output_dir])
         write_narrative(result, options[:output_dir]) if options[:narrative]
         print_interrupt_status(result, input, :documentation) if result.metadata[:interrupted]

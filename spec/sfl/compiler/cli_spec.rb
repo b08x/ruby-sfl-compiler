@@ -43,6 +43,16 @@ RSpec.describe SFL::Compiler::CLI do
       expect(parsed[:options]).to include(store: true)
     end
 
+    it "defaults sprint_id to nil for documentation" do
+      parsed = described_class.parse(%w[documentation docs/])
+      expect(parsed[:options]).to include(sprint_id: nil)
+    end
+
+    it "parses documentation with --sprint-id" do
+      parsed = described_class.parse(%w[documentation docs/ --sprint-id sprint-001])
+      expect(parsed[:options]).to include(sprint_id: "sprint-001")
+    end
+
     it "parses context with stance filters and limit" do
       parsed = described_class.parse(
         [

@@ -39,8 +39,11 @@ module SFL
         # @param topics [Integer, nil] fixed topic count for LDA; 0 → HDP
         #   (auto-discover topic count, k: nil); nil = no topic modeling
         # @param resume [Boolean] reuse cached Pass 2 results
+        # @param sprint_id [String, nil] when present, attaches a
+        #   Gödel-encoded question graph to the report footer (see
+        #   #sprint_metadata) — omitted entirely when nil
         # @return [Types::AnalysisResult]
-        def analyze(path, store: false, topics: nil, resume: false)
+        def analyze(path, store: false, topics: nil, resume: false, sprint_id: nil)
           @resume = resume
           sections = load_sections(path)
           total = sections.size
@@ -111,7 +114,7 @@ module SFL
               topics_enabled: !topic_labels.nil?,
               interrupted:,
               total:,
-            },
+            }.merge(sprint_metadata(sprint_id)),
             turns:,
             speaker_profiles: profiles,
             tenor_timeline: timeline(turns),
@@ -123,6 +126,46 @@ module SFL
             topic_labels:,
             topic_evolution: topic_evolution(turns)
           )
+        end
+
+        # A fixed, canonical question set for a documentation sprint —
+        # not yet content-derived or answer-tracked (that's
+        # SprintOrchestrator's job, not built yet); this is the smallest
+        # honest "questions were asked" graph a documentation report can
+        # attach today. `{}` (no sprint_id) omits the footer entirely.
+        # rubocop:disable Naming/AsciiIdentifiers -- QuestionGraph's own
+        # API names this method with the umlaut throughout.
+        private def sprint_metadata(sprint_id)
+          return {} unless sprint_id
+
+          questions = canonical_sprint_questions
+          {
+            sprint_id:,
+            sprint_godel_number: QuestionGraph.new(questions).gödel_number,
+            sprint_question_ids: questions.map { |q| q[:id] },
+          }
+        end
+        # rubocop:enable Naming/AsciiIdentifiers
+
+        private def canonical_sprint_questions
+          [
+            { id: :modality, text: "What is the average modality across this document?", dependencies: [] },
+            {
+              id: :data_quality,
+              text: "Are fallback/stub annotations present that could bias these findings?",
+              dependencies: [],
+            },
+            {
+              id: :tenor_consistency,
+              text: "Is tenor consistent across sections, or does it vary significantly?",
+              dependencies: [],
+            },
+            {
+              id: :overall_confidence,
+              text: "Is this analysis reliable enough to ground synthesis on?",
+              dependencies: %i[modality data_quality tenor_consistency],
+            },
+          ]
         end
 
         private def detect_key_moments(turns)
@@ -198,8 +241,6 @@ module SFL
           end
         end
 
-
-
         # `topics: 0` requests HDP (auto-discover the topic count) rather
         # than a fixed-k LDA — Tomoto's HDP constructor takes no `k:` at
         # all, so this maps the CLI's single `--topics N` integer flag onto
@@ -214,7 +255,7 @@ module SFL
           semantic_coherence_score = pre_turn&.semantic_coherence_score
           topic_info = if pre_turn && pre_turn.dominant_topic && modeler
             label = modeler.topic_labels[pre_turn.dominant_topic]&.first(3)&.join(", ")
-            { id: pre_turn.dominant_topic, label: label }
+            { id: pre_turn.dominant_topic, label: }
           else
             nil
           end

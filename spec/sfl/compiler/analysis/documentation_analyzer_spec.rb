@@ -76,6 +76,43 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
     end
   end
 
+  # rubocop:disable Naming/AsciiIdentifiers -- exercises QuestionGraph#gödel_number
+  describe "sprint_id" do
+    it "omits sprint metadata when sprint_id is not given" do
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_doc(dir))
+
+        expect(result.metadata).not_to have_key(:sprint_id)
+        expect(result.metadata).not_to have_key(:sprint_godel_number)
+      end
+    end
+
+    it "attaches a Gödel-encoded question graph when sprint_id is given" do
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:)
+          .analyze(write_doc(dir), sprint_id: "sprint-001")
+
+        expect(result.metadata[:sprint_id]).to eq("sprint-001")
+        expect(result.metadata[:sprint_godel_number]).to be_a(Integer)
+        expect(result.metadata[:sprint_question_ids]).to eq(
+          %i[modality data_quality tenor_consistency overall_confidence]
+        )
+
+        # Rebuilding the same canonical question graph independently must
+        # produce the identical gödel_number — proves the metadata came
+        # from QuestionGraph's real encoding, not a placeholder integer.
+        expected_graph = SFL::Compiler::QuestionGraph.new([
+          { id: :modality, text: "x", dependencies: [] },
+          { id: :data_quality, text: "x", dependencies: [] },
+          { id: :tenor_consistency, text: "x", dependencies: [] },
+          { id: :overall_confidence, text: "x", dependencies: %i[modality data_quality tenor_consistency] },
+        ])
+        expect(result.metadata[:sprint_godel_number]).to eq(expected_graph.gödel_number)
+      end
+    end
+  end
+  # rubocop:enable Naming/AsciiIdentifiers
+
   it "compiles without storing by default" do
     Dir.mktmpdir do |dir|
       described_class.new(pipeline:, clause_repo:)
