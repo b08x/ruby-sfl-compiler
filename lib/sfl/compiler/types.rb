@@ -52,6 +52,31 @@ module SFL
         )
       end
 
+      def load_speaker_profile(hash)
+        SpeakerProfile.new(hash)
+      end
+
+      def load_key_moment(hash)
+        KeyMoment.new(hash)
+      end
+
+      def load_example_passage(hash)
+        ExamplePassage.new(hash)
+      end
+
+      # Reconstructs an AnalysisResult from a Hash produced by `dump`.
+      # Called after a Gush/Redis JSON round-trip (symbol keys assumed).
+      def load_analysis_result(hash)
+        AnalysisResult.new(
+          hash.merge(
+            turns: hash.fetch(:turns).map { |t| load_conversation_turn(t) },
+            speaker_profiles: hash.fetch(:speaker_profiles).to_h { |k, p| [k.to_s, load_speaker_profile(p)] },
+            key_moments: hash.fetch(:key_moments, []).map { |m| load_key_moment(m) },
+            example_passages: hash.fetch(:example_passages, []).map { |p| load_example_passage(p) }
+          )
+        )
+      end
+
       # SFL Metafunction categories
       MetafunctionType = String.enum("ideational", "interpersonal", "textual")
 

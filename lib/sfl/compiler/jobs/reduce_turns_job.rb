@@ -24,13 +24,27 @@ module SFL
           compiled_turns, jsonl_path:, total:, topic_labels:, topic_shifts:
         )
 
-        output(
+        output(full_output(result, jsonl_path))
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      private def full_output(result, jsonl_path)
+        {
           jsonl_path:,
           turn_count: result.turns.size,
           metadata: result.metadata,
-          insights: result.insights
-        )
+          insights: result.insights,
+          speaker_profiles: result.speaker_profiles.transform_values { |p| Types.dump(p) },
+          tenor_timeline: result.tenor_timeline,
+          field_evolution: result.field_evolution,
+          correlations: result.correlations,
+          key_moments: result.key_moments.map { |m| Types.dump(m) },
+          example_passages: result.example_passages.map { |p| Types.dump(p) },
+          topic_labels: result.topic_labels,
+          topic_evolution: result.topic_evolution,
+        }
       end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       private def compiled_turns
         payloads

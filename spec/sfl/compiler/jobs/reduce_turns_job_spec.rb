@@ -62,6 +62,26 @@ RSpec.describe SFL::Compiler::ReduceTurnsJob do
     expect(job.output_payload[:metadata][:topics_enabled]).to be(true)
   end
 
+  it "forwards full AnalysisResult fields in output: speaker_profiles, tenor_timeline, key_moments, example_passages" do
+    job = described_class.new(
+      params: { jsonl_path: "spec/fixtures/conversations/sample.jsonl", total: 2 }
+    )
+    job.payloads = [
+      { id: "CompileTurnJob-1", class: "SFL::Compiler::CompileTurnJob", output: SFL::Compiler::Types.dump(turn_1) },
+      { id: "CompileTurnJob-2", class: "SFL::Compiler::CompileTurnJob", output: SFL::Compiler::Types.dump(turn_2) },
+    ]
+
+    job.perform
+
+    payload = job.output_payload
+    expect(payload).to include(:speaker_profiles, :tenor_timeline, :field_evolution, :correlations)
+    expect(payload).to include(:key_moments, :example_passages, :topic_labels, :topic_evolution)
+    expect(payload[:speaker_profiles]).to be_a(Hash)
+    expect(payload[:tenor_timeline]).to be_an(Array)
+    expect(payload[:key_moments]).to be_an(Array)
+    expect(payload[:example_passages]).to be_an(Array)
+  end
+
   it "ignores the TopicModelJob payload's class entirely when reconstructing turns" do
     job = described_class.new(
       params: { jsonl_path: "spec/fixtures/conversations/sample.jsonl", total: 2 }

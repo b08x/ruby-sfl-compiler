@@ -474,6 +474,70 @@ describe "Gush payload round-trip (Types.dump / Types.load_conversation_turn)" d
   end
 end
 
+# rubocop:disable Metrics/BlockLength
+describe "Gush payload round-trip (Types.dump / Types.load_analysis_result)" do
+  let(:profile) do
+    SFL::Compiler::Types::SpeakerProfile.new(
+      speaker_name: "Alice", turn_count: 1,
+      avg_tenor: 0.6, tenor_range: [0.5, 0.7], tenor_variance: 0.01,
+      avg_modality: 0.55, mood_distribution: { "declarative" => 1 }, dominant_processes: {}
+    )
+  end
+
+  let(:key_moment) do
+    SFL::Compiler::Types::KeyMoment.new(
+      turn_id: 1, type: "tenor_shift", magnitude: 0.25, description: "shift up"
+    )
+  end
+
+  let(:example_passage) do
+    SFL::Compiler::Types::ExamplePassage.new(
+      label: "Most Formal", text: "Hello.", speaker: "Alice", value: 0.8, reason: "highest tenor"
+    )
+  end
+
+  let(:turn) do
+    SFL::Compiler::Types::ConversationTurn.new(
+      turn_id: 1, speaker: "Alice", timestamp: Time.now,
+      message_text: "Hello.", clauses: [],
+      avg_tenor: 0.6, avg_modality: 0.55, dominant_mood: "declarative",
+      process_types: {}, participants: [], tenor_shift: nil
+    )
+  end
+
+  let(:result) do
+    SFL::Compiler::Types::AnalysisResult.new(
+      metadata: { conversation_id: "test", analyzed_at: Time.now.iso8601 },
+      turns: [turn],
+      speaker_profiles: { "Alice" => profile },
+      tenor_timeline: [{ turn_id: 1, tenor: 0.6 }],
+      field_evolution: [{ turn_id: 1, dominant_process: "material" }],
+      correlations: {},
+      insights: ["one insight"],
+      key_moments: [key_moment],
+      example_passages: [example_passage]
+    )
+  end
+
+  it "survives a real JSON round trip with speaker_profiles, key_moments, and example_passages intact" do
+    json = JSON.generate(SFL::Compiler::Types.dump(result))
+    hash = JSON.parse(json, symbolize_names: true)
+    reloaded = SFL::Compiler::Types.load_analysis_result(hash)
+
+    expect(reloaded.turns.size).to eq(1)
+    expect(reloaded.turns.first.speaker).to eq("Alice")
+    expect(reloaded.speaker_profiles["Alice"]).to be_a(SFL::Compiler::Types::SpeakerProfile)
+    expect(reloaded.speaker_profiles["Alice"].avg_tenor).to eq(0.6)
+    expect(reloaded.key_moments.first).to be_a(SFL::Compiler::Types::KeyMoment)
+    expect(reloaded.key_moments.first.magnitude).to eq(0.25)
+    expect(reloaded.example_passages.first).to be_a(SFL::Compiler::Types::ExamplePassage)
+    expect(reloaded.example_passages.first.label).to eq("Most Formal")
+    expect(reloaded.insights).to eq(["one insight"])
+  end
+end
+
+# rubocop:enable Metrics/BlockLength
+
 RSpec.describe "SFL::Compiler::NarrativeError" do
   it "is an SFL::Compiler::Error" do
     expect(SFL::Compiler::NarrativeError.ancestors).to include(SFL::Compiler::Error)
