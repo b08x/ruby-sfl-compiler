@@ -42,6 +42,11 @@ FILE=lsd-brain-network-collapse.md bundle exec ruby scripts/parse_metacognitive_
 bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output/latest
 bundle exec sfl-analyze documentation docs/ --store
 bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
+
+# Sidekiq worker for the Gush conversation analysis workflow (requires Redis)
+# Not a Rails app, so -r must point at a boot file or Sidekiq exits immediately
+# asking for one.
+bundle exec sidekiq -q gush -r lib/sfl/compiler/sidekiq_boot.rb
 ```
 
 ## Architecture

@@ -107,30 +107,18 @@ module SFL
       # Bootstrap rather than relying on a shared in-process Gush.configure
       # call, since a worker may start in a different process entirely.
       def configure_jobs(env)
-        require "sidekiq"
-        require "sidekiq/job"
         require "active_job"
+        require "sidekiq"
         require "gush"
 
-        # When ActiveJob::Base.queue_adapter = :sidekiq runs outside Rails, it
-        # raises NameError (uninitialized constant Sidekiq::ActiveJob::Wrapper).
-        # The real Wrapper lives in sidekiq's lib/sidekiq/rails.rb, which requires
-        # Rails unconditionally, so we can't require it directly in this non-Rails gem.
-        # We hand-copy its perform body (ActiveJob::Base.execute with provider_job_id).
-        # NOTE: This implementation must be re-verified against sidekiq's source on
-        # any sidekiq major/minor version bump — verified against sidekiq 7.3.9.
-        unless defined?(Sidekiq::ActiveJob::Wrapper)
-          Sidekiq.const_set(:ActiveJob, Module.new) unless defined?(Sidekiq::ActiveJob)
-          wrapper_class = Class.new do
-            include ::Sidekiq::Job
-
-            def perform(job_data)
-              ::ActiveJob::Base.execute(job_data.merge("provider_job_id" => jid))
-            end
-          end
-          Sidekiq::ActiveJob.const_set(:Wrapper, wrapper_class)
-        end
-
+        # sidekiq < 8.0's ActiveJob integration (Sidekiq::ActiveJob::Wrapper)
+        # only got defined via lib/sidekiq/rails.rb, which unconditionally
+        # requires "rails" — raising NameError outside Rails. sidekiq 8.0
+        # moved that definition into lib/active_job/queue_adapters/sidekiq_adapter.rb
+        # itself, gated only on `gem "activejob", ">= 7.0"`, so it now works
+        # standalone (verified against sidekiq 8.1.6). Pin stays >= 8.0;
+        # don't downgrade without re-adding the old Rails-independent
+        # Wrapper workaround this replaced.
         ActiveJob::Base.queue_adapter = :sidekiq
         Gush.configure do |c|
           c.redis_url = env["REDIS_URL"] || "redis://localhost:6379"

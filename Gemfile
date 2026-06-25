@@ -29,7 +29,7 @@ end
 gem "ruby-lsp", "~> 0.26.9"
 
 gem "gush", "~> 5.0"
-gem "sidekiq", "~> 7.0"
+gem "sidekiq", "~> 8.0"
 
 gem "kreuzberg", "~> 4.9"
 
