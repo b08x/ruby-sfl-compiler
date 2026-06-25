@@ -55,6 +55,32 @@ RSpec.describe SFL::Compiler::SprintRoleJob do
     expect(predictor).to have_received(:call).with(text: "the committee approved it")
   end
 
+  it "has no prior_output to merge when payloads is unset (Achilles has no dependency)" do
+    job = job_for(:achilles, "openrouter/model-a")
+
+    job.perform
+
+    expect(predictor).to have_received(:call).with(text: "the committee approved it")
+  end
+
+  it "merges the prior role's output into input under prior_output_key for a dependent role" do
+    job = described_class.new(
+      params: {
+        role: :tortoise,
+        signature_class: "FakeSprintSignature",
+        lm: "openrouter/model-b",
+        input: { "text" => "the committee approved it" },
+        prior_output_key: "draft",
+      }
+    )
+    job.payloads = [{ id: "achilles-1", class: "SFL::Compiler::SprintRoleJob", output: { "narrative" => "..." } }]
+
+    job.perform
+
+    expect(predictor).to have_received(:call)
+      .with(text: "the committee approved it", draft: { "narrative" => "..." })
+  end
+
   it "gives each role's job its own distinct LM provider — no shared global LM state" do
     lms = %i[achilles tortoise genie].zip(%w[openrouter/a openrouter/b openrouter/c]).map do |role, provider|
       cfg = Struct.new(:lm).new

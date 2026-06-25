@@ -6,7 +6,7 @@ require "gush"
 RSpec.describe SFL::Compiler::CrabConstraintJob do
   def job_with_claims(claims, invariants: [])
     job = described_class.new(params: { invariants: })
-    job.payloads = [{ id: "prior-1", class: "SprintRoleJob", output: { "claims" => claims } }]
+    job.payloads = [{ id: "prior-1", class: "SFL::Compiler::SprintRoleJob", output: { "claims" => claims } }]
     job
   end
 

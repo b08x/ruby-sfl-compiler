@@ -31,7 +31,7 @@ module SFL
       }.freeze
 
       def perform
-        prior_output = payloads.find { |p| p[:class] == "SprintRoleJob" }.fetch(:output)
+        prior_output = payloads.find { |p| p[:class] == SprintRoleJob.to_s }.fetch(:output)
         claims = Array(prior_output[claims_field] || prior_output[claims_field.to_sym])
         invariants = params.fetch(:invariants, [])
 

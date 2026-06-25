@@ -19,6 +19,13 @@ module SFL
     # Crab's invariant pinning is rule-based, not an LLM call, so it lives
     # in the separate CrabConstraintJob rather than this class — folding it
     # in here would violate SRP (see that job's own file comment).
+    #
+    # When this job has a direct dependency (Tortoise depends on Achilles,
+    # Genie depends on Crab), `payloads` carries that prior job's output —
+    # merged into the DSPy input under `prior_output_key` (default
+    # `:prior_output`) so the role's signature can see what came before.
+    # Achilles has no dependency, so `payloads` is empty/nil and this is a
+    # no-op for it.
     class SprintRoleJob < Gush::Job
       def perform
         Bootstrap.call(require_db: false, require_llm: false, require_observability: false)
@@ -28,6 +35,7 @@ module SFL
         predictor.configure { |c| c.lm = build_lm(params.fetch(:lm)) }
 
         input = params.fetch(:input, {}).transform_keys(&:to_sym)
+        input = input.merge(prior_output_input) if prior_output
         result = predictor.call(**input)
 
         output(result.to_h)
@@ -35,6 +43,14 @@ module SFL
 
       private def build_lm(provider)
         DSPy::LM.new(provider, api_key: Bootstrap.api_key_for(provider, ENV))
+      end
+
+      private def prior_output
+        Array(payloads).last&.fetch(:output)
+      end
+
+      private def prior_output_input
+        { params.fetch(:prior_output_key, :prior_output).to_sym => prior_output }
       end
     end
   end
