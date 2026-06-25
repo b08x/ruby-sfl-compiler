@@ -136,6 +136,35 @@ module SFL
         attribute :raw_transitivity, Types::Hash                  # Full transitivity parse
       end
 
+      # One piece of evidence (a token, POS tag, dependency relation, etc.)
+      # cited as support for a Pass 2 annotation decision. Internal
+      # representation only — DSPy's output boundary is the Sorbet
+      # `PremiseOutput < T::Struct` on `SFLSignature`/`SFLBatchSignature`,
+      # bridged into this type by `PassTwoEngine`.
+      class Premise < Dry::Struct
+        attribute :type, Types::String.enum(
+          "token", "pos", "dep", "process", "participant", "context", "lexico_grammatical"
+        )
+        attribute :source, Types::String
+        attribute :value, Types::String
+        attribute :weight, Types::Float.optional
+      end
+
+      # Structured derivation for an interpersonal annotation: which
+      # premises support it, which named SFL rule maps them to the
+      # conclusion, and a SHA256 `derivation_hash` over all three —
+      # computed by `PassTwoEngine` from the actual returned values, never
+      # trusted as an LLM output field (an LLM-emitted hash would verify
+      # nothing, since the model could emit any string).
+      class ReasoningTrace < Dry::Struct
+        attribute :premises, Types::Array.of(Premise)
+        attribute :inference_rule, Types::String
+        attribute :conclusion, Types::Hash
+        attribute :confidence, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :derivation_hash, Types::String
+        attribute :generated_at, Types::Time
+      end
+
       # Interpersonal metafunction payload (from Pass 2)
       class InterpersonalPayload < Dry::Struct
         attribute :clause_id, Types::String

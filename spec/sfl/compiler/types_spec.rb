@@ -133,6 +133,62 @@ RSpec.describe SFL::Compiler::Types do
     end
   end
 
+  describe "Premise" do
+    it "creates a premise" do
+      premise = SFL::Compiler::Types::Premise.new(
+        type: "token", source: "unanimously", value: "ADV", weight: 0.7
+      )
+
+      expect(premise.type).to eq("token")
+      expect(premise.weight).to eq(0.7)
+    end
+
+    it "rejects an unlisted type" do
+      expect do
+        SFL::Compiler::Types::Premise.new(
+          type: "vibe", source: "unanimously", value: "ADV", weight: 0.7
+        )
+      end.to raise_error(Dry::Struct::Error)
+    end
+
+    it "allows a nil weight" do
+      premise = SFL::Compiler::Types::Premise.new(
+        type: "dep", source: "nsubj", value: "committee", weight: nil
+      )
+      expect(premise.weight).to be_nil
+    end
+  end
+
+  describe "ReasoningTrace" do
+    def trace(**overrides)
+      SFL::Compiler::Types::ReasoningTrace.new(
+        {
+          premises: [
+            SFL::Compiler::Types::Premise.new(type: "token", source: "approved", value: "VERB", weight: 0.5),
+            SFL::Compiler::Types::Premise.new(type: "pos", source: "DET+VERB", value: "formal_pattern", weight: nil),
+          ],
+          inference_rule: "tenor_high_formal_register",
+          conclusion: { tenor: 0.8 },
+          confidence: 0.92,
+          derivation_hash: "a3f2b7c",
+          generated_at: ::Time.now,
+        }.merge(overrides)
+      )
+    end
+
+    it "creates a reasoning trace with two premises" do
+      result = trace
+
+      expect(result.premises.size).to eq(2)
+      expect(result.inference_rule).to eq("tenor_high_formal_register")
+      expect(result.derivation_hash).to eq("a3f2b7c")
+    end
+
+    it "rejects confidence outside 0.0-1.0" do
+      expect { trace(confidence: 1.5) }.to raise_error(Dry::Struct::Error)
+    end
+  end
+
   describe "TextualPayload" do
     it "creates a textual payload with valid theme_type values" do
       payload = SFL::Compiler::Types::TextualPayload.new(
