@@ -35,8 +35,8 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       metadata: {
         conversation_id: "test-convo",
         turn_count: 5,
-        speakers: ["Alice", "Bob"],
-        analyzed_at: Time.parse("2026-06-10 14:32:15")
+        speakers: %w[Alice Bob],
+        analyzed_at: Time.parse("2026-06-10 14:32:15"),
       },
       turns: [],
       speaker_profiles: { "Alice" => alice_profile, "Bob" => bob_profile },
@@ -44,11 +44,11 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       field_evolution: [],
       correlations: {
         "mental" => { avg_tenor: 0.34, avg_modality: 0.41, count: 10 },
-        "verbal" => { avg_tenor: 0.71, avg_modality: 0.78, count: 8 }
+        "verbal" => { avg_tenor: 0.71, avg_modality: 0.78, count: 8 },
       },
       insights: [
         "Alice maintains casual tenor across conversation",
-        "Mental processes correlate with low tenor"
+        "Mental processes correlate with low tenor",
       ]
     )
   end
@@ -125,7 +125,7 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
           conversation_id: "empty-convo",
           turn_count: 0,
           speakers: [],
-          analyzed_at: Time.now
+          analyzed_at: Time.now,
         },
         turns: [],
         speaker_profiles: {},
@@ -156,7 +156,7 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
   end
 
   describe "data quality warning" do
-    def annotated_clause(source)
+    def annotated_clause(source, reasoning_trace: nil)
       token = SFL::Compiler::Types::SyntacticToken.new(
         text: "works", lemma: "work", pos: "VERB", tag: "VBZ",
         dep: "ROOT", head_index: -1, morphology: {}, index: 0
@@ -173,11 +173,11 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
         clause_id: "syn-1", mood: "declarative",
         modality_weight: 0.5, tenor: 0.5,
         speaker_attitude: nil, reasoning: nil,
-        annotation_source: source
+        annotation_source: source, reasoning_trace:
       )
       SFL::Compiler::Types::AnnotatedClause.new(
-        id: "ann-1", text: "It works.", syntactic: syntactic,
-        ideational: ideational, interpersonal: interpersonal,
+        id: "ann-1", text: "It works.", syntactic:,
+        ideational:, interpersonal:,
         document_id: "doc-1", compiled_at: Time.now
       )
     end
@@ -185,7 +185,7 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
     def turn_with(clauses)
       SFL::Compiler::Types::ConversationTurn.new(
         turn_id: 1, speaker: "Alice", timestamp: Time.now,
-        message_text: "It works.", clauses: clauses,
+        message_text: "It works.", clauses:,
         avg_tenor: 0.5, avg_modality: 0.5, dominant_mood: "declarative",
         process_types: {}, participants: [], tenor_shift: nil
       )
@@ -210,7 +210,12 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
     end
 
     it "warns with counts when some clauses carry fallback or stub values" do
-      clauses = [annotated_clause("llm"), annotated_clause("llm"), annotated_clause("llm"), annotated_clause("fallback")]
+      clauses = [
+        annotated_clause("llm"),
+        annotated_clause("llm"),
+        annotated_clause("llm"),
+        annotated_clause("fallback"),
+]
       out = described_class.new(result_with_clauses(clauses)).render
       expect(out).to include("## ⚠️ Data Quality")
       expect(out).to include("1 of 4 clauses (25.0%)")
@@ -222,6 +227,46 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       expect(out).to include("2 of 2 clauses (100.0%)")
       expect(out).to include("Pass 2 did not run")
       expect(out).to include("placeholders, not findings")
+    end
+
+    describe "reasoning traces section" do
+      def reasoning_trace
+        SFL::Compiler::Types::ReasoningTrace.new(
+          premises: [
+            SFL::Compiler::Types::Premise.new(type: "token", source: "unanimously", value: "ADV", weight: 0.7),
+            SFL::Compiler::Types::Premise.new(type: "pos", source: "DET+VERB", value: "formal_pattern", weight: nil),
+          ],
+          inference_rule: "tenor_high_formal_register",
+          conclusion: { tenor: 0.8 },
+          confidence: 0.92,
+          derivation_hash: "a3f2b7c",
+          generated_at: Time.now
+        )
+      end
+
+      it "renders a collapsible details block with all premises for a clause with a populated trace" do
+        clause = annotated_clause("llm", reasoning_trace:)
+        out = described_class.new(result_with_clauses([clause])).render
+
+        expect(out).to include("### 🔍 Reasoning Traces")
+        expect(out).to include("<details>")
+        expect(out).to include("<summary>Reasoning: tenor_high_formal_register (confidence 0.92)</summary>")
+        expect(out).to include("| unanimously | token | ADV | 0.7 |")
+        expect(out).to include("| DET+VERB | pos | formal_pattern | — |")
+        expect(out).to include("Derivation: `a3f2b7c`")
+        expect(out).to include("</details>")
+      end
+
+      it "renders no proof-chain block for a fallback-sourced clause (reasoning_trace: nil)" do
+        out = described_class.new(result_with_clauses([annotated_clause("fallback")])).render
+
+        expect(out).not_to include("### 🔍 Reasoning Traces")
+        expect(out).not_to include("<details>")
+      end
+
+      it "renders no reasoning traces section when there are no traces at all" do
+        expect(output).not_to include("### 🔍 Reasoning Traces")
+      end
     end
   end
 

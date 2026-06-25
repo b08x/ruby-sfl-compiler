@@ -139,6 +139,20 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
         expect(trace.inference_rule).to eq("tenor_high_formal_register")
       end
 
+      it "leaves mood/tenor/modality untouched and only nils reasoning_trace when a premise is malformed" do
+        bad_premise = double("BadPremise", type: "token", source: "x", value: "y", weight: "not-a-float")
+        allow_any_instance_of(SFL::Compiler::SFLAnnotator)
+          .to receive(:call).and_return(dspy_response(premises: [bad_premise]))
+
+        result = nil
+        expect { result = engine.annotate(clause, ideational) }.to output(/\[WARN\].*reasoning trace/).to_stderr
+
+        expect(result.interpersonal.annotation_source).to eq("llm")
+        expect(result.interpersonal.mood).to eq("declarative")
+        expect(result.interpersonal.tenor).to eq(0.7)
+        expect(result.interpersonal.reasoning_trace).to be_nil
+      end
+
       it "leaves reasoning_trace nil for fallback-sourced (non-LLM) annotations" do
         allow_any_instance_of(SFL::Compiler::SFLAnnotator)
           .to receive(:call).and_raise(StandardError, "boom")

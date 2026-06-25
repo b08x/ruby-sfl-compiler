@@ -142,9 +142,14 @@ module SFL
       # `PremiseOutput < T::Struct` on `SFLSignature`/`SFLBatchSignature`,
       # bridged into this type by `PassTwoEngine`.
       class Premise < Dry::Struct
-        attribute :type, Types::String.enum(
-          "token", "pos", "dep", "process", "participant", "context", "lexico_grammatical"
-        )
+        # Open taxonomy, not an enum: real LLM output uses a far richer
+        # vocabulary of evidence categories (e.g. "discourse_marker",
+        # "modal_adjunct", "auxiliary_inversion") than any fixed list can
+        # anticipate — verified against a live Pass 2 run during the
+        # markdown-formatter card, where a 7-value enum here caused the
+        # *entire* clause (mood/tenor/modality, not just the premise) to
+        # default whenever the model used a category outside the list.
+        attribute :type, Types::String
         attribute :source, Types::String
         attribute :value, Types::String
         attribute :weight, Types::Float.optional

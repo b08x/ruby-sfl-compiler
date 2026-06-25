@@ -143,12 +143,15 @@ RSpec.describe SFL::Compiler::Types do
       expect(premise.weight).to eq(0.7)
     end
 
-    it "rejects an unlisted type" do
-      expect do
-        SFL::Compiler::Types::Premise.new(
-          type: "vibe", source: "unanimously", value: "ADV", weight: 0.7
-        )
-      end.to raise_error(Dry::Struct::Error)
+    it "accepts any string type — open taxonomy, not an enum" do
+      # Real LLM output uses a far richer evidence-category vocabulary
+      # (discourse_marker, modal_adjunct, auxiliary_inversion, etc.) than
+      # any fixed list anticipates — verified live; a prior enum here
+      # caused premise-construction failures to default the entire clause.
+      premise = SFL::Compiler::Types::Premise.new(
+        type: "discourse_marker", source: "however", value: "ADV", weight: 0.4
+      )
+      expect(premise.type).to eq("discourse_marker")
     end
 
     it "allows a nil weight" do

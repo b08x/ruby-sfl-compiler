@@ -276,11 +276,26 @@ module SFL
           speaker_attitude: result[:speaker_attitude],
           reasoning: result[:reasoning],
           annotation_source: "llm",
-          reasoning_trace: reasoning_trace_from(result, conclusion)
+          reasoning_trace: safe_reasoning_trace_from(result, conclusion, clause, correlation_id)
         )
       rescue Dry::Struct::Error => e
         log_and_warn("pass_two_invalid_interpersonal", correlation_id, clause,
           "Invalid interpersonal values: #{e.message} — defaults applied")
+        nil
+      end
+
+      # A malformed reasoning trace (e.g. an unparseable premise) must
+      # never default the clause's actual mood/tenor/modality — those came
+      # back correctly from the LLM; only the provenance layer is at risk.
+      # Caught live: an earlier Types::Premise#type enum rejected a real
+      # model's premise category, and because this call originally sat
+      # inside #interpersonal_from's own rescue, one bad premise defaulted
+      # the entire clause, not just its reasoning_trace.
+      private def safe_reasoning_trace_from(result, conclusion, clause, correlation_id)
+        reasoning_trace_from(result, conclusion)
+      rescue Dry::Struct::Error => e
+        log_and_warn("pass_two_invalid_reasoning_trace", correlation_id, clause,
+          "Invalid reasoning trace: #{e.message} — reasoning_trace left nil, interpersonal values unaffected")
         nil
       end
 
