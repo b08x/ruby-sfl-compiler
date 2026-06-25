@@ -30,6 +30,11 @@ module SFL
         "absent" => -> (actual, _expected) { actual.nil? || actual == "" },
       }.freeze
 
+      # Special op recognized by #first_violation: operates on the whole
+      # claim (recompute + compare its own derivation_hash) rather than a
+      # single field/value pair, so it's handled separately from OPERATORS.
+      DERIVATION_HASH_OP = "derivation_hash_reproducible"
+
       def perform
         prior_output = payloads.find { |p| p[:class] == SprintRoleJob.to_s }.fetch(:output)
         claims = Array(prior_output[claims_field] || prior_output[claims_field.to_sym])
@@ -58,20 +63,55 @@ module SFL
 
       private def first_violation(claim, invariants)
         invariants.each do |invariant|
-          field = fetch_either(invariant, :field)
           op = fetch_either(invariant, :op)
-          expected = fetch_either(invariant, :value)
-          actual = fetch_either(claim, field)
-
-          next if OPERATORS.fetch(op).call(actual, expected)
-
-          return {
-            "name" => fetch_either(invariant, :name),
-            "field" => field,
-            "reason" => "expected #{field} #{op} #{expected.inspect}, got #{actual.inspect}",
-          }
+          violation = violation_for(op, claim, invariant)
+          return violation if violation
         end
         nil
+      end
+
+      private def violation_for(operator, claim, invariant)
+        return derivation_hash_violation(claim, invariant) if operator == DERIVATION_HASH_OP
+
+        field_violation(claim, invariant)
+      end
+
+      # Recomputes the claim's own derivation_hash from its own premises/
+      # inference_rule/conclusion and compares to what's stored — flags
+      # claims whose provenance can't be re-verified under the current
+      # hashing rule (tampering, or a hashing-algorithm change since the
+      # trace was built). Operates on the whole claim, not a single field,
+      # so it doesn't fit the field/op/value DSL the other operators use.
+      private def derivation_hash_violation(claim, invariant)
+        recomputed = DerivationHash.compute(
+          premises: fetch_either(claim, :premises) || [],
+          inference_rule: fetch_either(claim, :inference_rule),
+          conclusion: fetch_either(claim, :conclusion) || {}
+        )
+        stored = fetch_either(claim, :derivation_hash)
+
+        return nil if recomputed == stored
+
+        {
+          "name" => fetch_either(invariant, :name),
+          "field" => "derivation_hash",
+          "reason" => "stored derivation_hash #{stored.inspect} does not match recomputed #{recomputed.inspect}",
+        }
+      end
+
+      private def field_violation(claim, invariant)
+        field = fetch_either(invariant, :field)
+        op = fetch_either(invariant, :op)
+        expected = fetch_either(invariant, :value)
+        actual = fetch_either(claim, field)
+
+        return nil if OPERATORS.fetch(op).call(actual, expected)
+
+        {
+          "name" => fetch_either(invariant, :name),
+          "field" => field,
+          "reason" => "expected #{field} #{op} #{expected.inspect}, got #{actual.inspect}",
+        }
       end
 
       private def fetch_either(hash, key)

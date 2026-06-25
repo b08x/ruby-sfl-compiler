@@ -5,8 +5,6 @@ require "dspy"
 require "timeout"
 require "dry/monads"
 require "journald/logger"
-require "digest"
-require "json"
 
 module SFL
   module Compiler
@@ -302,18 +300,9 @@ module SFL
           inference_rule:,
           conclusion:,
           confidence: clamp01(result[:confidence] || 0.5),
-          derivation_hash: compute_derivation_hash(premises, inference_rule, conclusion),
+          derivation_hash: DerivationHash.compute(premises:, inference_rule:, conclusion:),
           generated_at: ::Time.now
         )
-      end
-
-      private def compute_derivation_hash(premises, inference_rule, conclusion)
-        canonical = JSON.generate(
-          premises: premises.map(&:to_h).sort_by { |p| [p[:type], p[:source]] },
-          inference_rule:,
-          conclusion: conclusion.sort.to_h
-        )
-        Digest::SHA256.hexdigest(canonical)
       end
 
       private def textual_from(clause, result, correlation_id)

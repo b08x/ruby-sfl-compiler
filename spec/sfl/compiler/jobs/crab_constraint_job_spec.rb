@@ -64,4 +64,56 @@ RSpec.describe SFL::Compiler::CrabConstraintJob do
     expect(job.output_payload[:rejected_claims]).to eq([claims[1], claims[2]])
     expect(job.output_payload[:violations].map { |v| v["name"] }).to eq(%w[fallback_excluded min_clause_threshold])
   end
+
+  describe "derivation_hash_reproducible invariant" do
+    def reasoning_trace_claim(premises:, inference_rule: "tenor_high_formal_register", conclusion: { "tenor" => 0.8 })
+      premise_structs = premises.map { |p| SFL::Compiler::Types::Premise.new(**p) }
+      trace = SFL::Compiler::Types::ReasoningTrace.new(
+        premises: premise_structs,
+        inference_rule:,
+        conclusion:,
+        confidence: 0.9,
+        derivation_hash: SFL::Compiler::DerivationHash.compute(premises: premise_structs, inference_rule:, conclusion:),
+        generated_at: Time.now
+      )
+      SFL::Compiler::Types.dump(trace)
+    end
+
+    let(:invariant) { { "name" => "derivation_hash_reproducible", "op" => "derivation_hash_reproducible" } }
+
+    it "passes an untouched ReasoningTrace whose hash matches its own premises" do
+      claim = reasoning_trace_claim(premises: [{ type: "token", source: "approved", value: "VERB", weight: 0.5 }])
+      job = job_with_claims([claim], invariants: [invariant])
+
+      job.perform
+
+      expect(job.output_payload[:passed_claims]).to eq([claim])
+      expect(job.output_payload[:rejected_claims]).to eq([])
+    end
+
+    it "rejects a ReasoningTrace with a hand-corrupted derivation_hash" do
+      claim = reasoning_trace_claim(premises: [{ type: "token", source: "approved", value: "VERB", weight: 0.5 }])
+      claim[:derivation_hash] = "corrupted"
+      job = job_with_claims([claim], invariants: [invariant])
+
+      job.perform
+
+      expect(job.output_payload[:passed_claims]).to eq([])
+      expect(job.output_payload[:rejected_claims]).to eq([claim])
+      expect(job.output_payload[:violations].first["name"]).to eq("derivation_hash_reproducible")
+      expect(job.output_payload[:violations].first["reason"]).to include("corrupted")
+    end
+
+    it "correctly separates reproducible from non-reproducible traces in a real batch" do
+      good = reasoning_trace_claim(premises: [{ type: "token", source: "approved", value: "VERB", weight: 0.5 }])
+      bad = reasoning_trace_claim(premises: [{ type: "pos", source: "DET+VERB", value: "formal_pattern", weight: nil }])
+      bad[:derivation_hash] = "tampered"
+      job = job_with_claims([good, bad], invariants: [invariant])
+
+      job.perform
+
+      expect(job.output_payload[:passed_claims]).to eq([good])
+      expect(job.output_payload[:rejected_claims]).to eq([bad])
+    end
+  end
 end
