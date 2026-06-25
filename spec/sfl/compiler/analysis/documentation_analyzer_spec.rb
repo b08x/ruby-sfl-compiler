@@ -250,6 +250,88 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
     end
   end
 
+  describe "PDF chunk-boundary artifact detection" do
+    def pdf_section(file_id, slug, heading)
+      SFL::Compiler::MarkdownLoader::Section.new(
+        document_id: "#{file_id}##{slug}", file_id:, heading:,
+        heading_level: 1, heading_slug: slug, text: "irrelevant prose long enough to pass.", byte_range: nil
+      )
+    end
+
+    def clause_with_text(doc_id, text)
+      syntactic = SFL::Compiler::Types::SyntacticClause.new(
+        id: "syn-#{doc_id}", text:, tokens: [token],
+        root_index: 0, sentence_index: 0, document_id: doc_id
+      )
+      SFL::Compiler::Types::AnnotatedClause.new(
+        id: "ann-#{doc_id}", text:, syntactic:,
+        ideational: SFL::Compiler::Types::IdeationalPayload.new(
+          clause_id: "syn-#{doc_id}", process_type: "material",
+          participants: [], circumstances: [], raw_transitivity: {}
+        ),
+        interpersonal: SFL::Compiler::Types::InterpersonalPayload.new(
+          clause_id: "syn-#{doc_id}", mood: "declarative", modality_weight: 0.6,
+          tenor: 0.7, speaker_attitude: nil, reasoning: nil
+        ),
+        document_id: doc_id, compiled_at: Time.now
+      )
+    end
+
+    def write_fake_pdf(dir)
+      path = File.join(dir, "report.pdf")
+      File.write(path, "fake pdf bytes")
+      path
+    end
+
+    it "flags a known mid-sentence split across two PDF chunks and excludes it from the turn's averages" do
+      sections = [pdf_section("report", "p1-1", "p1 §1"), pdf_section("report", "p2-1", "p2 §1")]
+      allow(SFL::Compiler::PdfLoader).to receive(:load).and_return(sections)
+      allow(pipeline).to receive(:compile) do |_text, document_id:, **|
+        document_id == "report#p1-1" ? [clause_with_text(document_id, "The system was")]
+                                      : [clause_with_text(document_id, "designed for scalability.")]
+      end
+
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_fake_pdf(dir))
+
+        sources = result.turns.flat_map(&:clauses).map { |c| c.interpersonal.annotation_source }
+        expect(sources).to eq(%w[chunk_artifact chunk_artifact])
+        expect(result.turns[0].avg_tenor).to eq(0.5)
+        expect(result.turns[1].avg_tenor).to eq(0.5)
+      end
+    end
+
+    it "does not flag a clean PDF chunk boundary" do
+      sections = [pdf_section("report", "p1-1", "p1 §1"), pdf_section("report", "p2-1", "p2 §1")]
+      allow(SFL::Compiler::PdfLoader).to receive(:load).and_return(sections)
+      allow(pipeline).to receive(:compile) do |_text, document_id:, **|
+        document_id == "report#p1-1" ? [clause_with_text(document_id, "The system works well.")]
+                                      : [clause_with_text(document_id, "Users appreciate it.")]
+      end
+
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_fake_pdf(dir))
+
+        sources = result.turns.flat_map(&:clauses).map { |c| c.interpersonal.annotation_source }
+        expect(sources).to eq(%w[llm llm])
+      end
+    end
+
+    it "never triggers for pure markdown docs, even when section text would otherwise match the heuristic" do
+      allow(pipeline).to receive(:compile) do |_text, document_id:, **|
+        document_id == "guide#introduction" ? [clause_with_text(document_id, "The system was")]
+                                             : [clause_with_text(document_id, "designed for scalability.")]
+      end
+
+      Dir.mktmpdir do |dir|
+        result = described_class.new(pipeline:, clause_repo:).analyze(write_doc(dir))
+
+        sources = result.turns.flat_map(&:clauses).map { |c| c.interpersonal.annotation_source }
+        expect(sources).to eq(%w[llm llm])
+      end
+    end
+  end
+
   context "with topics: requested" do
     it "skips the pre-pass and omits :topic when fewer than 3 sections" do
       Dir.mktmpdir do |dir|

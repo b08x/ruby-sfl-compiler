@@ -229,6 +229,25 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
       expect(out).to include("placeholders, not findings")
     end
 
+    it "counts chunk_artifact clauses separately from fallback/stub" do
+      clauses = [
+        annotated_clause("llm"),
+        annotated_clause("chunk_artifact"),
+        annotated_clause("chunk_artifact"),
+      ]
+      out = described_class.new(result_with_clauses(clauses)).render
+      expect(out).to include("## ⚠️ Data Quality")
+      expect(out).to include("2 chunk-boundary artifacts excluded.")
+      expect(out).not_to include("carry fallback/stub interpersonal values")
+    end
+
+    it "renders both the fallback/stub line and the chunk-artifact line when both are present" do
+      clauses = [annotated_clause("llm"), annotated_clause("fallback"), annotated_clause("chunk_artifact")]
+      out = described_class.new(result_with_clauses(clauses)).render
+      expect(out).to include("1 of 3 clauses (33.3%)")
+      expect(out).to include("1 chunk-boundary artifacts excluded.")
+    end
+
     describe "reasoning traces section" do
       def reasoning_trace
         SFL::Compiler::Types::ReasoningTrace.new(

@@ -78,28 +78,54 @@ module SFL
         # Clauses whose interpersonal values came from the Pass 2 fallback or
         # a Pass-1-only stub all sit at the scale midpoint (0.5/0.5/declarative),
         # which silently drags every aggregate toward "mixed". Surface that.
+        # chunk_artifact clauses (PDF chunk-boundary fragments) get their own
+        # line — they're a distinct provenance from fallback/stub and are
+        # already excluded from their turn's avg_tenor/avg_modality by
+        # DocumentationAnalyzer, not just biasing them.
         private def data_quality_warning
           clauses = result.turns.flat_map(&:clauses)
           return "" if clauses.empty?
 
-          defaulted = clauses.count { |c| c.interpersonal.annotation_source != "llm" }
-          return "" if defaulted.zero?
+          lines = data_quality_lines(clauses)
+          return "" if lines.empty?
 
-          pct = (defaulted * 100.0 / clauses.size).round(1)
-          warning = <<~WARN.chomp
+          "#{lines.join("\n\n")}\n"
+        end
+
+        private def data_quality_lines(clauses)
+          defaulted = clauses.count { |c| %w[fallback stub].include?(c.interpersonal.annotation_source) }
+          chunk_artifacts = clauses.count { |c| c.interpersonal.annotation_source == "chunk_artifact" }
+          return [] if defaulted.zero? && chunk_artifacts.zero?
+
+          [data_quality_header, *data_quality_body_lines(defaulted, chunk_artifacts, clauses.size)].compact
+        end
+
+        private def data_quality_body_lines(defaulted, chunk_artifacts, total)
+          [
+            (data_quality_defaulted_line(defaulted, total) if defaulted.positive?),
+            ("**#{chunk_artifacts} chunk-boundary artifacts excluded.**" if chunk_artifacts.positive?),
+            (data_quality_all_defaulted_note if defaulted == total),
+          ]
+        end
+
+        private def data_quality_header
+          <<~HEADER.chomp
 
             ---
 
             ## ⚠️ Data Quality
+          HEADER
+        end
 
-            **#{defaulted} of #{clauses.size} clauses (#{pct}%)** carry fallback/stub interpersonal values (tenor=0.5, modality=0.5, mood=declarative) instead of LLM annotations. Tenor and modality averages are biased toward 0.5.
-          WARN
+        private def data_quality_defaulted_line(defaulted, total)
+          pct = (defaulted * 100.0 / total).round(1)
+          "**#{defaulted} of #{total} clauses (#{pct}%)** carry fallback/stub interpersonal values " \
+            "(tenor=0.5, modality=0.5, mood=declarative) instead of LLM annotations. " \
+            "Tenor and modality averages are biased toward 0.5."
+        end
 
-          if defaulted == clauses.size
-            warning += "\n\n**Pass 2 did not run for any clause — the interpersonal values in this report are placeholders, not findings.**"
-          end
-
-          "#{warning}\n"
+        private def data_quality_all_defaulted_note
+          "**Pass 2 did not run for any clause — the interpersonal values in this report are placeholders, not findings.**"
         end
 
         private def actor_label

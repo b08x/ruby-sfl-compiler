@@ -65,7 +65,7 @@ module SFL
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
       # "stub" = Pass 2 was skipped entirely (e.g. PASS=1 runs)
-      AnnotationSource = String.default("llm").enum("llm", "fallback", "stub")
+      AnnotationSource = String.default("llm").enum("llm", "fallback", "stub", "chunk_artifact")
 
       # Transitivity process types (Ideational)
       ProcessType = String.enum("material", "mental", "relational", "verbal", "behavioral", "existential")

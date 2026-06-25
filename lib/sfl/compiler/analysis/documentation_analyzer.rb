@@ -59,7 +59,7 @@ module SFL
           topic_labels = nil
           topic_shifts = []
           if topics && sections.size >= 3
-            stub_turns = sections.each_with_index.map do |(section, mtime), idx|
+            stub_turns = sections.each_with_index.map do |(section, mtime, _pdf_chunk), idx|
               Types::ConversationTurn.new(
                 turn_id: idx + 1,
                 speaker: section.heading || section.file_id,
@@ -83,7 +83,7 @@ module SFL
           end
 
           turns = []
-          sections.each_with_index do |(section, mtime), idx|
+          sections.each_with_index do |(section, mtime, _pdf_chunk), idx|
             break if @stop_requested&.call
 
             turn_id = idx + 1
@@ -103,6 +103,8 @@ module SFL
               "#{path} produced 0 clauses across #{turns.size} section(s) — insufficient data to analyze. " \
                 "Check that the source contains parseable prose."
           end
+
+          turns = flag_chunk_artifacts(sections, turns)
 
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
@@ -245,14 +247,94 @@ module SFL
           passages
         end
 
-        # @return [Array<[MarkdownLoader::Section, Time]>]
+        # @return [Array<[MarkdownLoader::Section, Time, Boolean]>] the
+        #   third element marks PDF-chunked sections — ChunkArtifactDetector
+        #   only ever runs on boundaries between two of those.
         private def load_sections(path)
           files = File.directory?(path) ? Dir.glob(File.join(path, "**", "*.{md,pdf}")) : [path]
           files.flat_map do |file|
             mtime = File.mtime(file)
-            loader = File.extname(file).casecmp(".pdf").zero? ? PdfLoader : MarkdownLoader
-            loader.load(file).map { |section| [section, mtime] }
+            pdf_chunk = File.extname(file).casecmp(".pdf").zero?
+            loader = pdf_chunk ? PdfLoader : MarkdownLoader
+            loader.load(file).map { |section| [section, mtime, pdf_chunk] }
           end
+        end
+
+        # Markdown sections are chunked by heading — a semantically real
+        # boundary, not an arbitrary character split — so they never
+        # produce a chunk_boundaries entry and the detector never runs on
+        # them (requirement #4's "pure markdown docs never trigger" by
+        # construction, not by a content heuristic).
+        private def flag_chunk_artifacts(sections, turns)
+          boundaries = pdf_chunk_boundaries(sections, turns)
+          return turns if boundaries.empty?
+
+          affected = ChunkArtifactDetector.detect(turns.flat_map(&:clauses), boundaries)
+          return turns if affected.empty?
+
+          rebuild_turns_with_chunk_artifacts(turns, affected)
+        end
+
+        # Flat-clause-array boundary indices, one per pair of consecutive
+        # PDF-chunked sections from the same source file (never across
+        # files, and never into/out of a markdown section).
+        private def pdf_chunk_boundaries(sections, turns)
+          boundaries = []
+          offset = turn_clause_count(turns, 0)
+
+          sections.each_cons(2).with_index(1) do |(prev, nxt), idx|
+            boundaries << offset if contiguous_pdf_chunk?(prev, nxt)
+            offset += turn_clause_count(turns, idx)
+          end
+
+          boundaries
+        end
+
+        private def turn_clause_count(turns, idx)
+          turns[idx]&.clauses&.size || 0
+        end
+
+        private def contiguous_pdf_chunk?(prev, nxt)
+          prev_section, _, prev_pdf = prev
+          next_section, _, next_pdf = nxt
+          prev_pdf && next_pdf && prev_section.file_id == next_section.file_id
+        end
+
+        # Rewrites only the affected turns, overriding each flagged
+        # clause's annotation_source and excluding it from that turn's
+        # avg_tenor/avg_modality (a fallback 0.5 from an ambiguous
+        # fragment shouldn't drag a real average toward the midpoint).
+        private def rebuild_turns_with_chunk_artifacts(turns, affected_flat_indices)
+          affected = affected_flat_indices
+          offset = 0
+
+          turns.map do |turn|
+            local_affected = (0...turn.clauses.size).select { |i| affected.include?(offset + i) }
+            offset += turn.clauses.size
+            next turn if local_affected.empty?
+
+            rebuilt_turn(turn, local_affected)
+          end
+        end
+
+        private def rebuilt_turn(turn, local_affected)
+          new_clauses = turn.clauses.each_with_index.map do |clause, i|
+            local_affected.include?(i) ? mark_chunk_artifact(clause) : clause
+          end
+
+          turn.new(clauses: new_clauses, **reliable_averages(new_clauses))
+        end
+
+        private def reliable_averages(clauses)
+          reliable = clauses.reject { |c| c.interpersonal.annotation_source == "chunk_artifact" }
+          {
+            avg_tenor: mean(reliable.map { |c| c.interpersonal.tenor }),
+            avg_modality: mean(reliable.map { |c| c.interpersonal.modality_weight }),
+          }
+        end
+
+        private def mark_chunk_artifact(clause)
+          clause.new(interpersonal: clause.interpersonal.new(annotation_source: "chunk_artifact"))
         end
 
         # `topics: 0` requests HDP (auto-discover the topic count) rather
