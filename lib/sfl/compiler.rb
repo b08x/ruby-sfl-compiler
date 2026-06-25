@@ -103,6 +103,9 @@ loader = Zeitwerk::Loader.new
 loader.push_dir(File.expand_path("..", __dir__))
 loader.ignore(File.expand_path("../sfl-compiler.rb", __dir__))
 loader.ignore(File.expand_path("compiler/version.rb", __dir__))
+# Loaded standalone via require_relative from exe/sfl-analyze, before
+# this file even runs — see langfuse_reachability.rb's own comment.
+loader.ignore(File.expand_path("compiler/langfuse_reachability.rb", __dir__))
 loader.tag = "sfl-compiler"
 loader.inflector.inflect(
   "sfl" => "SFL",

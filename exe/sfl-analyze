@@ -21,6 +21,19 @@ rescue StandardError => e
   warn "[WARN] .env failed to load: #{e.message}"
 end
 
+# Same one-shot-decision reasoning as above: if Langfuse is configured
+# but unreachable, the only way to act on it is before "sfl-compiler"
+# (and therefore "dspy") is ever required.
+require_relative "../lib/sfl/compiler/langfuse_reachability"
+case SFL::Compiler::LangfuseReachability.decide(env: ENV, tty: $stdin.tty?)
+when :cancel
+  warn "Cancelled."
+  exit 1
+when :skip_tracing
+  ENV.delete("LANGFUSE_PUBLIC_KEY")
+  ENV.delete("LANGFUSE_SECRET_KEY")
+end
+
 require "sfl-compiler"
 
 exit SFL::Compiler::CLI.run(ARGV)
