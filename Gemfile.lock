@@ -28,6 +28,7 @@ PATH
       pgvector (~> 0.3)
       pragmatic_segmenter (~> 0.3)
       pragmatic_tokenizer (~> 3.0)
+      prime (~> 0.1)
       ruby-spacy (~> 0.4)
       ruby_llm (~> 1.3)
       sequel (~> 5.88)
@@ -188,6 +189,7 @@ GEM
       fiber-storage
     fiber-storage (1.0.1)
     fiddle (1.1.8)
+    forwardable (1.4.0)
     git-lint (9.7.0)
       cogger (~> 1.0)
       containable (~> 1.1)
@@ -317,6 +319,9 @@ GEM
     pgvector (0.3.3)
     pragmatic_segmenter (0.3.24)
     pragmatic_tokenizer (3.2.1)
+    prime (0.1.4)
+      forwardable
+      singleton
     prism (1.9.0)
     process-group (1.2.4)
       process-terminal (~> 0.2.0)
@@ -453,6 +458,7 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
+    singleton (0.3.0)
     sod (1.5.0)
       cogger (~> 1.0)
       containable (~> 1.1)
@@ -603,6 +609,7 @@ CHECKSUMS
   fiber-local (1.1.0) sha256=c885f94f210fb9b05737de65d511136ea602e00c5105953748aa0f8793489f06
   fiber-storage (1.0.1) sha256=f48e5b6d8b0be96dac486332b55cee82240057065dc761c1ea692b2e719240e1
   fiddle (1.1.8) sha256=7fa8ee3627271497f3add5503acdbc3f40b32f610fc1cf49634f083ef3f32eee
+  forwardable (1.4.0) sha256=f1cd40cc9812937980e1c76f1aa053660990a7c9b6a98fc37d945468afcce838
   git-lint (9.7.0) sha256=9074262104618f45a14f5fece20d7f5e6918c7a3b2b2ee0447630184ec07653e
   gitt (4.6.0) sha256=bb7c5f152f51b487b362aa2e6ea28952e05f5d903339bc3e890c9f2b0b353fa6
   glamour (0.2.2-x86_64-linux-gnu) sha256=7324383dded88ce0a6d557cdac03b62008d03c6201de9df52dbb94a460f19adf
@@ -658,6 +665,7 @@ CHECKSUMS
   pgvector (0.3.3) sha256=9cad4b69487110b2dc26d57e6ba9ff2cbe72421c09e6d17397bb29e1551d1872
   pragmatic_segmenter (0.3.24) sha256=3c3709953efc06cd6a81c26bf7eeb083ace6f116932799b77f83b17aef4534c9
   pragmatic_tokenizer (3.2.1) sha256=92bc6609506d486893fb78e1be874ada6c6eb4db7e6dc3968afbaff9968d9cbe
+  prime (0.1.4) sha256=4d755ebf7c2994a6f3a3fee0d072063be3fff2d4042ebff6cd5eebd4747a225e
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
   process-group (1.2.4) sha256=269801e7f96cd0f90336583714c0ad0b1b480c277c7385cf0847fcf1200a83bb
   process-pipeline (1.0.2) sha256=ca220364e1574ea6eadfb630c9818a0969a8c4c31d208f864460b2eb606fe0f0
@@ -708,6 +716,7 @@ CHECKSUMS
   simplecov (0.22.0) sha256=fe2622c7834ff23b98066bb0a854284b2729a569ac659f82621fc22ef36213a5
   simplecov-html (0.13.2) sha256=bd0b8e54e7c2d7685927e8d6286466359b6f16b18cb0df47b508e8d73c777246
   simplecov_json_formatter (0.1.4) sha256=529418fbe8de1713ac2b2d612aa3daa56d316975d307244399fa4838c601b428
+  singleton (0.3.0) sha256=83ea1bca5f4aa34d00305ab842a7862ea5a8a11c73d362cb52379d94e9615778
   sod (1.5.0) sha256=92e2b804012b6a307b6e089c441cd5816a590b9ca00be0a991d566335fd319c7
   sorbet-baml (0.5.1) sha256=065091d055e28f80efeb0701f78fadb6edc476f3b940b0d0d1ab46fbb451b023
   sorbet-result (1.4.0) sha256=194eededbcb78cf04ee2db8bd3b19e76f305dc043062ed90c56b4b9eac268ccd

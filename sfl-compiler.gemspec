@@ -57,6 +57,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pgvector", "~> 0.3"
   spec.add_dependency "pragmatic_segmenter", "~> 0.3"
   spec.add_dependency "pragmatic_tokenizer", "~> 3.0"
+  spec.add_dependency "prime", "~> 0.1"
   spec.add_dependency "ruby_llm", "~> 1.3"
   spec.add_dependency "ruby-spacy", "~> 0.4"
   spec.add_dependency "sequel", "~> 5.88"

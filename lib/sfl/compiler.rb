@@ -57,6 +57,10 @@ module SFL
     # Raised when topic modeling encounters unrecoverable errors.
     class TopicModelerError < Error; end
 
+    # Raised when a QuestionGraph's dependency edges can't be resolved
+    # (a cycle, or a dependency id that doesn't match any question).
+    class QuestionGraphError < Error; end
+
     def self.logger
       require "journald/logger"
       @logger ||= Journald::Logger.new("sfl-compiler")
