@@ -26,6 +26,10 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:mood, "narrative")).to eq(["declarative", :aliased])
       end
 
+      it "normalizes 'elliptical_fragment' to fragment, not declarative" do
+        expect(described_class.normalize(:mood, "elliptical_fragment")).to eq(["fragment", :aliased])
+      end
+
       it "normalizes 'continuative' to declarative" do
         expect(described_class.normalize(:mood, "continuative")).to eq(["declarative", :aliased])
       end

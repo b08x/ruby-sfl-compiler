@@ -17,6 +17,7 @@ module SFL
           "query" => "interrogative",
           "queries" => "interrogative",
           "elliptical" => "declarative",
+          "elliptical_fragment" => "fragment",
           "nominal" => "fragment",
           "narrative" => "declarative",
           "continuative" => "declarative",
