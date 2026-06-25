@@ -111,6 +111,31 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
     end
 
+    describe "SFL::Compiler::SFLAnnotator#call" do
+      it "passes structured premises and inference_rule through as PremiseOutput instances" do
+        premises = [
+          SFL::Compiler::PremiseOutput.new(type: "token", source: "unanimously", value: "ADV", weight: 0.7),
+          SFL::Compiler::PremiseOutput.new(type: "pos", source: "DET+VERB", value: "formal_pattern", weight: nil),
+        ]
+        dspy_result = double(
+          mood: "declarative", modality_weight: 0.8, tenor: 0.7,
+          speaker_attitude: "assertive", topical_theme: "The system",
+          textual_theme: nil, interpersonal_theme: nil, rheme: "processes data",
+          theme_type: "unmarked", reasoning: "formal register",
+          premises:, inference_rule: "tenor_high_formal_register"
+        )
+        predictor = instance_double(DSPy::ChainOfThought, call: dspy_result)
+        allow(DSPy::ChainOfThought).to receive(:new).and_return(predictor)
+
+        result = SFL::Compiler::SFLAnnotator.new("Text: test\n").call
+
+        expect(result[:premises]).to eq(premises)
+        expect(result[:premises].first).to be_a(SFL::Compiler::PremiseOutput)
+        expect(result[:premises].first.type).to eq("token")
+        expect(result[:inference_rule]).to eq("tenor_high_formal_register")
+      end
+    end
+
     describe "#interpersonal_from" do
       let(:correlation_id) { "test-correlation" }
 

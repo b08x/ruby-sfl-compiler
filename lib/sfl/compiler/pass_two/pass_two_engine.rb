@@ -440,6 +440,17 @@ module SFL
       end
     end
 
+    # One piece of evidence (token/POS/dep/etc.) the LLM cites as support
+    # for an annotation decision. Sorbet T::Struct, not Dry::Struct — this
+    # is the DSPy output-boundary type; `Types::Premise` (Dry::Struct) is
+    # the internal representation it gets bridged into downstream.
+    class PremiseOutput < T::Struct
+      const :type, String
+      const :source, String
+      const :value, String
+      const :weight, T.nilable(Float)
+    end
+
     # DSPy.rb signature for SFL interpersonal and textual annotation.
     # NOTE: Processes belong to the Ideational metafunction (handled in Pass 1).
     # This signature handles Interpersonal (mood, modality, tenor) and
@@ -479,6 +490,10 @@ module SFL
         const :theme_type, String,
           description: "Theme type: #{ClassificationRegistry.signature_description(:theme_type)}"
         const :reasoning, String, description: "Step-by-step reasoning for the classification"
+        const :premises, T::Array[PremiseOutput],
+          description: "Specific tokens/POS/deps/etc. that support this annotation"
+        const :inference_rule, String,
+          description: "Named SFL rule mapping premises to the conclusion, e.g. 'tenor_high_formal_register'"
       end
     end
 
@@ -506,6 +521,8 @@ module SFL
           rheme: result.rheme,
           theme_type: result.theme_type,
           reasoning: result.reasoning,
+          premises: result.premises,
+          inference_rule: result.inference_rule,
         }
       end
 
@@ -552,6 +569,8 @@ module SFL
       const :rheme, T.nilable(String)
       const :theme_type, String
       const :reasoning, T.nilable(String)
+      const :premises, T::Array[PremiseOutput], default: []
+      const :inference_rule, T.nilable(String)
     end
 
     # Batched variant of SFLSignature: annotates many clauses per LLM call.
@@ -605,6 +624,8 @@ module SFL
             rheme: a.rheme,
             theme_type: a.theme_type,
             reasoning: a.reasoning,
+            premises: a.premises,
+            inference_rule: a.inference_rule,
           }
         end
       end
