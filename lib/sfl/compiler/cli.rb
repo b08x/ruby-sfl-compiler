@@ -123,6 +123,7 @@ module SFL
           narrative: false,
           topics: nil,
           sprint_id: nil,
+          live: false,
         }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
@@ -132,6 +133,7 @@ module SFL
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
           opt.on("--sprint-id ID") { |v| options[:sprint_id] = v }
+          opt.on("--live") { options[:live] = true }
           add_tracing_option(opt, options)
         end.parse!(argv)
         options
@@ -292,6 +294,12 @@ module SFL
         stop_flag = StopFlag.new
         install_interrupt_trap(stop_flag)
 
+        # Early-return for --live: no spaCy/Pipeline needed in this process.
+        if options[:live]
+          Bootstrap.call(require_jobs: true, require_llm: false, require_observability: false)
+          return run_documentation_live(input, options)
+        end
+
         ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
         pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
         if options[:store]
@@ -317,6 +325,27 @@ module SFL
         print_interrupt_status(result, input, :documentation) if result.metadata[:interrupted]
       ensure
         Signal.trap("INT", "DEFAULT")
+      end
+
+      # `--live` for documentation: same architecture as conversation --live.
+      # Sidekiq workers run CompileSectionJob per section via
+      # DocumentationAnalysisWorkflow; TUI polls via WorkflowPoller.
+      # Prerequisite: `bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb -c 1`
+      module_function def run_documentation_live(input, options)
+        flow = DocumentationAnalysisWorkflow.create(input, store: options[:store],
+          sprint_id: options[:sprint_id])
+        flow.start!
+
+        app = TUI::BatchApp.new(workflow_id: flow.id, files: [input])
+        Bubbletea.run(app)
+
+        return unless app.result
+
+        result = Types.load_analysis_result(
+          JSON.parse(JSON.generate(app.result), symbolize_names: true)
+        )
+        finish_report(result, options[:output_dir])
+        write_narrative(result, options[:output_dir]) if options[:narrative]
       end
 
       module_function def run_knowledge_base(input, options)

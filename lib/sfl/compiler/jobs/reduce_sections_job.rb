@@ -37,6 +37,7 @@ module SFL
         {
           path:,
           section_count: result.turns.size,
+          turns: result.turns.map { |t| Types.dump(t) },
           metadata: result.metadata,
           insights: result.insights,
           speaker_profiles: result.speaker_profiles.transform_values { |p| Types.dump(p) },
