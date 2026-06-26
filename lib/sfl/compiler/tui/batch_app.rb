@@ -162,6 +162,8 @@ module SFL
         end
 
         private def time_line
+          return "" if @done
+
           parts = []
           if @started_at
             elapsed_s = (Time.now - @started_at).to_i
