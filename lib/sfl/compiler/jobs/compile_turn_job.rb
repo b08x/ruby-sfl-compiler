@@ -87,7 +87,7 @@ module SFL
 
       private def pipeline
         @pipeline ||= begin
-          ctx = Bootstrap.call(require_db: true, require_llm: true, require_observability: false)
+          ctx = Bootstrap.call(require_db: true, require_llm: true, require_observability: true)
           Pipeline.new(db: ctx.db, spacy_model: ctx.config.spacy_model)
         end
       end

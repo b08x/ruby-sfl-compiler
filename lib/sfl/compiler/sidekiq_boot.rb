@@ -8,10 +8,10 @@
 # ReduceTurnsJob at all, and never defines Sidekiq::ActiveJob::Wrapper
 # (only Bootstrap#configure_jobs does that, and nothing else calls it in a
 # worker boot path). require_db/require_llm/require_observability are off
-# here because Bootstrap.call is invoked again, for real, inside each job's
-# own #perform (see CompileTurnJob#pipeline) — this boot file only needs to
-# make Gush/ActiveJob/Sidekiq wiring exist before the worker starts pulling
-# jobs off the queue.
+# here because Bootstrap is invoked for real inside each job's #perform
+# (see CompileTurnJob#pipeline, CompileSectionJob#pipeline) with
+# require_observability: true — the OTel TracerProvider and Langfuse exporter
+# are initialized per-worker-process on first job pickup, not at boot time.
 require "sfl/compiler"
 
 SFL::Compiler::Bootstrap.call(
