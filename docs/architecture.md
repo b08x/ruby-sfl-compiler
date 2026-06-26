@@ -138,7 +138,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 | `TopicModeler` | LDA/HDP topic clustering |
 | `CorrelationAnalyzer` | Process type × tenor/modality correlation |
 | `NarrativeGenerator` | LLM prose from structured analysis |
-| `QuestionGraph` | Gödel-encoded dependency DAG |
+| `QuestionGraph` | Phase 1: Gödel-encoded dependency DAG (testing limit) |
 | `CrossDocumentGraph` | Multi-document question merging |
 
 ### Storage Layer
@@ -208,7 +208,17 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 
 ---
 
-## Gödel Numbering in QuestionGraph
+## QuestionGraph: Dependency Tracking
+
+### Phase 1 Implementation (Testing Limit) — Gödel Numbering
+
+The Phase 1 `QuestionGraph` tracks dependencies across multi-agent reasoning
+sprints using **Gödel numbering** — an elegant, mathematically pure encoding
+inspired by Kurt Gödel's incompleteness work. Each question in the dependency
+DAG is assigned a prime number in topological order. Axiomatic (root) questions
+receive small primes; derived questions receive the next available prime
+multiplied by the product of their dependencies' primes. This means the
+topological structure of the graph is fully recoverable from a single integer.
 
 ```
   Question: "Does modality hold across doc types?"
@@ -226,6 +236,46 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
   decode(180) → all questions whose value divides 180
   consistent? → decode.keys.sort == questions.keys.sort
 ```
+
+This approach was chosen for the research prototype because it provides
+**provably complete dependency tracking** in a single column — the graph
+structure is fully determined by the integer's prime factorization, and
+consistency can be verified by round-tripping through encode/decode with no
+external state. Every transformation is traceable, making it ideal for academic
+validation.
+
+**The integer overflow is intentional.** The Gödel number grows
+super-exponentially with DAG depth (each new level multiplies by the next
+prime), and it overflows PostgreSQL's `BIGINT` (2^63 - 1) at approximately
+6-7 deep nodes. This is not a bug — it acts as an **implicit, hardware-bound
+circuit breaker** that forces the system to halt before context windows grow
+too large for meaningful analysis. In the research setting, this was a useful
+safety valve: the system physically cannot produce a runaway reasoning chain.
+
+### Phase 2 Implementation (Production DAGs)
+
+The Gödel numbering approach does not scale. The super-exponential growth and
+hard overflow ceiling make it unsuitable for production reasoning at arbitrary
+depths. Phase 2 will replace it with **standard relational graph structures**
+that decouple graph depth from storage representation:
+
+- **Adjacency lists** — a `question_edges` table mapping `parent_id →
+  child_id` with a `depth` column. Queries use recursive CTEs for
+  reachability and topological ordering. No integer overflow; depth is bounded
+  only by available storage.
+- **Postgres Ltree** — the `ltree` extension stores the path from root to each
+  node as a label string (e.g. `doc0.modality.this_question`), enabling
+  subtree queries, ancestry checks, and depth constraints via native GiST
+  indexing.
+- **Array tracking** — a `dependency_ids integer[]` column on each question
+  row, with `@>` (contains) and `&&` (overlaps) operators for dependency
+  queries. Simpler than a join table for sparse graphs.
+
+All three approaches eliminate the integer overflow ceiling, paving the way
+for **infinite-depth contextual reasoning** where the graph's shape is
+constrained by semantic relevance (see Phase 2's "Rolling Synthesis" and
+"Cognitive Gas" concepts in the README) rather than by hardware arithmetic
+limits.
 
 ---
 

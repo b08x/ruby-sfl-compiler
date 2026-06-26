@@ -1,15 +1,115 @@
-# Two-Pass SFL Compiler
+# ruby-sfl-compiler
+
+**Phase 1 Prototype — Active Proof of Concept**
 
 A Ruby gem that compiles natural language into structured Systemic Functional
-Linguistics (SFL) annotations for high-fidelity Retrieval-Augmented Generation
-(RAG). Where conventional RAG retrieves by topic alone, this compiler also
-indexes *rhetorical stance* — how certain the writer was (modality), how formal
+Linguistics (SFL) annotations for Retrieval-Augmented Generation (RAG). Where
+conventional RAG retrieves by topic alone, this compiler also indexes
+*rhetorical stance* — how certain the writer was (modality), how formal
 (tenor), and what kind of process each clause describes — so retrieval can
 filter on how something was said, not just what it said.
+
+The compiler uses a two-pass pipeline: a **syntactic engine** (Pass 1, spaCy
+via PyCall) extracts token-level structure and ideational content, then a
+**semantic annotator** (Pass 2, DSPy.rb + LLM) classifies interpersonal
+features like mood, modality, and tenor. Annotated clauses are stored in
+PostgreSQL with pgvector for hybrid retrieval that combines semantic
+similarity, keyword matching, and scalar stance filters.
 
 It ships with `sfl-analyze`, a CLI that analyzes conversations and
 documentation, ingests clauses into PostgreSQL, and answers questions over the
 stored corpus with cited, stance-aware evidence.
+
+---
+
+## The Core Hypothesis: Stance-Filtered RAG (Safe RAG)
+
+This project exists to test a single, high-stakes hypothesis:
+
+**Can Systemic Functional Linguistics (SFL) be used to secure LLMs against
+context poisoning and role confusion?**
+
+When an LLM retrieves documents to answer a question, it can easily absorb the
+emotional or manipulative stance of poisoned or highly biased documents. The
+ruby-sfl-compiler is built to test a structural defense against this.
+
+**Mechanism:** During ingestion, it stores SFL metadata alongside vector
+embeddings.
+
+**Action:** During retrieval, it uses hybrid Reciprocal Rank Fusion (RRF)
+combined with scalar stance filters. By configuring the retriever to only pull
+evidence where `min_modality` is high (factually confident) and `min_tenor` is
+high (formal/objective register), the goal is to strictly populate the LLM's
+context window with objective facts, isolating it from adopting an
+inappropriate persona.
+
+If the hypothesis holds, stance-filtered retrieval becomes a structural
+defense layer — not a prompt-level guardrail, but a deterministic filter that
+governs what evidence reaches the model's context window in the first place.
+
+---
+
+## Project Status: Phase 1 Prototype
+
+This is an **active proof of concept**, not a production system. The current
+implementation was built to establish the two-pass SFL annotation pipeline and
+begin testing the Safe RAG hypothesis on real data.
+
+### What Phase 1 Established
+
+The Ruby/PyCall architecture and the math-based DAG (Directed Acyclic Graph)
+tracking — inspired by Gödel numbering — have successfully established the
+full pipeline:
+
+- **Two-pass annotation** from raw text through SFL-tagged, embedding-ready
+  clauses stored in PostgreSQL.
+- **Hybrid retrieval** combining semantic vector search, keyword matching, and
+  scalar stance filters via Reciprocal Rank Fusion.
+- **Provenance tracking** — every clause carries an `annotation_source` marker
+  so fallback or placeholder data is never silently presented as measurement.
+
+We are currently working out the practical proofs and use cases on local data
+— validating which SFL filter combinations produce materially different
+retrieval outcomes and whether stance filtering demonstrably changes the
+quality and objectivity of LLM-generated answers.
+
+### Architectural Decisions Suited to Research, Not Production
+
+The Phase 1 architecture was deliberately optimized for reproducibility,
+traceability, and rapid iteration — not for throughput, horizontal
+scalability, or production deployment:
+
+- **Ruby + Python via PyCall.** Pass 1 delegates to spaCy through PyCall,
+  which bridges Ruby and an embedded Python interpreter in a single process.
+  This eliminated serialization overhead during research but introduces a
+  single-threaded constraint (PyCall does not support multi-threaded use) and
+  couples two language runtimes tightly.
+
+- **Gödel-numbered DAG tracking.** Clause relationships and analysis
+  dependencies are tracked through mathematical encodings rather than
+  conventional graph data structures. This approach was valuable for academic
+  validation — every transformation is provably traceable — but it is
+  hardware-bound and not suited to distributed or high-volume processing.
+
+- **Low-volume by design.** The pipeline processes clauses sequentially (or
+  across Sidekiq worker processes for parallelism), stores results in a local
+  PostgreSQL instance, and targets corpus sizes typical of academic
+  experiments and single-document analysis.
+
+---
+
+## Architectural Lineage: A Composite Design
+
+This project is a composite architecture — a system built by
+reverse-engineering and synthesizing design patterns from a radically diverse
+array of research domains that usually do not interact: Systemic Functional
+Linguistics, Cognitive Behavioral Therapy, cognitive neuroscience,
+existential philosophy, the Unix philosophy, and cybersecurity practice.
+
+For the full intellectual lineage of every engineering pattern in the
+compiler, see [docs/architectural-lineage.md](docs/architectural-lineage.md).
+
+---
 
 ## Architecture
 
@@ -122,9 +222,9 @@ DATABASE_URL=postgresql:///sfl_compiler_dev
 DSPY_PROVIDER=openrouter/mistralai/mistral-7b-instruct
 
 # API key matching the provider prefix (set exactly one)
-OPENROUTER_API_KEY=sk-or-your-key-here   # openrouter/...
+OPENROUTER_API_KEY=sk-or-...here   # openrouter/...
 # GOOGLE_API_KEY=your-key-here           # google/...
-# OPENAI_API_KEY=sk-your-key-here        # openai/...
+# OPENAI_API_KEY=***        # openai/...
 # ANTHROPIC_API_KEY=your-key-here        # anthropic/...
 
 # spaCy model
@@ -368,8 +468,57 @@ bundle install
 bundle exec rspec spec/        # unit suite
 ```
 
-See `docs/guides/USAGE.md` for the operator-focused guide and `CLAUDE.md` for the
-agent/contributor codebase map.
+See `docs/guides/USAGE.md` for the operator-focused guide,
+`docs/guides/modular-integration.md` for the RAG middleware integration guide,
+and `CLAUDE.md` for the agent/contributor codebase map.
+
+---
+
+## Roadmap to Phase 2
+
+Phase 1 established the pipeline. Phase 2 tests the Safe RAG hypothesis at
+scale.
+
+To test these proofs on massive enterprise datasets, the next iteration
+focuses on replacing the hardware-bound limits of Phase 1 with sustainable
+context management.
+
+### Rolling Synthesis
+
+An incremental context window that maintains SFL annotations as living state
+rather than recomputing clause graphs from scratch. As new clauses arrive, the
+synthesis rolls forward, preserving rhetorical continuity without replaying
+the full analysis history.
+
+Rolling Synthesis replaces the Gödel-numbered DAG tracking — which requires
+re-evaluating the full clause graph and is constrained by the mathematical
+encoding's memory footprint — with a streaming, semantically grounded model
+that can operate over arbitrarily large corpora without proportional hardware
+cost.
+
+### Supporting Architecture Changes
+
+- **Runtime decoupling.** The in-process PyCall bridge will be replaced with a
+  standalone syntactic service (or a language-native parser) so that Pass 1
+  and Pass 2 can scale independently and run distributed without the
+  single-threaded PyCall constraint.
+
+- **Cognitive Gas.** A semantic budget model for LLM context. Rather than
+  tracking token counts or fixed window sizes, the system measures the
+  "cognitive cost" of each clause in SFL terms (process complexity, modality
+  density, tenor shifts) and allocates retrieval and generation budget
+  accordingly. This replaces the math-based DAG with a dynamic, semantically
+  grounded approach to context management.
+
+Phase 2 is in the design stage. The Phase 1 codebase remains the active
+foundation for ongoing proof-of-concept work and the reference implementation
+as the architecture evolves.
+
+For the full engineering roadmap — including Rolling Synthesis (Fractal
+Graphs), Cognitive Gas, and Semantic Convergence — see
+[ROADMAP.md](ROADMAP.md).
+
+---
 
 ## License
 
