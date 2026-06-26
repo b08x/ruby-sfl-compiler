@@ -7,10 +7,9 @@ require "pastel"
 module SFL
   module Compiler
     module TUI
-      # Compact single-pane progress view for `sfl-analyze --live`.
+      # Compact bordered progress card for `sfl-analyze --live`.
       # Polls Gush/Redis state via WorkflowPoller — never touches Pipeline,
-      # spaCy, or PyCall. PyCall is single-thread only; all analysis runs in
-      # Sidekiq worker processes.
+      # spaCy, or PyCall (all analysis runs in Sidekiq worker processes).
       class BatchApp
         include Bubbletea::Model
 
@@ -22,7 +21,10 @@ module SFL
         end
 
         POLL_INTERVAL = 0.5
-        BAR_WIDTH     = 32
+        BAR_WIDTH     = 36
+
+        CARD_PADDING_H = 3  # left+right padding chars per side inside the card
+        BORDER_CHARS   = 2  # one border char on each side
 
         def initialize(workflow_id:, files:, width: 100, height: 30)
           @workflow_id    = workflow_id
@@ -52,24 +54,15 @@ module SFL
 
         def update(message)
           case message
-          when PollMessage    then handle_poll
-          when FailedMessage  then @done = true; @error = message.error; [self, nil]
+          when PollMessage           then handle_poll
+          when FailedMessage         then @done = true; @error = message.error; [self, nil]
           when Bubbletea::KeyMessage then handle_key(message)
           else [self, nil]
           end
         end
 
         def view
-          body = [
-            "",
-            "  #{progress_bar_line}",
-            "",
-            "  #{@pastel.dim('Section:')} #{@current_turn || @pastel.dim('waiting for workers…')}",
-            "  #{summary_line}",
-            ""
-          ].join("\n")
-
-          Lipgloss.join_vertical(Lipgloss::LEFT, header, body, footer)
+          Lipgloss.join_vertical(Lipgloss::LEFT, card, footer)
         end
 
         private def handle_key(msg)
@@ -96,9 +89,9 @@ module SFL
         end
 
         private def apply_progress(progress)
-          newly_done = progress.completed - @last_completed
+          newly_done      = progress.completed - @last_completed
           @last_completed = progress.completed
-          @started_at ||= Time.now if newly_done.positive? && @last_completed == newly_done
+          @started_at   ||= Time.now if newly_done.positive? && @last_completed == newly_done
 
           progress.running_jobs.each { |label| @current_turn = label }
         end
@@ -107,55 +100,130 @@ module SFL
           Bubbletea.tick(POLL_INTERVAL) { PollMessage.new }
         end
 
-        private def progress_bar_line
-          return @pastel.dim("  #{BAR_WIDTH.times.map { '░' }.join}   0%") if @total.zero?
+        # ── Rendering ───────────────────────────────────────────────────
 
-          ratio  = @last_completed.to_f / @total
-          filled = (ratio * BAR_WIDTH).floor
-          empty  = BAR_WIDTH - filled
-          pct    = (ratio * 100).round
+        private def card
+          inner_w = @width - BORDER_CHARS - (CARD_PADDING_H * 2)
 
-          bar = @pastel.green("█" * filled) + @pastel.dark("░" * empty)
-          "#{bar}  #{pct}%  (#{@last_completed}/#{@total})  #{eta_string}"
-        end
+          body = [
+            title_line(inner_w),
+            "",
+            progress_bar_line,
+            time_line,
+            "",
+            current_section_line,
+            "",
+            completion_line,
+          ].join("\n")
 
-        private def eta_string
-          return "" if @last_completed.zero? || @total.zero? || !@started_at
-          elapsed = Time.now - @started_at
-          return "" if elapsed < 1
-
-          rate      = @last_completed / elapsed
-          remaining = @total - @last_completed
-          secs      = (remaining / rate).round
-
-          return @pastel.dim("ETA: <1s") if secs <= 0
-          @pastel.dim(secs < 60 ? "ETA: #{secs}s" : "ETA: #{secs / 60}m #{secs % 60}s")
-        end
-
-        private def summary_line
-          if @done && @result && !@error
-            count    = @result[:section_count] || @result[:turn_count] || 0
-            insights = @result[:insights]&.size || 0
-            coverage = @result.dig(:metadata, :annotation_coverage) || {}
-            llm      = coverage[:llm] || 0
-            fallback = coverage[:fallback] || 0
-            "#{count} sections  ·  #{insights} insights  ·  #{llm} llm / #{fallback} fallback"
-          elsif @done && @error
-            ""
-          else
-            @pastel.dim("analysing…")
-          end
-        end
-
-        private def header
-          status = @done ? (@error ? @pastel.red("FAILED") : @pastel.green("DONE")) : @pastel.yellow("running")
-          Chat::Styles::HEADER.render("SFL Batch — #{File.basename(@current_file.to_s)}  [#{status}]")
+          Lipgloss::Style.new
+            .border(Lipgloss::ROUNDED_BORDER)
+            .border_foreground("62")
+            .padding(1, CARD_PADDING_H)
+            .width(@width - BORDER_CHARS)
+            .render(body)
         end
 
         private def footer
-          return Chat::Styles::ERROR.render("Error: #{@error.message}") if @error
-          return Chat::Styles::FOOTER.render("Done  ·  q or ctrl+c to exit") if @done
-          Chat::Styles::FOOTER.render("q / ctrl+c to exit")
+          Chat::Styles::FOOTER.render("  q / ctrl+c to exit")
+        end
+
+        # Title: "SFL Batch  ·  filename" left, "● status" right-aligned.
+        private def title_line(inner_width)
+          left  = "#{@pastel.bold('SFL Batch')}  #{@pastel.dim('·')}  " \
+                  "#{@pastel.cyan(File.basename(@current_file.to_s))}"
+          right = status_dot
+          gap   = [inner_width - visible_length(left) - visible_length(right), 1].max
+          "#{left}#{' ' * gap}#{right}"
+        end
+
+        private def status_dot
+          if @done
+            @error ? @pastel.red("● failed") : @pastel.green("● done")
+          else
+            @pastel.yellow("● running")
+          end
+        end
+
+        private def progress_bar_line
+          if @total.zero?
+            return @pastel.bright_black("░" * BAR_WIDTH) + "   " + @pastel.dim("0%")
+          end
+
+          ratio  = @last_completed.to_f / @total
+          filled = (ratio * BAR_WIDTH).floor
+          pct    = (ratio * 100).round
+
+          bar   = @pastel.green("█" * filled) +
+                  @pastel.bright_black("░" * (BAR_WIDTH - filled))
+          count = @pastel.dim("#{@last_completed}/#{@total}")
+
+          "#{bar}  #{@pastel.bold("#{pct}%")}  #{count}"
+        end
+
+        private def time_line
+          parts = []
+          if @started_at
+            elapsed_s = (Time.now - @started_at).to_i
+            parts << "elapsed #{format_duration(elapsed_s)}" if elapsed_s >= 1
+          end
+          if (eta = eta_seconds)
+            parts << "ETA ~#{format_duration(eta)}"
+          end
+          return "" if parts.empty?
+          @pastel.dim("  " + parts.join("  ·  "))
+        end
+
+        private def current_section_line
+          if @done && !@error
+            ""
+          elsif @current_turn
+            "#{@pastel.cyan('→')}  #{@pastel.bold(@current_turn)}"
+          else
+            @pastel.dim("  waiting for workers…")
+          end
+        end
+
+        private def completion_line
+          return "" unless @done
+          if @error
+            return Chat::Styles::ERROR.render(@error.message)
+          end
+
+          count    = @result[:section_count] || @result[:turn_count] || 0
+          insights = @result[:insights]&.size || 0
+          coverage = @result.dig(:metadata, :annotation_coverage) || {}
+          llm      = coverage[:llm]      || 0
+          fallback = coverage[:fallback] || 0
+
+          [
+            @pastel.green("✓"),
+            "#{@pastel.bold(count.to_s)} #{@pastel.dim('sections')}",
+            @pastel.dim("·"),
+            "#{@pastel.bold(insights.to_s)} #{@pastel.dim('insights')}",
+            @pastel.dim("·"),
+            @pastel.dim("#{llm} llm · #{fallback} fallback"),
+          ].join("  ")
+        end
+
+        # ── Helpers ─────────────────────────────────────────────────────
+
+        # Strip ANSI escape codes to measure visible character width.
+        private def visible_length(str)
+          str.gsub(/\e\[[0-9;]*m/, "").length
+        end
+
+        private def eta_seconds
+          return nil if @last_completed.zero? || @total.zero? || !@started_at
+          elapsed = Time.now - @started_at
+          return nil if elapsed < 2
+          rate = @last_completed.to_f / elapsed
+          ((@total - @last_completed) / rate).round
+        end
+
+        private def format_duration(secs)
+          return "<1s" if secs <= 0
+          secs < 60 ? "#{secs}s" : "#{secs / 60}m #{secs % 60}s"
         end
       end
     end
