@@ -68,6 +68,7 @@ module SFL
         :heading_slug,   # URL-safe id from Inkmark (nil for preamble)
         :text,           # clean plain-prose text ready for spaCy
         :byte_range,     # Range into original source (nil for preamble)
+        :frontmatter,    # Hash parsed from YAML frontmatter (nil if absent)
         keyword_init: true
       )
 
@@ -117,9 +118,9 @@ module SFL
       def sections_from_source
         results = []
 
-        # Strip YAML frontmatter before handing to Inkmark — the `---` block
-        # is a setext-style delimiter that Inkmark mis-parses as an H2 heading,
-        # causing the entire document to collapse into one synthetic section.
+        # Parse YAML frontmatter before stripping it — Inkmark mis-parses
+        # the `---` block as a setext H2, collapsing the whole document.
+        fm = parse_frontmatter(@source)
         body_source = @source.sub(/\A---\n.*?\n---\n?/m, "")
 
         # --- Preamble (content before the first heading) ---
@@ -132,7 +133,8 @@ module SFL
             heading_level: nil,
             heading_slug: nil,
             text: clean_text(preamble_text),
-            byte_range: nil
+            byte_range: nil,
+            frontmatter: fm
           )
         end
 
@@ -147,11 +149,22 @@ module SFL
             heading_level: chunk[:level],
             heading_slug: chunk[:id],
             text: clean,
-            byte_range: chunk[:byte_range]
+            byte_range: chunk[:byte_range],
+            frontmatter: fm
           )
         end
 
         results
+      end
+
+      def parse_frontmatter(source)
+        match = source.match(/\A---\n(.*?)\n---\n?/m)
+        return nil unless match
+
+        require "yaml"
+        YAML.safe_load(match[1], permitted_classes: [Time, Date, Symbol])
+      rescue StandardError
+        nil
       end
 
       # Extract any prose that appears before the first ATX heading.

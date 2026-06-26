@@ -10,6 +10,10 @@ require_relative "analysis/topic_modeler"
 require_relative "analysis/conversation_analyzer"
 require_relative "analysis/documentation_analyzer"
 require_relative "analysis/narrative_generator"
+require_relative "analysis/content_type_classifier"
+require_relative "analysis/quality_scorer"
+require_relative "analysis/migration_assessor"
+require_relative "analysis/knowledge_base_analyzer"
 
 module SFL
   module Compiler

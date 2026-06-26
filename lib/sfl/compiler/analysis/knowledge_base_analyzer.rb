@@ -1,0 +1,210 @@
+# frozen_string_literal: true
+
+module SFL
+  module Compiler
+    module Analysis
+      # Analyzes a directory or file set as a knowledge base corpus rather
+      # than as a conversation: each document section becomes a KnowledgeArtifact
+      # with a content_type classification, quality_score, and migration_action
+      # recommendation.
+      #
+      # Supports .md, .pdf, and (optionally) image files. Image analysis
+      # requires a vision-capable LLM and is disabled by default — pass
+      # `analyze_images: true` to enable it.
+      #
+      # Returns a Types::KnowledgeBaseReport, not an AnalysisResult.
+      class KnowledgeBaseAnalyzer
+        include Aggregations
+
+        TEXT_EXTENSIONS  = %w[.md .pdf].freeze
+        IMAGE_EXTENSIONS = %w[.png .jpg .jpeg .webp].freeze
+        STALENESS_MONTHS = 18
+
+        # @param pipeline [Pipeline]
+        # @param clause_repo [ClauseRepository, nil] required only for store: true
+        # @param on_progress [#call, nil]
+        #   called with { artifact_id:, total:, title: } before each section
+        def initialize(pipeline:, clause_repo: nil, on_progress: nil)
+          @pipeline    = pipeline
+          @clause_repo = clause_repo
+          @on_progress = on_progress
+          @classifier  = ContentTypeClassifier.new
+          @scorer      = QualityScorer.new
+          @assessor    = MigrationAssessor.new
+        end
+
+        # @param path [String] a file or directory
+        # @param store [Boolean] persist clauses + embeddings
+        # @param resume [Boolean] reuse cached Pass 2 results
+        # @param analyze_images [Boolean] run vision LLM on image files
+        #   (expensive — disabled by default)
+        # @param vision_model [String, nil] RubyLLM model id for image
+        #   description; nil uses the configured default
+        # @return [Types::KnowledgeBaseReport]
+        def analyze(path, store: false, resume: false, analyze_images: false, vision_model: nil)
+          @resume = resume
+
+          tuples = load_all_sections(path.to_s, analyze_images:, vision_model:)
+          total  = tuples.size
+
+          artifacts = tuples.each_with_index.map do |(section, source_file, mtime), idx|
+            artifact_id = idx + 1
+            @on_progress&.call(artifact_id:, total:, title: section_title(section))
+            compile_artifact(section, source_file, mtime, artifact_id, store)
+          end
+
+          manifest = artifacts.map do |a|
+            @assessor.assess(
+              artifact_id:   a.artifact_id,
+              title:         a.title,
+              source_file:   a.source_file,
+              content_type:  a.content_type,
+              quality_score: a.quality_score
+            )
+          end
+
+          # Backfill migration_action/reason from manifest into artifacts so
+          # the artifact structs are self-contained (report consumers don't
+          # need to cross-reference).
+          manifest_index = manifest.index_by(&:artifact_id)
+          artifacts = artifacts.map do |a|
+            entry = manifest_index[a.artifact_id]
+            a.new(migration_action: entry.action, migration_reason: entry.reason)
+          end
+
+          Types::KnowledgeBaseReport.new(
+            metadata: {
+              source_path:      path.to_s,
+              analyzed_at:      Time.now.iso8601,
+              artifact_count:   artifacts.size,
+              file_count:       tuples.map { |(_, f, _)| f }.uniq.size,
+              images_analyzed:  analyze_images,
+              store:,
+            },
+            artifacts:,
+            migration_manifest:        manifest,
+            content_type_distribution: type_distribution(artifacts),
+            quality_distribution:      quality_buckets(artifacts),
+            staleness_flags:           staleness_flags(artifacts)
+          )
+        end
+
+        private
+
+        def load_all_sections(path, analyze_images:, vision_model:)
+          files = collect_files(path, analyze_images:)
+
+          files.flat_map do |file|
+            mtime  = File.mtime(file)
+            loader = loader_for(File.extname(file).downcase, vision_model:)
+            next [] unless loader
+
+            loader.call(file).map { |section| [section, file, mtime] }
+          rescue => e
+            warn "[WARN] KnowledgeBaseAnalyzer: skipping #{file}: #{e.message}"
+            []
+          end
+        end
+
+        def collect_files(path, analyze_images:)
+          extensions = TEXT_EXTENSIONS + (analyze_images ? IMAGE_EXTENSIONS : [])
+
+          if File.directory?(path)
+            Dir.glob(File.join(path, "**", "*")).select do |f|
+              File.file?(f) && extensions.include?(File.extname(f).downcase)
+            end.sort
+          else
+            [path]
+          end
+        end
+
+        def loader_for(ext, vision_model:)
+          case ext
+          when ".md"   then ->(p) { MarkdownLoader.load(p) }
+          when ".pdf"  then ->(p) { PdfLoader.load(p) }
+          when *IMAGE_EXTENSIONS
+            ->(p) { ImageLoader.new(p, vision_model:).sections }
+          end
+        end
+
+        def section_title(section)
+          section.frontmatter&.dig("title") || section.heading || section.file_id
+        end
+
+        def compile_artifact(section, source_file, mtime, artifact_id, store)
+          frontmatter  = section.frontmatter
+          last_updated = parse_last_updated(frontmatter&.dig("last updated") ||
+                                            frontmatter&.dig("last_updated")) || mtime
+          tags         = Array(frontmatter&.dig("tags")).map(&:to_s)
+
+          @clause_repo&.delete_by_document(section.document_id) if store
+          clauses = @pipeline.compile(
+            section.text,
+            document_id: section.document_id,
+            store:,
+            embed: store,
+            resume: @resume
+          )
+
+          content_type  = @classifier.classify(section:, clauses:, frontmatter:)
+          quality_score = @scorer.score(clauses:, last_updated:)
+
+          llm_count = clauses.count { |c| c.interpersonal.annotation_source == "llm" }
+
+          Types::KnowledgeArtifact.new(
+            artifact_id:,
+            title:        section_title(section),
+            source_file:,
+            section_path: section.heading,
+            content_type:,
+            quality_score:,
+            migration_action: :review,   # overwritten after assessment pass
+            migration_reason: "",
+            tags:,
+            last_updated:,
+            clauses:,
+            avg_tenor:    mean(clauses.map { |c| c.interpersonal.tenor }),
+            avg_modality: mean(clauses.map { |c| c.interpersonal.modality_weight }),
+            dominant_mood: clauses.map { |c| c.interpersonal.mood }.tally
+                                  .max_by { |_, n| n }&.first || "declarative",
+            process_types: clauses.map { |c| c.ideational.process_type }.tally,
+            annotation_coverage: {
+              llm:      llm_count,
+              fallback: clauses.size - llm_count,
+              total:    clauses.size
+            }
+          )
+        end
+
+        def parse_last_updated(value)
+          return nil unless value
+
+          Time.parse(value.to_s)
+        rescue ArgumentError, TypeError
+          nil
+        end
+
+        def type_distribution(artifacts)
+          artifacts.group_by(&:content_type).transform_values(&:size)
+        end
+
+        def quality_buckets(artifacts)
+          {
+            high:   artifacts.count { |a| a.quality_score >= 0.65 },
+            medium: artifacts.count { |a| a.quality_score >= 0.40 && a.quality_score < 0.65 },
+            low:    artifacts.count { |a| a.quality_score < 0.40 },
+          }
+        end
+
+        def staleness_flags(artifacts)
+          cutoff = Time.now - (STALENESS_MONTHS * 30 * 24 * 60 * 60)
+          artifacts.filter_map do |a|
+            next unless a.last_updated && a.last_updated < cutoff
+
+            { artifact_id: a.artifact_id, title: a.title, last_updated: a.last_updated.iso8601 }
+          end
+        end
+      end
+    end
+  end
+end

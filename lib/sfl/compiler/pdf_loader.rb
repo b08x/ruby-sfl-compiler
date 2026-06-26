@@ -82,7 +82,8 @@ module SFL
           heading_level: 1,
           heading_slug: slug,
           text:,
-          byte_range: nil
+          byte_range: nil,
+          frontmatter: nil
         )
       end
     end

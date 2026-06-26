@@ -334,6 +334,62 @@ module SFL
         attribute :confidence, Types::Float.optional
       end
 
+      # ── Knowledge Base Cleaning / Migration types ──────────────────────────
+
+      # Content-type enum for KB artifacts (default :unknown for unclassified sections).
+      KBContentType = Types::Coercible::Symbol.default(:unknown).enum(
+        :research_note, :technical_reference, :tutorial, :draft,
+        :ai_generated, :code_snippet, :index, :image, :unknown
+      )
+
+      # Migration action enum (default :review so partial builds are safe).
+      MigrationAction = Types::Coercible::Symbol.default(:review).enum(
+        :keep, :update, :archive, :review, :merge_candidate
+      )
+
+      # A single section of a document assessed for KB cleaning/migration.
+      class KnowledgeArtifact < Dry::Struct
+        attribute :artifact_id,         Types::Integer
+        attribute :title,               Types::String
+        attribute :source_file,         Types::String
+        attribute :section_path,        Types::String.optional.default(nil)
+        attribute :content_type,        KBContentType
+        attribute :quality_score,       Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :migration_action,    MigrationAction
+        attribute :migration_reason,    Types::String.default("".freeze)
+        attribute :tags,                Types::Array.of(Types::String).default([].freeze)
+        attribute :last_updated,        Types::Nominal::Time.optional.default(nil)
+        attribute :clauses,             Types::Array.of(AnnotatedClause).default([].freeze)
+        attribute :avg_tenor,           Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :avg_modality,        Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :dominant_mood,       Types::MoodType
+        attribute :process_types,       Types::Hash.default({}.freeze)
+        attribute :annotation_coverage, Types::Hash.default({}.freeze)
+      end
+
+      # One row in the migration manifest — stripped of clause payloads.
+      class MigrationManifestEntry < Dry::Struct
+        attribute :artifact_id,   Types::Integer
+        attribute :title,         Types::String
+        attribute :source_file,   Types::String
+        attribute :action,        MigrationAction
+        attribute :reason,        Types::String
+        attribute :quality_score, Types::Float.constrained(gteq: 0.0, lteq: 1.0)
+        attribute :content_type,  KBContentType
+      end
+
+      # Full report from KnowledgeBaseAnalyzer.
+      class KnowledgeBaseReport < Dry::Struct
+        attribute :metadata,                   Types::Hash
+        attribute :artifacts,                  Types::Array.of(KnowledgeArtifact).default([].freeze)
+        attribute :migration_manifest,         Types::Array.of(MigrationManifestEntry).default([].freeze)
+        attribute :content_type_distribution,  Types::Hash.default({}.freeze)
+        attribute :quality_distribution,       Types::Hash.default({}.freeze)
+        attribute :staleness_flags,            Types::Array.of(Types::Hash).default([].freeze)
+      end
+
+      # ── End Knowledge Base types ────────────────────────────────────────────
+
       # An LLM-written interpretive narrative over an analysis. Six fixed
       # prose sections; assembly into markdown is the formatter's job.
       class NarrativeReport < Dry::Struct
