@@ -472,7 +472,7 @@ RSpec.describe SFL::Compiler::MarkdownLoader do
   # Section struct
   # ============================================================
   describe SFL::Compiler::MarkdownLoader::Section do
-    it "is a Struct with all expected fields" do
+    it "is a Struct with all expected fields including frontmatter" do
       section = described_class.new(
         document_id: "doc#heading",
         file_id: "doc",
@@ -480,7 +480,8 @@ RSpec.describe SFL::Compiler::MarkdownLoader do
         heading_level: 1,
         heading_slug: "heading",
         text: "Body text content here",
-        byte_range: (0..10)
+        byte_range: (0..10),
+        frontmatter: { "title" => "Doc", "tags" => ["ruby"] }
       )
 
       expect(section.document_id).to eq("doc#heading")
@@ -490,6 +491,73 @@ RSpec.describe SFL::Compiler::MarkdownLoader do
       expect(section.heading_slug).to eq("heading")
       expect(section.text).to eq("Body text content here")
       expect(section.byte_range).to eq(0..10)
+      expect(section.frontmatter).to eq({ "title" => "Doc", "tags" => ["ruby"] })
+    end
+
+    it "defaults frontmatter to nil when omitted" do
+      section = described_class.new(
+        document_id: "doc#preamble", file_id: "doc",
+        heading: nil, heading_level: nil, heading_slug: nil,
+        text: "Some text", byte_range: nil
+      )
+      expect(section.frontmatter).to be_nil
+    end
+  end
+
+  describe "frontmatter parsing" do
+    it "exposes parsed YAML frontmatter on every section" do
+      path = write_md("tagged.md", <<~MD)
+        ---
+        title: Tagged Note
+        tags:
+          - research
+          - nlp
+        last updated: 2026-01-10
+        ---
+
+        # Section One
+
+        Content of section one with sufficient prose to pass the length filter.
+      MD
+
+      sections = described_class.new(path).sections
+      expect(sections).not_to be_empty
+      sections.each do |s|
+        expect(s.frontmatter).to be_a(Hash)
+        expect(s.frontmatter["title"]).to eq("Tagged Note")
+        expect(s.frontmatter["tags"]).to include("research", "nlp")
+      end
+    end
+
+    it "sets frontmatter to nil when there is no YAML block" do
+      path = write_md("plain.md", <<~MD)
+        # Just a Heading
+
+        Plain content with no frontmatter at all, plenty of words here.
+      MD
+
+      sections = described_class.new(path).sections
+      sections.each { |s| expect(s.frontmatter).to be_nil }
+    end
+
+    it "does not include frontmatter keys in the section text" do
+      path = write_md("meta.md", <<~MD)
+        ---
+        title: Hidden Title
+        author: Bob
+        ---
+
+        # Real Content
+
+        The actual prose that should survive into the section text.
+      MD
+
+      sections = described_class.new(path).sections
+      sections.each do |s|
+        expect(s.text).not_to include("Hidden Title")
+        expect(s.text).not_to include("author:")
+        expect(s.text).not_to include("Bob")
+      end
     end
   end
 end
