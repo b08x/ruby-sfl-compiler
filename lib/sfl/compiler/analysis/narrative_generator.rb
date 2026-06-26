@@ -226,35 +226,31 @@ module SFL
 
       # DSPy signature: one call produces all six narrative sections.
       class NarrativeSignature < DSPy::Signature
-        description "Write an interpretive analytical narrative of a " \
-          "conversation analyzed with Systemic Functional Linguistics. " \
-          "Ground every claim in the supplied statistics; quote message " \
-          "previews where they illustrate a point. NEVER interpret " \
-          "tenor/modality values from turns marked UNRELIABLE — " \
-          "describe those turns as unmeasured. Use the KEY MOMENTS entries " \
-          "as explicit evidence when describing pivots and anomalies in " \
-          "the conversational arc. If the digest opens with a LOW " \
-          "CONFIDENCE WARNING, state plainly in data_quality (and " \
-          "takeaways) that the analysis rests on a small sample and " \
-          "findings are provisional. Style exemplar: " \
-          "'Robert is the only speaker who uses imperatives — in SFL " \
-          "terms, the only one demanding rather than giving. That " \
-          "asymmetry is the facilitator role, recovered from grammar " \
-          "alone.' Write clear analytical prose, not bullet dumps."
+        description "Compile the analysis digest into a structured SFL report. " \
+          "Constraints: " \
+          "1. State only data-backed SFL metrics (tenor, modality, coherence) and structural roles. " \
+          "2. Exclude 'UNRELIABLE' turns from all dynamics calculations. " \
+          "3. Prefix every conversational pivot with its Turn ID and shift magnitude. " \
+          "4. Generate output strictly matching the required schema without conversational padding."
 
         input do
           const :analysis_digest, String,
-            description: "Statistics, speaker profiles, correlations, and " \
-              "per-turn stance rows with message previews"
+            description: "Raw analysis data block containing metadata, speaker profiles, process/stance correlations, insights, turns, and key moments."
         end
 
         output do
-          const :overview, String, description: "What this conversation is: topic, participants, setting"
-          const :cast_and_roles, String, description: "Each speaker's role as the grammar reveals it"
-          const :interpersonal_dynamics, String, description: "Tenor/modality patterns and shifts between speakers"
-          const :conversational_arc, String, description: "Phases, pivots, and how the interaction resolves"
-          const :data_quality, String, description: "Annotation coverage caveats; which turns are unmeasured"
-          const :takeaways, String, description: "Three to five grounded conclusions"
+          const :overview, String,
+            description: "State the topic, participants, and setting. Limit 2 paragraphs."
+          const :cast_and_roles, String,
+            description: "Map speakers to transitivity grammar structures (Process types, Participant roles, Circumstances). Limit 1 paragraph per speaker."
+          const :interpersonal_dynamics, String,
+            description: "Report tenor and modality measurements. State numerical differences between speakers."
+          const :conversational_arc, String,
+            description: "Map the chronological sequence. Map every key moment to its Turn ID and shift magnitude."
+          const :data_quality, String,
+            description: "Report the fallback percentage and list UNRELIABLE turns. If LOW CONFIDENCE is true, prepend: 'WARNING: Clause count is below recommended threshold. Findings are provisional.'"
+          const :takeaways, String,
+            description: "Extract 3 to 5 numbered conclusions. Strictly enforce format: '1. [Conclusion] derived from [Metric].'"
         end
       end
 
