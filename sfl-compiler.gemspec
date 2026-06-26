@@ -64,5 +64,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "tomoto", "~> 0.3"
   spec.add_dependency "tty-progressbar", "~> 0.18"
   spec.add_dependency "tty-prompt", "~> 0.23"
+  spec.add_dependency "yajl-ruby", "~> 1.4"
   spec.add_dependency "zeitwerk", "~> 2.7"
 end
