@@ -45,8 +45,11 @@ bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
 
 # Live split-pane TUI (--live): requires Redis + a running Sidekiq worker.
 # Start both before invoking --live or jobs will never execute.
-bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb  # terminal 1
-bundle exec sfl-analyze conversation chat.jsonl --live               # terminal 2
+# CRITICAL: -c 1 (concurrency 1) is REQUIRED. PyCall/spaCy is not thread-safe;
+# default concurrency-10 causes all jobs to import PyCall simultaneously →
+# [BUG] Segmentation fault. Use -c 1 to give each job a single-threaded process.
+bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb -c 1  # terminal 1
+bundle exec sfl-analyze conversation chat.jsonl --live                    # terminal 2
 
 # Sidekiq worker for the Gush conversation analysis workflow (requires Redis)
 # Not a Rails app, so -r must point at a boot file or Sidekiq exits immediately
@@ -54,7 +57,8 @@ bundle exec sfl-analyze conversation chat.jsonl --live               # terminal 
 # Kernel#require, which (unlike #load) does not search cwd for a bare relative
 # path, only $LOAD_PATH. Without ./ this fails with LoadError from inside
 # sidekiq/cli.rb, even though the file exists right there.
-bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb
+# Also always use -c 1 (see above: PyCall segfault at concurrency > 1).
+bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb -c 1
 ```
 
 ## Architecture

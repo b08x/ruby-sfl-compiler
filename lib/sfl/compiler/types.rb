@@ -39,7 +39,20 @@ module SFL
       # Time-typed attributes, so Dry::Struct's own Hash coercion handles
       # them.
       def load_annotated_clause(hash)
-        AnnotatedClause.new(hash.merge(compiled_at: ::Time.parse(hash.fetch(:compiled_at))))
+        interp = hash[:interpersonal]
+        merged_interp = if interp && interp[:reasoning_trace]
+          rt = interp[:reasoning_trace]
+          coerced_rt = rt.merge(generated_at: ::Time.parse(rt.fetch(:generated_at).to_s))
+          interp.merge(reasoning_trace: coerced_rt)
+        else
+          interp
+        end
+        AnnotatedClause.new(
+          hash.merge(
+            compiled_at: ::Time.parse(hash.fetch(:compiled_at)),
+            interpersonal: merged_interp
+          )
+        )
       end
 
       # Reconstructs a ConversationTurn from a Hash produced by `dump`.
