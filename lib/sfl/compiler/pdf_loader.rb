@@ -55,6 +55,8 @@ module SFL
 
         config = Kreuzberg::Config::Extraction.new(chunking: DEFAULT_CHUNKING)
         result = Kreuzberg.extract_file_sync(path: @path, config:)
+        fm = pdf_frontmatter(result)
+
         chunks = result.chunks
         if chunks.nil? || chunks.empty?
           chunks = [
@@ -66,11 +68,11 @@ module SFL
           cleaned = chunk.content.strip
           next if @skip_empty && cleaned.length < @min_length
 
-          yield build_section(cleaned, chunk:, index:)
+          yield build_section(cleaned, chunk:, index:, frontmatter: fm)
         end
       end
 
-      private def build_section(text, chunk:, index:)
+      private def build_section(text, chunk:, index:, frontmatter: nil)
         label = chunk.first_page ? "p#{chunk.first_page}" : "chunk#{index + 1}"
         heading = "#{label} §#{index + 1}"
         slug = "#{label}-#{index + 1}"
@@ -83,8 +85,42 @@ module SFL
           heading_slug: slug,
           text:,
           byte_range: nil,
-          frontmatter: nil
+          frontmatter:
         )
+      end
+
+      # Builds a frontmatter hash from Kreuzberg's document-level metadata.
+      # Returns nil when the PDF carries no extractable metadata — avoids
+      # polluting downstream classifiers with empty hashes.
+      private def pdf_frontmatter(result)
+        meta = result.metadata
+        return nil unless meta.is_a?(Hash)
+
+        title   = non_blank(meta.dig("title"))
+        author  = non_blank(meta.dig("author"))
+        created = meta.dig("created") || meta.dig("creation_date")
+        kw_tags = result.extracted_keywords&.map(&:text)&.compact || []
+
+        return nil if title.nil? && author.nil? && created.nil? && kw_tags.empty?
+
+        fm = {}
+        fm["title"]        = title             if title
+        fm["author"]       = author            if author
+        fm["tags"]         = kw_tags           unless kw_tags.empty?
+        fm["last updated"] = parse_pdf_date(created) if created
+        fm
+      end
+
+      private def non_blank(val)
+        str = val.to_s.strip
+        str.empty? ? nil : str
+      end
+
+      private def parse_pdf_date(date_str)
+        require "time"
+        Time.parse(date_str.to_s)
+      rescue ArgumentError, TypeError
+        nil
       end
     end
   end

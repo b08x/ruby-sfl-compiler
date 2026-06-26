@@ -7,8 +7,8 @@ RSpec.describe SFL::Compiler::PdfLoader do
     Kreuzberg::Result::Chunk.new(content, nil, nil, nil, 0, 1, first_page, first_page, nil, nil)
   end
 
-  def stub_extraction(chunks:, content: "")
-    result = instance_double(Kreuzberg::Result, content:, chunks:)
+  def stub_extraction(chunks:, content: "", metadata: nil, extracted_keywords: [])
+    result = instance_double(Kreuzberg::Result, content:, chunks:, metadata:, extracted_keywords:)
     allow(Kreuzberg).to receive(:extract_file_sync).and_return(result)
   end
 
@@ -62,6 +62,41 @@ RSpec.describe SFL::Compiler::PdfLoader do
       sections = described_class.load("/tmp/fake.pdf", file_id: "custom-id")
 
       expect(sections.first.document_id).to start_with("custom-id#")
+    end
+
+    it "passes nil frontmatter when Kreuzberg returns no metadata" do
+      stub_extraction(chunks: [chunk("Long enough chunk text to clear the minimum length threshold easily.", first_page: 1)])
+
+      sections = described_class.load("/tmp/fake.pdf")
+
+      expect(sections.first.frontmatter).to be_nil
+    end
+
+    it "builds a frontmatter hash from PDF title, author, and keywords" do
+      kw = instance_double(Kreuzberg::ExtractedKeyword, text: "nlp")
+      stub_extraction(
+        chunks: [chunk("Long enough chunk text to clear the minimum length threshold easily.", first_page: 1)],
+        metadata: { "title" => "Research Paper", "author" => "A. Author", "created" => "2024-01-15" },
+        extracted_keywords: [kw]
+      )
+
+      section = described_class.load("/tmp/fake.pdf").first
+      fm = section.frontmatter
+
+      expect(fm["title"]).to eq("Research Paper")
+      expect(fm["author"]).to eq("A. Author")
+      expect(fm["tags"]).to include("nlp")
+      expect(fm["last updated"]).to be_a(Time)
+    end
+
+    it "returns nil frontmatter when metadata hash is empty" do
+      stub_extraction(
+        chunks: [chunk("Long enough chunk text to clear the minimum length threshold easily.", first_page: 1)],
+        metadata: {},
+        extracted_keywords: []
+      )
+
+      expect(described_class.load("/tmp/fake.pdf").first.frontmatter).to be_nil
     end
   end
 end
