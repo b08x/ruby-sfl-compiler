@@ -2,9 +2,11 @@
 
 ## `sfl-analyze conversation/documentation ... --live` segfaults (hard freeze)
 
-**Status:** confirmed root cause, fix deferred (not yet implemented as of this
-writing — check `git log -- lib/sfl/compiler/tui/batch_app.rb` before assuming
-this is still broken).
+**Status:** FIXED in BatchApp rewrite (commit on development branch). `BatchApp`
+no longer runs Pipeline/spaCy in a thread — it only polls Redis via
+`WorkflowPoller`. The Gush `ConversationAnalysisWorkflow` runs actual work in
+separate Sidekiq OS processes. Requires Redis + `bundle exec sidekiq -q gush`
+running before invoking `--live`. Documentation `--live` not yet wired.
 
 **Symptom:** running with `--live` appears to hard-freeze the terminal partway
 through analysis. It's not actually a hang — the process segfaults

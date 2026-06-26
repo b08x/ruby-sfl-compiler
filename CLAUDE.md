@@ -43,6 +43,11 @@ bundle exec sfl-analyze conversation conversation.jsonl --output-dir ./output/la
 bundle exec sfl-analyze documentation docs/ --store
 bundle exec sfl-analyze context "what is the main claim?" --min-modality 0.7
 
+# Live split-pane TUI (--live): requires Redis + a running Sidekiq worker.
+# Start both before invoking --live or jobs will never execute.
+bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb  # terminal 1
+bundle exec sfl-analyze conversation chat.jsonl --live               # terminal 2
+
 # Sidekiq worker for the Gush conversation analysis workflow (requires Redis)
 # Not a Rails app, so -r must point at a boot file or Sidekiq exits immediately
 # asking for one. The leading ./ is required — Sidekiq's -r loads the path via
@@ -118,7 +123,7 @@ progress via injectable `on_progress` callback) so a TUI can reuse them.
 ### Parallel Conversation Analysis (Gush/Sidekiq) — library-level, no CLI wiring yet
 - `lib/sfl/compiler/workflows/conversation_analysis_workflow.rb`: a `Gush::Workflow` that decomposes the same work `ConversationAnalyzer#analyze` does sequentially into a parallel DAG — one `CompileTurnJob` per turn (no dependency between them, so they run concurrently across however many Sidekiq workers are up), fanning into one `ReduceTurnsJob`.
 - **Why this exists**: Pass 1 calls spaCy through PyCall, and [PyCall's own docs state it does not support multi-threaded use](https://github.com/red-data-tools/pycall.rb) — calling it from a `Thread.new` inside one process segfaults (this is exactly what's wrong with the TUI's `--live` flag today, see `lib/sfl/compiler/tui/batch_app.rb` / `.claude/skills/sfl-tui/references/known-issues.md`). Running each turn in its own Sidekiq **process** instead of a thread sidesteps the restriction entirely — each worker process gets its own Python interpreter.
-- **Scope today**: only the `topics: nil` path (no topic-modeling pre-pass); `DocumentationAnalyzer` has no equivalent workflow yet; `ReduceTurnsJob#output` forwards `metadata`/`insights` only, not the full `speaker_profiles`/`tenor_timeline`/`correlations`/`key_moments` — none of this is wired into `sfl-analyze`'s CLI/TUI yet. See the trackboi track `tui-overhaul-gush-sidekiq-backed-pycall-safe` for the rebuild-the-TUI-on-this follow-up work.
+- **Scope today**: `topics: nil` path only (no topic-modeling pre-pass for documentation). `ReduceTurnsJob#output` now forwards the full `AnalysisResult` (all 12 fields). `--live` wires through the TUI via `WorkflowPoller` + `BatchApp`; one file per invocation (multi-file deferred). `DocumentationAnalysisWorkflow` exists but has no `--live` wiring in the CLI yet.
 - **Running it**: needs Redis (`REDIS_URL`, defaults to `redis://localhost:6379`) and a Sidekiq worker (`bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb`) — see Essential Commands. `ConversationAnalysisWorkflow.create(jsonl_path); flow.start!; flow.reload; flow.status` per Gush's own API.
 
 ## Key File Map

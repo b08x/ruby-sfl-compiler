@@ -215,16 +215,21 @@ module SFL
         stop_flag = StopFlag.new
         install_interrupt_trap(stop_flag)
 
-        ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
-        pipeline = with_interrupts_deferred { Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache") }
-
         # One report per file: ConversationAnalyzer#analyze's single-file
         # contract is unchanged — batching a folder of .jsonl exports is
         # purely a CLI-level orchestration concern, not an analyzer one.
         files = File.directory?(input) ? Dir.glob(File.join(input, "**", "*.jsonl")) : [input]
         raise UsageError, "No .jsonl files found in #{input}" if files.empty?
 
-        return run_conversation_live(pipeline, files, options) if options[:live]
+        # Early-return for --live: no spaCy/Pipeline needed in this process
+        # (Sidekiq workers boot their own). Wire Gush/Redis instead.
+        if options[:live]
+          Bootstrap.call(require_jobs: true, require_llm: false, require_observability: false)
+          return run_conversation_live(files, options)
+        end
+
+        ctx = Bootstrap.call(require_llm: !options[:pass1_only], require_observability: !options[:disable_tracing])
+        pipeline = with_interrupts_deferred { Pipeline.new(db: ctx.db, cache_dir: ".sfl-cache") }
 
         analyzer = Analysis::ConversationAnalyzer.new(
           pipeline:,
@@ -253,27 +258,32 @@ module SFL
         Signal.trap("INT", "DEFAULT")
       end
 
-      # `--live`: split-pane Bubbletea dashboard instead of plain stdout
-      # progress lines. Reports are written after the TUI exits (whether
-      # by completing or by the user quitting early — quitting the view
-      # does not stop the in-flight analysis thread, only the rendering).
-      module_function def run_conversation_live(pipeline, files, options)
-        app = TUI::BatchApp.new(
-          pipeline:, files:,
-          pass_one_only: options[:pass1_only], topics: options[:topics], resume: options[:resume]
-        )
+      # `--live`: split-pane Bubbletea dashboard backed by a Gush workflow.
+      # Sidekiq workers run the actual spaCy/LLM work in separate OS processes
+      # (no PyCall in this process's threads). The TUI only polls Redis.
+      # Prerequisite: `bundle exec sidekiq -q gush -r ./lib/sfl/compiler/sidekiq_boot.rb`
+      # must be running in another terminal alongside Redis.
+      #
+      # Multi-file support is deferred — one workflow per invocation for now.
+      module_function def run_conversation_live(files, options)
+        if files.size > 1
+          warn "[WARN] --live currently supports one file per invocation; using #{files.first}"
+        end
+        path = files.first
+
+        flow = ConversationAnalysisWorkflow.create(path, topics: options[:topics])
+        flow.start!
+
+        app = TUI::BatchApp.new(workflow_id: flow.id, files: [path])
         Bubbletea.run(app)
 
-        app.results.each_with_index do |result, idx|
-          output_dir = if files.size > 1
-            File.join(options[:output_dir],
-              File.basename(files[idx], ".*"))
-          else
-            options[:output_dir]
-          end
-          finish_report(result, output_dir)
-          write_narrative(result, output_dir) if options[:narrative]
-        end
+        return unless app.result
+
+        result = Types.load_analysis_result(
+          JSON.parse(JSON.generate(app.result), symbolize_names: true)
+        )
+        finish_report(result, options[:output_dir])
+        write_narrative(result, options[:output_dir]) if options[:narrative]
       end
 
       module_function def run_documentation(input, options)
