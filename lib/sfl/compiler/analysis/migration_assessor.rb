@@ -7,7 +7,7 @@ module SFL
       # artifact from its content_type and quality_score.
       #
       # Decision matrix:
-      #   :ai_generated               → archive   (generated content, low migration value)
+      #   :ai_generated               → review    (verify against ground truth, reword before migrating)
       #   :code_snippet               → review    (may be useful, needs human judgment)
       #   :image                      → review    (binary asset, pipeline only sees description)
       #   quality < 0.35              → archive   (too sparse/fallback-heavy to migrate)
@@ -17,8 +17,8 @@ module SFL
       #   quality ≥ 0.50              → update    (good content, check before migrating)
       #   else                        → archive
       class MigrationAssessor
-        ARCHIVE_TYPES    = %i[ai_generated].freeze
-        REVIEW_TYPES     = %i[draft code_snippet image].freeze
+        GROUND_TRUTH_TYPES = %i[ai_generated].freeze
+        REVIEW_TYPES       = %i[draft code_snippet image].freeze
         KEEP_TYPES       = %i[technical_reference tutorial].freeze
         KEEP_THRESHOLD   = 0.65
         UPDATE_THRESHOLD = 0.50
@@ -42,8 +42,8 @@ module SFL
         private
 
         def recommend(content_type, quality_score)
-          if ARCHIVE_TYPES.include?(content_type)
-            [:archive, "#{content_type.to_s.tr("_", " ")} content — generated output, low migration value"]
+          if GROUND_TRUTH_TYPES.include?(content_type)
+            [:review, "AI-generated — verify against ground truth and reword before migrating"]
           elsif REVIEW_TYPES.include?(content_type)
             [:review, "#{content_type.to_s.tr("_", " ")} — requires manual decision before migration"]
           elsif quality_score < ARCHIVE_QUALITY
