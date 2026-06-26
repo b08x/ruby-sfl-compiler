@@ -288,8 +288,7 @@ module SFL
             "",
             "---",
             "",
-            "**Sprint ID**: #{sprint_id} | **Sprint G_N = #{result.metadata[:sprint_godel_number]}** | " \
-              "**Questions**: #{questions.join(', ')}",
+            "**Sprint ID**: #{sprint_id} | **Questions**: #{questions.join(', ')}",
           ].join("\n")
         end
 

@@ -40,27 +40,26 @@ Phase 1 was deliberately optimized for reproducibility, traceability, and
 rapid iteration. One architectural choice in particular has served its
 research purpose and is now blocking scale:
 
-**Gödel-numbered DAG tracking.** The `QuestionGraph` (see
-`lib/sfl/compiler/question_graph.rb`) encodes dependency relationships across
-multi-agent reasoning sprints as a single integer via prime factorization —
-inspired by Kurt Gödel's incompleteness work. Each question in the dependency
-DAG is assigned a prime number in topological order. Axiomatic (root) questions
-receive small primes; derived questions receive the next available prime
-multiplied by the product of their dependencies' primes.
+**Sequential context accumulation.** The `SprintWorkflow` runs a single
+Genie synthesis at the end of each sprint — one LLM call summarizing
+everything produced by Achilles, Tortoise, and Crab. For small corpora this
+is fine. For a 10,000-word incident report producing hundreds of annotated
+clauses, the working memory passed to the Genie grows without bound. Every
+clause from every section accumulates in context until synthesis fires. The
+context window degrades before reasoning begins.
 
-The Gödel number grows super-exponentially with DAG depth. Each new level
-multiplies by the next prime, and the encoding overflows PostgreSQL's `BIGINT`
-(2^63 - 1) at approximately 6-7 deep nodes.
+The `QuestionGraph` used to compound this with a Gödel-encoded dependency
+DAG that overflowed PostgreSQL `BIGINT` at 6-7 deep nodes (a hard ceiling
+that served as an implicit circuit breaker in early research). That encoding
+has been replaced with a standard adjacency-list graph (`roots`, `leaves`,
+`ancestors`, `descendants`, `reachable?`) — no integer arithmetic, no
+overflow ceiling. But the underlying problem — holding all working memory
+until a single terminal synthesis — remains.
 
-This is not a bug. It was an intentional implicit circuit breaker — a
-hardware-bound safety valve that forces the system to halt before context
-windows grow too large for meaningful analysis. In the research setting, this
-was useful: the system physically cannot produce a runaway reasoning chain.
-
-But to test the Safe RAG hypothesis on real-world datasets — deep security
+To test the Safe RAG hypothesis on real-world datasets — deep security
 incident reports, multi-day conversation trees, enterprise knowledge bases
-spanning thousands of documents — the integer overflow ceiling is not a
-safety valve. It is a wall.
+spanning thousands of documents — the system needs to summarize
+incrementally rather than accumulate exhaustively.
 
 ---
 
@@ -88,11 +87,6 @@ A 10,000-word security incident report produces hundreds of annotated
 clauses. If each clause must be held in working memory alongside its
 dependency relationships for downstream reasoning, the context window
 exhausts itself on raw tokens before reasoning even begins.
-
-The Gödel numbering approach compounds this: every new reasoning depth
-multiplies the dependency graph's encoding. The system hits the BIGINT
-ceiling not because the reasoning is unsound, but because the representation
-cannot contain it.
 
 ### The Pattern
 
@@ -127,13 +121,12 @@ ancestors — it references their compressed summaries.
 
 ### What It Replaces
 
-The Gödel-numbered DAG tracking in `QuestionGraph` (see
-`docs/architecture.md`, "Phase 1 Implementation — Gödel Numbering"). The
-super-exponential integer growth and the BIGINT overflow ceiling are
-eliminated because the dependency graph no longer tries to encode its full
-topology in a single integer. Instead, the topology is carried as
-summarized axioms that reference each other semantically, not
-arithmetically.
+The single terminal Genie synthesis in `SprintWorkflow` (see
+`lib/sfl/compiler/workflows/sprint_workflow.rb`). Currently the Genie fires
+once, at the end of a sprint, summarizing everything Achilles, Tortoise, and
+Crab produced in bulk. Rolling Synthesis replaces that batch accumulation
+with incremental compression: intermediate syntheses fire at semantic
+boundaries so working memory never grows unbounded.
 
 ### What It Preserves
 
@@ -180,9 +173,8 @@ proportional to its SFL-derived cognitive weight:
 When a reasoning loop's gas budget approaches exhaustion, the system
 forces a graceful summarization — triggering a Rolling Synthesis cycle
 that compresses the remaining working memory into an Axiomatic summary
-and continues with a fresh budget. This replaces the Phase 1 failure mode
-(a fatal database crash when the Gödel number overflows BIGINT) with a
-controlled degradation: the loop summarizes, flushes, and continues.
+and continues with a fresh budget. The loop summarizes, flushes, and
+continues rather than accumulating until the context window saturates.
 
 ### What It Replaces
 
@@ -212,9 +204,7 @@ compressed evidence the same way they assess raw clauses today.
 A reasoning loop that revisits the same evidence, rephrases the same
 argument, or cycles through equivalent clauses without making progress
 is stuck. In a token-budgeted system, this manifests as slow waste — the
-loop burns tokens without converging. In a Gödel-numbered system, the
-loop may hit the integer overflow ceiling before anyone notices it was
-spinning.
+loop burns tokens without converging.
 
 In Phase 2, where context windows are unbounded and reasoning depth is
 limited only by semantic relevance, the stuck-loop problem becomes
@@ -251,14 +241,13 @@ When entropy collapse is detected, the system forces a circuit break:
 
 ### What It Replaces
 
-The Gödel number's implicit overflow circuit breaker (see
-`docs/architecture.md`: "the system physically cannot produce a runaway
-reasoning chain"). Phase 1's circuit breaker was a mathematical accident
-— the system halted because the integer could not grow, not because the
-reasoning had converged. Phase 2 replaces this with a deliberate,
-semantically grounded circuit breaker: the system halts because the
-reasoning has stopped producing new information, which is the correct
-reason to stop.
+The no-op circuit breaker in `PassTwoEngine` (see
+`lib/sfl/compiler/pass_two/pass_two_engine.rb`, the
+`default_circuit_breaker` lambda that never trips). Phase 1 has no runaway
+loop detection — a stuck reasoning loop burns LLM calls indefinitely.
+Phase 2 replaces this with a deliberate, semantically grounded circuit
+breaker: the system halts because the reasoning has stopped producing new
+information, which is the correct reason to stop.
 
 ### What It Preserves
 
@@ -279,10 +268,10 @@ PHASE 1 (Current)                          PHASE 2 (Target)
 Raw Text → Pass 1 → Pass 2 → Store        Raw Text → Pass 1 → Pass 2 → Store
          (sequential, PyCall)                       (decoupled runtimes)
 
-QuestionGraph (Gödel numbering)            Rolling Synthesis (Fractal Graphs)
-  - BIGINT overflow at 6-7 nodes            - Intermediate Genie syntheses
-  - Implicit circuit breaker                - Compress → flush → carry forward
-  - Super-exponential growth                - Unbounded depth
+QuestionGraph (adjacency list, in-memory)  Rolling Synthesis (Fractal Graphs)
+  - Sprint-scale only (no persistence)      - Intermediate Genie syntheses
+  - Single terminal Genie synthesis         - Compress → flush → carry forward
+  - Working memory grows unbounded          - Unbounded depth
 
 CircuitBreaker (no-op placeholder)         Cognitive Gas (Semantic Budget)
   - Never trips                            - SFL-weighted cost per clause

@@ -358,13 +358,12 @@ RSpec.describe SFL::Compiler::Formatters::MarkdownFormatter do
     it "renders the sprint footer when sprint_id is present" do
       with_sprint = result.new(metadata: result.metadata.merge(
         sprint_id: "sprint-001",
-        sprint_godel_number: 30,
         sprint_question_ids: %i[modality data_quality overall_confidence]
       ))
       out = described_class.new(with_sprint).render
 
       expect(out).to include("**Sprint ID**: sprint-001")
-      expect(out).to include("Sprint G_N = 30")
+      expect(out).not_to include("G_N")
       expect(out).to include("**Questions**: modality, data_quality, overall_confidence")
     end
   end

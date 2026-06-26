@@ -138,7 +138,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 | `TopicModeler` | LDA/HDP topic clustering |
 | `CorrelationAnalyzer` | Process type × tenor/modality correlation |
 | `NarrativeGenerator` | LLM prose from structured analysis |
-| `QuestionGraph` | Phase 1: Gödel-encoded dependency DAG (testing limit) |
+| `QuestionGraph` | Adjacency-list dependency DAG; `roots`/`leaves`/`ancestors`/`descendants`/`reachable?` |
 | `CrossDocumentGraph` | Multi-document question merging |
 
 ### Storage Layer
@@ -210,72 +210,48 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 
 ## QuestionGraph: Dependency Tracking
 
-### Phase 1 Implementation (Testing Limit) — Gödel Numbering
+### Current Implementation — Adjacency List (In-Memory)
 
-The Phase 1 `QuestionGraph` tracks dependencies across multi-agent reasoning
-sprints using **Gödel numbering** — an elegant, mathematically pure encoding
-inspired by Kurt Gödel's incompleteness work. Each question in the dependency
-DAG is assigned a prime number in topological order. Axiomatic (root) questions
-receive small primes; derived questions receive the next available prime
-multiplied by the product of their dependencies' primes. This means the
-topological structure of the graph is fully recoverable from a single integer.
+`QuestionGraph` (`lib/sfl/compiler/question_graph.rb`) tracks question
+dependencies across multi-agent reasoning sprints as a pair of adjacency
+lists — forward (`children`: who depends on a given node) and reverse
+(`parents`: what a given node depends on) — built in one pass at
+construction time.
 
 ```
-  Question: "Does modality hold across doc types?"
-  Dependencies: [doc0.modality, doc1.modality]
-       │
-       ▼
-  Assign primes in topological order:
-    doc0.modality → 2 (axiomatic)
-    doc1.modality → 3 (axiomatic)
-    this_question  → 5 × (2 × 3) = 30  (derived)
-       │
-       ▼
-  gödel_number = 2 × 3 × 30 = 180
-  factor(180) = {2=>1, 3=>1, 5→2}  ← verifies encoding
-  decode(180) → all questions whose value divides 180
-  consistent? → decode.keys.sort == questions.keys.sort
+  questions = [
+    { id: :modality,           dependencies: [] },
+    { id: :data_quality,       dependencies: [] },
+    { id: :tenor_consistency,  dependencies: [] },
+    { id: :overall_confidence, dependencies: [:modality, :data_quality, :tenor_consistency] },
+  ]
+
+  graph = QuestionGraph.new(questions)
+  graph.roots     #=> [:modality, :data_quality, :tenor_consistency]
+  graph.leaves    #=> [:overall_confidence]
+  graph.depth(:overall_confidence)          #=> 1
+  graph.ancestors(:overall_confidence)      #=> [:modality, :data_quality, :tenor_consistency]
+  graph.reachable?(from: :modality, to: :overall_confidence) #=> true
 ```
 
-This approach was chosen for the research prototype because it provides
-**provably complete dependency tracking** in a single column — the graph
-structure is fully determined by the integer's prime factorization, and
-consistency can be verified by round-tripping through encode/decode with no
-external state. Every transformation is traceable, making it ideal for academic
-validation.
+Topological ordering uses Kahn's algorithm. Construction raises
+`QuestionGraphError` on cycles or unresolvable dependency ids, both of
+which prevent the graph from being built.
 
-**The integer overflow is intentional.** The Gödel number grows
-super-exponentially with DAG depth (each new level multiplies by the next
-prime), and it overflows PostgreSQL's `BIGINT` (2^63 - 1) at approximately
-6-7 deep nodes. This is not a bug — it acts as an **implicit, hardware-bound
-circuit breaker** that forces the system to halt before context windows grow
-too large for meaningful analysis. In the research setting, this was a useful
-safety valve: the system physically cannot produce a runaway reasoning chain.
+### Phase 2: Persistent Graph Storage
 
-### Phase 2 Implementation (Production DAGs)
+The in-memory adjacency list has no overflow ceiling and handles sprint-scale
+graphs (typically < 20 nodes) without issue. Phase 2 will add PostgreSQL
+persistence for cross-session and cross-document reasoning:
 
-The Gödel numbering approach does not scale. The super-exponential growth and
-hard overflow ceiling make it unsuitable for production reasoning at arbitrary
-depths. Phase 2 will replace it with **standard relational graph structures**
-that decouple graph depth from storage representation:
+- **Adjacency list table** — `question_edges(parent_id, child_id, depth)` with
+  recursive CTEs for reachability and topological ordering.
+- **Postgres Ltree** — path-encoded label strings (`doc0.modality.confidence`)
+  enabling subtree queries and depth constraints via native GiST indexing.
 
-- **Adjacency lists** — a `question_edges` table mapping `parent_id →
-  child_id` with a `depth` column. Queries use recursive CTEs for
-  reachability and topological ordering. No integer overflow; depth is bounded
-  only by available storage.
-- **Postgres Ltree** — the `ltree` extension stores the path from root to each
-  node as a label string (e.g. `doc0.modality.this_question`), enabling
-  subtree queries, ancestry checks, and depth constraints via native GiST
-  indexing.
-- **Array tracking** — a `dependency_ids integer[]` column on each question
-  row, with `@>` (contains) and `&&` (overlaps) operators for dependency
-  queries. Simpler than a join table for sparse graphs.
-
-All three approaches eliminate the integer overflow ceiling, paving the way
-for **infinite-depth contextual reasoning** where the graph's shape is
-constrained by semantic relevance (see Phase 2's "Rolling Synthesis" and
-"Cognitive Gas" concepts in the README) rather than by hardware arithmetic
-limits.
+Persistence is a prerequisite for Rolling Synthesis: intermediate Axiomatic
+summaries need a durable home when reasoning spans multiple Genie synthesis
+cycles. See `ROADMAP.md` for the Phase 2 design.
 
 ---
 
@@ -285,8 +261,8 @@ limits.
   Sprint A (doc0)          Sprint B (doc1)
   ┌──────────────┐         ┌──────────────┐
   │ QuestionGraph│         │ QuestionGraph│
-  │  modality=2  │         │  modality=3  │
-  │  tenor=5     │         │  tenor=7     │
+  │  :modality   │         │  :modality   │
+  │  :tenor      │         │  :tenor      │
   └──────┬───────┘         └──────┬───────┘
          │                        │
          └──────────┬─────────────┘

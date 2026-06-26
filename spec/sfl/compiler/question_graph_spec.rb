@@ -1,131 +1,143 @@
 # frozen_string_literal: true
 
-# rubocop:disable Naming/AsciiIdentifiers -- exercises #gödel_number, named
-# with the umlaut per the QuestionGraph card/track throughout.
-
 require "spec_helper"
 
 RSpec.describe SFL::Compiler::QuestionGraph do
-  describe "axiomatic questions" do
-    it "assigns the first sequential primes to questions with no dependencies" do
-      graph = described_class.new([
-        { id: :q1, text: "a", dependencies: [] },
-        { id: :q2, text: "b", dependencies: [] },
-        { id: :q3, text: "c", dependencies: [] },
-      ])
+  let(:three_roots) do
+    described_class.new([
+      { id: :q1, text: "a", dependencies: [] },
+      { id: :q2, text: "b", dependencies: [] },
+      { id: :q3, text: "c", dependencies: [] },
+    ])
+  end
 
-      expect(graph.values.values_at(:q1, :q2, :q3)).to eq([2, 3, 5])
+  # q1 ─┐
+  # q2 ─┴─► q3 ─► q4
+  let(:diamond) do
+    described_class.new([
+      { id: :q1, text: "a", dependencies: [] },
+      { id: :q2, text: "b", dependencies: [] },
+      { id: :q3, text: "derived from q1 and q2", dependencies: %i[q1 q2] },
+      { id: :q4, text: "derived from q3", dependencies: [:q3] },
+    ])
+  end
+
+  describe "#nodes / #questions" do
+    it "stores all questions keyed by id" do
+      expect(three_roots.nodes.keys).to match_array(%i[q1 q2 q3])
+    end
+
+    it "aliases as #questions" do
+      expect(three_roots.questions).to be(three_roots.nodes)
     end
   end
 
-  describe "derived questions" do
-    it "multiplies a fresh seed prime by the product of dependency values" do
-      graph = described_class.new([
-        { id: :q1, text: "a", dependencies: [] },
-        { id: :q2, text: "b", dependencies: [] },
-        { id: :q3, text: "derived", dependencies: %i[q1 q2] },
-      ])
-
-      # q1 => 2, q2 => 3, q3's seed is the next prime after 2,3 => 5,
-      # value = 5 * (2 * 3) = 30
-      expect(graph.values[:q1]).to eq(2)
-      expect(graph.values[:q2]).to eq(3)
-      expect(graph.values[:q3]).to eq(30)
+  describe "#roots" do
+    it "returns questions with no dependencies" do
+      expect(three_roots.roots).to match_array(%i[q1 q2 q3])
     end
 
-    it "never collides with its single dependency's own value" do
-      graph = described_class.new([
-        { id: :q1, text: "a", dependencies: [] },
-        { id: :q4, text: "derived from one", dependencies: [:q1] },
-      ])
+    it "excludes derived questions" do
+      expect(diamond.roots).to match_array(%i[q1 q2])
+    end
+  end
 
-      expect(graph.values[:q4]).not_to eq(graph.values[:q1])
-      expect(graph.values[:q4]).to be > graph.values[:q1]
+  describe "#leaves" do
+    it "returns questions that nothing else depends on" do
+      expect(diamond.leaves).to eq([:q4])
     end
 
-    it "resolves a deeply nested dependency chain regardless of input order" do
+    it "treats a standalone graph as all roots and all leaves" do
+      expect(three_roots.leaves).to match_array(%i[q1 q2 q3])
+    end
+  end
+
+  describe "#parents" do
+    it "returns direct dependencies of a question" do
+      expect(diamond.parents(:q3)).to match_array(%i[q1 q2])
+    end
+
+    it "returns empty for a root question" do
+      expect(diamond.parents(:q1)).to eq([])
+    end
+  end
+
+  describe "#children" do
+    it "returns questions that directly depend on the given id" do
+      expect(diamond.children(:q3)).to eq([:q4])
+    end
+
+    it "returns empty for a leaf" do
+      expect(diamond.children(:q4)).to eq([])
+    end
+  end
+
+  describe "#ancestors" do
+    it "returns all upstream questions transitively" do
+      expect(diamond.ancestors(:q4)).to match_array(%i[q3 q1 q2])
+    end
+
+    it "returns empty for a root" do
+      expect(diamond.ancestors(:q1)).to eq([])
+    end
+  end
+
+  describe "#descendants" do
+    it "returns all downstream questions transitively" do
+      expect(diamond.descendants(:q1)).to match_array(%i[q3 q4])
+    end
+
+    it "returns empty for a leaf" do
+      expect(diamond.descendants(:q4)).to eq([])
+    end
+  end
+
+  describe "#reachable?" do
+    it "is true when a path exists between two questions" do
+      expect(diamond.reachable?(from: :q1, to: :q4)).to be(true)
+    end
+
+    it "is false when no path exists" do
+      expect(diamond.reachable?(from: :q4, to: :q1)).to be(false)
+    end
+  end
+
+  describe "#depth" do
+    it "is 0 for root questions" do
+      expect(diamond.depth(:q1)).to eq(0)
+    end
+
+    it "is 1 for a question one hop from a root" do
+      expect(diamond.depth(:q3)).to eq(1)
+    end
+
+    it "is 2 for a question two hops from a root" do
+      expect(diamond.depth(:q4)).to eq(2)
+    end
+  end
+
+  describe "#topological_order" do
+    it "places all dependencies before their dependents" do
+      order = diamond.topological_order
+      expect(order.index(:q1)).to be < order.index(:q3)
+      expect(order.index(:q2)).to be < order.index(:q3)
+      expect(order.index(:q3)).to be < order.index(:q4)
+    end
+
+    it "resolves regardless of input order" do
       graph = described_class.new([
         { id: :q, text: "outer", dependencies: [:q_prime] },
         { id: :q_prime, text: "middle", dependencies: [:q_double_prime] },
         { id: :q_double_prime, text: "innermost", dependencies: [] },
       ])
 
-      expect(graph.values[:q_double_prime]).to eq(2)
-      expect(graph.values[:q_prime]).to eq(3 * 2)
-      expect(graph.values[:q]).to eq(5 * (3 * 2))
+      order = graph.topological_order
+      expect(order.index(:q_double_prime)).to be < order.index(:q_prime)
+      expect(order.index(:q_prime)).to be < order.index(:q)
     end
   end
 
-  describe "#gödel_number" do
-    it "is the product of every question's assigned value" do
-      graph = described_class.new([
-        { id: :q1, text: "a", dependencies: [] },
-        { id: :q4, text: "derived", dependencies: [:q1] },
-      ])
-
-      expect(graph.gödel_number).to eq(graph.values[:q1] * graph.values[:q4])
-    end
-
-    it "produces a composite integer for the acceptance example" do
-      graph = described_class.new([
-        { id: :q1, text: "...", dependencies: [] },
-        { id: :q4, text: "...", dependencies: [:q1] },
-      ])
-
-      expect(graph.gödel_number).to be_a(Integer)
-      expect(Prime.prime?(graph.gödel_number)).to be(false)
-    end
-  end
-
-  describe "#factor" do
-    it "returns a prime => exponent hash" do
-      graph = described_class.new([{ id: :q1, text: "a", dependencies: [] }])
-
-      expect(graph.factor(12)).to eq({ 2 => 2, 3 => 1 })
-    end
-
-    it "defaults to factoring this graph's own gödel_number" do
-      graph = described_class.new([{ id: :q1, text: "a", dependencies: [] }])
-
-      expect(graph.factor).to eq({ 2 => 1 })
-    end
-  end
-
-  describe "#decode and #consistent?" do
-    it "recovers the original question id set for a 5-question graph" do
-      graph = described_class.new([
-        { id: :q1, text: "a", dependencies: [] },
-        { id: :q2, text: "b", dependencies: [] },
-        { id: :q3, text: "c", dependencies: [] },
-        { id: :q4, text: "derived from q1", dependencies: [:q1] },
-        { id: :q5, text: "derived from q2 and q3", dependencies: %i[q2 q3] },
-      ])
-
-      expect(graph.decode.sort).to eq(%i[q1 q2 q3 q4 q5].sort)
-      expect(graph).to be_consistent
-    end
-
-    it "handles a single-question graph (gödel number is the prime itself)" do
-      graph = described_class.new([{ id: :q1, text: "only one", dependencies: [] }])
-
-      expect(graph.gödel_number).to eq(2)
-      expect(graph.decode).to eq([:q1])
-      expect(graph).to be_consistent
-    end
-
-    it "handles a deeply nested dependency chain" do
-      graph = described_class.new([
-        { id: :q, text: "outer", dependencies: [:q_prime] },
-        { id: :q_prime, text: "middle", dependencies: [:q_double_prime] },
-        { id: :q_double_prime, text: "innermost", dependencies: [] },
-      ])
-
-      expect(graph.decode.sort).to eq(%i[q q_prime q_double_prime].sort)
-      expect(graph).to be_consistent
-    end
-  end
-
-  describe "cyclic or unresolved dependencies" do
+  describe "error cases" do
     it "raises QuestionGraphError for a cycle" do
       expect do
         described_class.new([
@@ -140,8 +152,7 @@ RSpec.describe SFL::Compiler::QuestionGraph do
         described_class.new([
           { id: :a, text: "a", dependencies: [:missing] },
         ])
-      end.to raise_error(SFL::Compiler::QuestionGraphError)
+      end.to raise_error(SFL::Compiler::QuestionGraphError, /missing/)
     end
   end
 end
-# rubocop:enable Naming/AsciiIdentifiers

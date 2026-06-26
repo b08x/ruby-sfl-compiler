@@ -149,19 +149,18 @@ module SFL
         # SprintOrchestrator's job, not built yet); this is the smallest
         # honest "questions were asked" graph a documentation report can
         # attach today. `{}` (no sprint_id) omits the footer entirely.
-        # rubocop:disable Naming/AsciiIdentifiers -- QuestionGraph's own
-        # API names this method with the umlaut throughout.
         private def sprint_metadata(sprint_id)
           return {} unless sprint_id
 
           questions = canonical_sprint_questions
+          graph = QuestionGraph.new(questions)
           {
             sprint_id:,
-            sprint_godel_number: QuestionGraph.new(questions).gödel_number,
             sprint_question_ids: questions.map { |q| q[:id] },
+            sprint_roots:        graph.roots,
+            sprint_leaves:       graph.leaves,
           }
         end
-        # rubocop:enable Naming/AsciiIdentifiers
 
         private def canonical_sprint_questions
           [

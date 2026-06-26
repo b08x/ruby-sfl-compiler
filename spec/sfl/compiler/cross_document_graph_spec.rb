@@ -94,13 +94,12 @@ RSpec.describe SFL::Compiler::CrossDocumentGraph do
       expect(ids).not_to include(:reconciliation_needed_modality)
     end
 
-    # rubocop:disable Naming/AsciiIdentifiers -- exercises QuestionGraph#gödel_number
-    it "merges into a single resolvable QuestionGraph with a real gödel_number" do
+    it "merges into a QuestionGraph with roots and leaves" do
       result = described_class.aggregate([doc_graph, doc_graph])
 
-      expect(result.graph.gödel_number).to be_a(Integer)
-      expect(result.graph).to be_consistent
+      expect(result.graph.roots).not_to be_empty
+      expect(result.graph.leaves).not_to be_empty
+      expect(result.graph.topological_order.size).to eq(result.graph.nodes.size)
     end
-    # rubocop:enable Naming/AsciiIdentifiers
   end
 end
