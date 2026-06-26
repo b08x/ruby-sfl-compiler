@@ -24,6 +24,9 @@ module SFL
           documentation <path>         Analyze a markdown/PDF file or directory
                                         (PDFs are chunked into ~paragraph-sized,
                                         page-anchored sections, not by heading)
+          knowledge-base <path>        Assess a KB directory for migration —
+                                        classifies artifacts, scores quality,
+                                        and produces a migration manifest
           context "<query>"            Query stored clauses, synthesize an answer
           narrate <analysis.json>      Write an LLM narrative from a report JSON
           tui                          Interactive menu (no input argument)
@@ -53,6 +56,11 @@ module SFL
           --min-modality F  --max-modality F
           --limit N                    Max clauses to retrieve [10]
 
+        knowledge-base:
+          --store                      Persist clauses + embeddings for `context`
+          --images / --no-images       Analyze image files via vision LLM (default off)
+          --vision-model MODEL         Vision LLM model id (falls back to VISION_MODEL env var)
+
         narrate:
           --output-dir DIR             Where to write narrative_report.md [JSON's directory]
       TEXT
@@ -61,8 +69,9 @@ module SFL
       # @return [Hash] {command:, input:, options:}
       module_function def parse(argv)
         argv = argv.dup
-        command = argv.shift&.to_sym
-        unless %i[conversation documentation context narrate tui].include?(command)
+        # Normalise hyphens so "knowledge-base" dispatches to parse_knowledge_base_options.
+        command = argv.shift&.tr("-", "_")&.to_sym
+        unless %i[conversation documentation knowledge_base context narrate tui].include?(command)
           raise UsageError, "Unknown subcommand: #{command}\n\n#{USAGE}"
         end
 
@@ -123,6 +132,26 @@ module SFL
           opt.on("--narrative") { options[:narrative] = true }
           opt.on("--topics N", Integer) { |v| options[:topics] = v }
           opt.on("--sprint-id ID") { |v| options[:sprint_id] = v }
+          add_tracing_option(opt, options)
+        end.parse!(argv)
+        options
+      end
+
+      module_function def parse_knowledge_base_options(argv)
+        options = {
+          output_dir:   "./output/latest",
+          store:        false,
+          images:       false,
+          vision_model: nil,
+          resume:       false,
+        }
+        OptionParser.new do |opt|
+          opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
+          opt.on("--store") { options[:store] = true }
+          opt.on("--images") { options[:images] = true }
+          opt.on("--no-images") { options[:images] = false }
+          opt.on("--vision-model MODEL") { |v| options[:vision_model] = v }
+          opt.on("--resume") { options[:resume] = true }
           add_tracing_option(opt, options)
         end.parse!(argv)
         options
@@ -280,6 +309,51 @@ module SFL
         Signal.trap("INT", "DEFAULT")
       end
 
+      module_function def run_knowledge_base(input, options)
+        stop_flag = StopFlag.new
+        install_interrupt_trap(stop_flag)
+
+        ctx = Bootstrap.call(require_llm: true, require_observability: !options[:disable_tracing])
+        pipeline_args = { db: ctx.db, cache_dir: ".sfl-cache" }
+        if options[:store]
+          pipeline_args[:embedder] = Embedder.new(
+            model: ctx.config.embedding_model,
+            ollama_base_url: ctx.config.ollama_base_url
+          )
+        end
+        pipeline = with_interrupts_deferred { Pipeline.new(**pipeline_args) }
+
+        # vision_model Bootstrap config wired in the ImageLoader card; fall
+        # back to the CLI flag or the env var directly in the meantime.
+        vision_model = options[:vision_model] ||
+          (ctx.config.respond_to?(:vision_model) ? ctx.config.vision_model : ENV["VISION_MODEL"])
+
+        analyzer = Analysis::KnowledgeBaseAnalyzer.new(
+          pipeline:,
+          clause_repo: options[:store] ? ClauseRepository.new(ctx.db) : nil,
+          on_progress: kb_progress_printer,
+          stop_requested: -> { stop_flag.stopped? }
+        )
+
+        result = analyzer.analyze(
+          input,
+          store:          options[:store],
+          resume:         options[:resume],
+          analyze_images: options[:images],
+          vision_model:
+        )
+
+        paths = Formatters::KBReportWriter.write(result, options[:output_dir])
+
+        puts "\nGenerated:"
+        paths.each { |format, path| puts "  #{format.to_s.upcase}: #{path}" }
+        puts "\nArtifacts: #{result.metadata[:artifact_count]} " \
+          "| Stale: #{result.staleness_flags.size} " \
+          "| Files: #{result.metadata[:file_count]}"
+      ensure
+        Signal.trap("INT", "DEFAULT")
+      end
+
       module_function def run_context(query, options)
         ctx = Bootstrap.call(require_llm: true, require_observability: !options[:disable_tracing])
         db = ctx.db
@@ -380,6 +454,12 @@ module SFL
         lambda do |event|
           label = event[:defaulted].zero? ? "OK" : "#{event[:defaulted]}/#{event[:clause_count]} DEFAULTED"
           puts "#{event[:elapsed]}s [#{label}]"
+        end
+      end
+
+      module_function def kb_progress_printer
+        lambda do |event|
+          puts "  #{event[:artifact_id]}/#{event[:total]} #{event[:title]}"
         end
       end
 

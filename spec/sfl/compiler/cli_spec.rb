@@ -98,6 +98,29 @@ RSpec.describe SFL::Compiler::CLI do
       expect(parsed[:options][:narrative]).to be(true)
     end
 
+    it "parses the knowledge-base subcommand with defaults" do
+      parsed = described_class.parse(%w[knowledge-base ~/Notebook])
+      expect(parsed[:command]).to eq(:knowledge_base)
+      expect(parsed[:input]).to eq("~/Notebook")
+      expect(parsed[:options]).to include(
+        store: false, images: false, vision_model: nil, resume: false, disable_tracing: false
+      )
+    end
+
+    it "parses knowledge-base --store --images --vision-model" do
+      parsed = described_class.parse(
+        %w[knowledge-base ~/Notebook --store --images --vision-model claude-sonnet-4-6 --output-dir ./out]
+      )
+      expect(parsed[:options]).to include(
+        store: true, images: true, vision_model: "claude-sonnet-4-6", output_dir: "./out"
+      )
+    end
+
+    it "parses knowledge-base --no-images to override default" do
+      parsed = described_class.parse(%w[knowledge-base ~/Notebook --images --no-images])
+      expect(parsed[:options][:images]).to be(false)
+    end
+
     it "raises UsageError for an unknown subcommand" do
       expect { described_class.parse(%w[bogus x]) }
         .to raise_error(SFL::Compiler::CLI::UsageError, /Unknown subcommand/)
