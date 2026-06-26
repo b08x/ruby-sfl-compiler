@@ -36,7 +36,7 @@ module SFL
           @on_progress = on_progress
           @on_turn_start = on_turn_start
           @stop_requested = stop_requested
-          @resume = pipeline.cache ? true : false
+          @resume = pipeline&.cache ? true : false
         end
 
         # @param path [String] a .md file or a directory of .md files
@@ -106,6 +106,31 @@ module SFL
 
           turns = flag_chunk_artifacts(sections, turns)
 
+          build_result(
+            turns,
+            path:, total:, interrupted:,
+            topic_labels:, topic_shifts:, sprint_id:
+          )
+        end
+
+        # Public so ReduceSectionsJob can call it after fan-in.
+        # @param turns [Array<Types::ConversationTurn>]
+        # @param path [String] original input path (file or directory)
+        # @param total [Integer] expected section count
+        # @param interrupted [Boolean] whether compilation stopped early
+        # @param sections_meta [Array<Hash>] optional lightweight section info
+        #   used only for chunk-artifact detection. Each entry must have
+        #   "file_id" and "pdf_chunk" keys (string-keyed after Gush JSON
+        #   round-trip). When empty/omitted, chunk detection is skipped.
+        # @param topic_labels [Hash, nil]
+        # @param topic_shifts [Array]
+        # @param sprint_id [String, nil]
+        # @return [Types::AnalysisResult]
+        def build_result(turns, path:, total:, interrupted: false,
+                         sections_meta: [], topic_labels: nil,
+                         topic_shifts: [], sprint_id: nil)
+          turns = apply_chunk_artifacts(turns, sections_meta) if sections_meta.any?
+
           TenorTracker.new(turns).calculate_shifts
           turns = CohesionAnalyzer.new.analyze(turns)
           profiles = SpeakerProfiler.build_profiles(turns)
@@ -113,6 +138,8 @@ module SFL
 
           all_key_moments = detect_key_moments(turns)
           all_key_moments.concat(topic_shifts)
+
+          total_clauses = turns.sum { |t| t.clauses.size }
 
           Types::AnalysisResult.new(
             metadata: {
@@ -264,6 +291,20 @@ module SFL
         # produce a chunk_boundaries entry and the detector never runs on
         # them (requirement #4's "pure markdown docs never trigger" by
         # construction, not by a content heuristic).
+        # Gush fan-in path: reconstruct the minimal section tuples
+        # flag_chunk_artifacts needs from the JSON-serializable sections_meta
+        # array that ReduceSectionsJob passes through params.
+        private def apply_chunk_artifacts(turns, sections_meta)
+          fake_sections = sections_meta.map do |meta|
+            file_id  = meta[:file_id]  || meta["file_id"]
+            heading  = meta[:heading]  || meta["heading"]
+            pdf_chunk = meta[:pdf_chunk].nil? ? meta["pdf_chunk"] : meta[:pdf_chunk]
+            section = Struct.new(:file_id, :heading, :text).new(file_id, heading, "")
+            [section, Time.now, pdf_chunk]
+          end
+          flag_chunk_artifacts(fake_sections, turns)
+        end
+
         private def flag_chunk_artifacts(sections, turns)
           boundaries = pdf_chunk_boundaries(sections, turns)
           return turns if boundaries.empty?

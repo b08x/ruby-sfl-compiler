@@ -48,7 +48,7 @@ module SFL
         config.dspy_provider = env["DSPY_PROVIDER"] if env["DSPY_PROVIDER"]
         config.ollama_base_url = env["OLLAMA_BASE_URL"] if env["OLLAMA_BASE_URL"]
         config.embedding_model = env["EMBEDDING_MODEL"] if env["EMBEDDING_MODEL"]
-        config.vision_model    = env["VISION_MODEL"]    if env["VISION_MODEL"]
+        config.vision_model    = env["VISION_MODEL"]
 
         configure_llm(config.dspy_provider, env) if require_llm
         configure_observability(env) if require_observability
