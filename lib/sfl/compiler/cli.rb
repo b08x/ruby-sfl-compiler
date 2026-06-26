@@ -323,10 +323,7 @@ module SFL
         end
         pipeline = with_interrupts_deferred { Pipeline.new(**pipeline_args) }
 
-        # vision_model Bootstrap config wired in the ImageLoader card; fall
-        # back to the CLI flag or the env var directly in the meantime.
-        vision_model = options[:vision_model] ||
-          (ctx.config.respond_to?(:vision_model) ? ctx.config.vision_model : ENV["VISION_MODEL"])
+        vision_model = options[:vision_model] || ctx.config.vision_model
 
         analyzer = Analysis::KnowledgeBaseAnalyzer.new(
           pipeline:,

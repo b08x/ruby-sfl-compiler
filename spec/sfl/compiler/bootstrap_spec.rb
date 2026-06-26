@@ -78,6 +78,16 @@ RSpec.describe SFL::Compiler::Bootstrap do
       expect(ctx.config.spacy_model).to eq("en_core_web_lg")
       expect(ctx.config.database_url).to eq("postgresql:///custom_db")
     end
+
+    it "copies VISION_MODEL from env into config" do
+      ctx = call({ "VISION_MODEL" => "claude-sonnet-4-6" }, require_llm: false)
+      expect(ctx.config.vision_model).to eq("claude-sonnet-4-6")
+    end
+
+    it "leaves vision_model nil when VISION_MODEL is absent" do
+      ctx = call({}, require_llm: false)
+      expect(ctx.config.vision_model).to be_nil
+    end
   end
 
   describe "observability" do
