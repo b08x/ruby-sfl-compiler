@@ -1,0 +1,23 @@
+{
+	"version": 1,
+	"name": "sfl-compiler",
+	"people": [
+		{
+			"id": "person_01KVMJ5P8X1YH265RRBTNDVX4T",
+			"displayName": "Robert Pannick",
+			"gitEmails": [
+				"rwpannick@gmail.com"
+			],
+			"gitNames": [
+				"Robert Pannick"
+			]
+		}
+	],
+	"agents": [
+		{
+			"id": "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR",
+			"name": "hermes",
+			"description": "Default"
+		}
+	]
+}
