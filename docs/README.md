@@ -4,6 +4,21 @@
 
 ---
 
+## Key Documents
+
+| Document | What it answers |
+|----------|----------------|
+| [README.md](../README.md) | What this is and why it exists (Safe RAG hypothesis) |
+| [ROADMAP.md](../ROADMAP.md) | Phase 2: Rolling Synthesis, Cognitive Gas, Semantic Convergence |
+| [docs/architectural-lineage.md](architectural-lineage.md) | Where every engineering pattern came from (6 disciplines) |
+| [docs/guides/modular-integration.md](guides/modular-integration.md) | How to drop SFL into an existing RAG pipeline |
+| [docs/use-cases/llm-role-isolation.md](use-cases/llm-role-isolation.md) | The Rhetorical Firewall hypothesis |
+| [docs/guides/USAGE.md](guides/USAGE.md) | Operator guide: CLI, env vars, corpus management |
+| [docs/architecture.md](architecture.md) | Pipeline internals, QuestionGraph, storage schema |
+| [CLAUDE.md](../CLAUDE.md) | Agent/contributor codebase map |
+
+---
+
 ## At a Glance
 
 ```
@@ -44,17 +59,6 @@
      │  JSON  ││ CSV  ││Markdown│
      └────────┘└──────┘└────────┘
 ```
-
----
-
-## What's New (June 2026)
-
-| Feature | What it does |
-|---------|-------------|
-| **CrossDocumentGraph** | Merges per-document question graphs; auto-detects cross-document findings |
-| **LangfuseReachability** | Pre-flight TCP check before loading dspy; prompts continue/cancel |
-| **TopicModelJob** | Topic modeling as standalone Gush job; CompileTurnJob + ReduceTurnsJob depend on it |
-| **SprintWorkflow** | 4-stage pipeline: Achilles → Tortoise → Crab → Genie |
 
 ---
 
@@ -133,16 +137,13 @@ bundle exec sfl-analyze tui
     │
     ▼
   ┌──────────────────────────────────────┐
-  │         Analysis Layer               │
+  │    Analysis Layer (standard runs)    │
   │  • ConversationAnalyzer (per turn)   │
   │  • TenorTracker (formality shifts)   │
   │  • SpeakerProfiler (per speaker)     │
   │  • CohesionAnalyzer (repetition, etc)│
-  │  • TopicModeler (LDA/HDP)           │
   │  • CorrelationAnalyzer              │
   │  • NarrativeGenerator (LLM prose)    │
-  │  • QuestionGraph (Gödel numbering)   │
-  │  • CrossDocumentGraph (multi-doc)   │
   └──────────────┬───────────────────────┘
                  │
         ┌────────┼────────┐
@@ -202,9 +203,12 @@ bundle exec sfl-analyze tui
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                    QuestionGraph (Gödel)                     │
+│         QuestionGraph (Phase 1 research — sprint only)       │
 │  Axiomatic Q → prime p          Derived Q → seed × ∏(deps) │
 │  Consistent? → decode == keys   → factorize to verify       │
+│  Never instantiated by standard sfl-analyze runs. Only      │
+│  created inside SprintWorkflow and CrossDocumentGraph.      │
+│  BIGINT overflows at ~6-7 nodes by design. ROADMAP.md §2.  │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
