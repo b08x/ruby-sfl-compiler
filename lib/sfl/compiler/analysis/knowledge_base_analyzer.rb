@@ -24,13 +24,16 @@ module SFL
         # @param clause_repo [ClauseRepository, nil] required only for store: true
         # @param on_progress [#call, nil]
         #   called with { artifact_id:, total:, title: } before each section
-        def initialize(pipeline:, clause_repo: nil, on_progress: nil)
-          @pipeline    = pipeline
-          @clause_repo = clause_repo
-          @on_progress = on_progress
-          @classifier  = ContentTypeClassifier.new
-          @scorer      = QualityScorer.new
-          @assessor    = MigrationAssessor.new
+        # @param stop_requested [#call, nil] polled once per artifact; if it
+        #   returns truthy the loop halts and a partial report is returned
+        def initialize(pipeline:, clause_repo: nil, on_progress: nil, stop_requested: nil)
+          @pipeline       = pipeline
+          @clause_repo    = clause_repo
+          @on_progress    = on_progress
+          @stop_requested = stop_requested
+          @classifier     = ContentTypeClassifier.new
+          @scorer         = QualityScorer.new
+          @assessor       = MigrationAssessor.new
         end
 
         # @param path [String] a file or directory
@@ -47,10 +50,12 @@ module SFL
           tuples = load_all_sections(path.to_s, analyze_images:, vision_model:)
           total  = tuples.size
 
-          artifacts = tuples.each_with_index.map do |(section, source_file, mtime), idx|
+          artifacts = tuples.each_with_index.each_with_object([]) do |((section, source_file, mtime), idx), acc|
+            break acc if @stop_requested&.call
+
             artifact_id = idx + 1
             @on_progress&.call(artifact_id:, total:, title: section_title(section))
-            compile_artifact(section, source_file, mtime, artifact_id, store)
+            acc << compile_artifact(section, source_file, mtime, artifact_id, store)
           end
 
           manifest = artifacts.map do |a|
