@@ -219,20 +219,32 @@ Create a `.env` file in the project root (copy from `.env.example`):
 DATABASE_URL=postgresql:///sfl_compiler_dev
 
 # LLM provider for Pass 2 (interpersonal annotation)
+# Use a fast instruction-following model — reasoning models (MiMo, DeepSeek-R1)
+# do not reliably produce structured JSON output and will time out on batches.
 DSPY_PROVIDER=openrouter/mistralai/mistral-7b-instruct
 
 # API key matching the provider prefix (set exactly one)
 OPENROUTER_API_KEY=sk-or-...here   # openrouter/...
-# GOOGLE_API_KEY=your-key-here           # google/...
-# OPENAI_API_KEY=***        # openai/...
-# ANTHROPIC_API_KEY=your-key-here        # anthropic/...
+# GOOGLE_API_KEY=your-key-here     # google/...
+# OPENAI_API_KEY=sk-...            # openai/...
+# ANTHROPIC_API_KEY=your-key-here  # anthropic/...
 
 # spaCy model
 SPACY_MODEL=en_core_web_sm
 
+# Embeddings — required for semantic search and `context` queries
+OLLAMA_BASE_URL=http://localhost:11434
+EMBEDDING_MODEL=embeddinggemma:latest
+
+# Vision model for `knowledge-base --images` (optional)
+# Must be a vision-capable model available from your DSPY_PROVIDER.
+# Omit to skip image analysis; image calls are expensive.
+# VISION_MODEL=claude-sonnet-4-6
+
 # Optional Pass 2 tuning
 # SFL_BATCH_SIZE=12      # clauses per LLM call
 # SFL_CONCURRENCY=4      # concurrent LLM calls
+# SFL_LLM_TIMEOUT=120    # seconds before a chunk times out (default 120)
 
 # Optional — only needed for the parallel Gush workflow (see below)
 # REDIS_URL=redis://localhost:6379
@@ -247,7 +259,7 @@ to keyword search.
 
 ## The sfl-analyze CLI
 
-Four subcommands cover the analyze → ingest → query → narrate workflow.
+Five subcommands cover the analyze → ingest → query → narrate workflow.
 
 ### Analyze a conversation
 
@@ -329,6 +341,57 @@ takeaways, grounded in the report's statistics and message previews. Add
 `--narrative` to `conversation`/`documentation` to generate it inline right
 after the CSV/JSON/MD trio — that path is best-effort and only warns on
 failure, while `narrate` itself exits 1 on error.
+
+### Analyze a file corpus as a knowledge base
+
+```bash
+bundle exec sfl-analyze knowledge-base ~/Notebook/ --output-dir ./output/kb
+```
+
+Treats a directory (or single file) as a knowledge base corpus rather than a
+conversation. Supports `.md`, `.pdf`, and (optionally) image files. Each
+document section becomes a **KnowledgeArtifact** with:
+
+- **Content-type classification** — guide, reference, tutorial, changelog,
+  meeting notes, incident report, and more
+- **Quality score** (0.0–1.0) — derived from prose density, recency, tag
+  richness, and structural markers
+- **Migration-action recommendation** — keep, update, archive, delete, or split
+
+```bash
+# Enable vision LLM analysis for image files (PNG, JPG, WEBP)
+bundle exec sfl-analyze knowledge-base ~/Notebook/ --images \
+  --vision-model claude-sonnet-4-6 --output-dir ./output/kb
+
+# Persist clauses + embeddings for later `context` queries
+bundle exec sfl-analyze knowledge-base ~/Notebook/ --store --output-dir ./output/kb
+```
+
+**Flags:**
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--store` | off | Persist clauses + embeddings via `ClauseRepository` |
+| `--images` / `--no-images` | off | Run vision LLM on image files |
+| `--vision-model MODEL` | `VISION_MODEL` env | Override vision model for this run |
+| `--output-dir DIR` | `./sfl_output` | Write report files here |
+
+**Output** (written to `--output-dir`):
+
+| File | Purpose |
+|------|---------|
+| `knowledge_base_report.csv` | One row per artifact: id, title, content_type, quality, action |
+| `knowledge_base_report.json` | Full `KnowledgeBaseReport` including SFL annotation coverage |
+| `knowledge_base_report.md` | Human-readable: executive summary, migration manifest, staleness flags |
+
+The markdown report includes a **Data Quality** section when any clause carries
+fallback or stub annotations, and a **Staleness** section for artifacts not
+updated in the past 18 months.
+
+> **Model selection**: Use an instruction-following model for `DSPY_PROVIDER`
+> (e.g. `openrouter/mistralai/mistral-7b-instruct`), not a reasoning model.
+> Vision calls (`--images`) use the separate `VISION_MODEL` env var — these can
+> be different models.
 
 ## Parallel Conversation Analysis (Gush / Sidekiq)
 
