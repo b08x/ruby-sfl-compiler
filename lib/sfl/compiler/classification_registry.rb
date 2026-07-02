@@ -23,6 +23,17 @@ module SFL
           "continuative" => "declarative",
           "rhetorical_question" => "interrogative",
           "rhetorical question" => "interrogative",
+          # LLM modality/mood conflation — "modal" describes a feature, not a mood
+          "modal" => "declarative",
+          # Hortatory/urging clauses — directive like imperative in SFL
+          "exhortative" => "imperative",
+          # Conditional and subjunctive are not primary SFL mood categories
+          "conditional" => "declarative",
+          "subjunctive" => "declarative",
+          # No-value sentinels the LLM returns when it cannot determine mood
+          "null" => "declarative",
+          "n/a" => "declarative",
+          "" => "declarative",
         }.freeze,
         transforms: [
           -> (val) { val.end_with?("_phrase") ? "fragment" : val },
@@ -69,6 +80,13 @@ module SFL
           "conditional" => "circumstantial",
           "concessive" => "circumstantial",
           "manner" => "circumstantial",
+          # "marking" → model intended "marked theme"
+          "marking" => "marked",
+          # No-value sentinels the LLM returns when it cannot determine theme type
+          "null" => "unmarked",
+          "none" => "unmarked",
+          "n/a" => "unmarked",
+          "" => "unmarked",
         }.freeze,
         transforms: [
           lambda do |val|

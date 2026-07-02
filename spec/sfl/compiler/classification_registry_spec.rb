@@ -97,6 +97,38 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:theme_type, "concessive")).to eq(["circumstantial", :aliased])
         expect(described_class.normalize(:theme_type, "manner")).to eq(["circumstantial", :aliased])
       end
+
+      it "maps 'marking' to marked (model intended 'marked theme')" do
+        expect(described_class.normalize(:theme_type, "marking")).to eq(["marked", :aliased])
+      end
+
+      it "maps no-value sentinels to unmarked" do
+        expect(described_class.normalize(:theme_type, "null")).to eq(["unmarked", :aliased])
+        expect(described_class.normalize(:theme_type, "none")).to eq(["unmarked", :aliased])
+        expect(described_class.normalize(:theme_type, "n/a")).to eq(["unmarked", :aliased])
+        expect(described_class.normalize(:theme_type, "")).to eq(["unmarked", :aliased])
+      end
+    end
+
+    context "with mood dimension — extended aliases" do
+      it "maps 'modal' to declarative (modality feature, not a mood category)" do
+        expect(described_class.normalize(:mood, "modal")).to eq(["declarative", :aliased])
+      end
+
+      it "maps 'exhortative' to imperative (directive/hortatory clause)" do
+        expect(described_class.normalize(:mood, "exhortative")).to eq(["imperative", :aliased])
+      end
+
+      it "maps 'conditional' and 'subjunctive' to declarative" do
+        expect(described_class.normalize(:mood, "conditional")).to eq(["declarative", :aliased])
+        expect(described_class.normalize(:mood, "subjunctive")).to eq(["declarative", :aliased])
+      end
+
+      it "maps no-value sentinels to declarative" do
+        expect(described_class.normalize(:mood, "null")).to eq(["declarative", :aliased])
+        expect(described_class.normalize(:mood, "n/a")).to eq(["declarative", :aliased])
+        expect(described_class.normalize(:mood, "")).to eq(["declarative", :aliased])
+      end
     end
   end
 end
