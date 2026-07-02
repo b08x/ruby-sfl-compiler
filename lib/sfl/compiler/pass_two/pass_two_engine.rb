@@ -49,7 +49,7 @@ module SFL
 
       def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil,
         chunk_timeout: DEFAULT_CHUNK_TIMEOUT, batch_attempts: DEFAULT_BATCH_ATTEMPTS,
-        provider_chain: nil
+        provider_chain: nil, on_gas_exhausted: nil
       )
         @provider = provider || SFL::Compiler.config.dspy_provider
         @logger = Journald::Logger.new("sfl-compiler-pass-two")
@@ -58,6 +58,7 @@ module SFL
         @circuit_breaker = circuit_breaker || default_circuit_breaker
         @batch_annotator = batch_annotator  # nil = auto-build per entry in chain
         @provider_chain  = provider_chain || ProviderFallback.build_chain(@provider)
+        @on_gas_exhausted = on_gas_exhausted
       end
 
       # Annotate many clauses with batched, concurrent LLM calls.
@@ -234,7 +235,13 @@ module SFL
       # Run one chunk through the provider chain. Tries each provider in
       # order (primary first, then fallbacks); on exhaustion, defaults.
       private def annotate_chunk(chunk, correlation_id, semantic_coherence_score = nil)
-        @circuit_breaker.charge_batch(chunk) if @circuit_breaker.respond_to?(:charge_batch)
+        if @circuit_breaker.respond_to?(:charge_batch)
+          @circuit_breaker.charge_batch(chunk)
+          if @circuit_breaker.respond_to?(:exhausted?) && @circuit_breaker.exhausted?
+            trigger_rolling_synthesis(chunk, correlation_id)
+            @circuit_breaker.reset!
+          end
+        end
 
         items = chunk.map do |entry|
           {
@@ -321,6 +328,27 @@ module SFL
           end
         end
         nil
+      end
+
+      # Called when CognitiveGas budget is exhausted mid-batch. Fires the
+      # on_gas_exhausted callback (if provided) with the IDs of the clauses
+      # in the current chunk, then the caller resets the budget so processing
+      # can continue. The callback is responsible for enqueuing
+      # IntermediateGenieJob; PassTwoEngine stays job-agnostic.
+      private def trigger_rolling_synthesis(chunk, correlation_id)
+        clause_ids = chunk.map { |e| e[:clause].id }
+        @logger.send_message(
+          message: "cognitive_gas_exhausted",
+          priority: Journald::LOG_WARNING,
+          correlation_id:,
+          clause_count: clause_ids.size,
+          spent: @circuit_breaker.spent,
+          budget: @circuit_breaker.budget
+        )
+        warn "[WARN] CognitiveGas budget exhausted " \
+             "(#{@circuit_breaker.spent}/#{@circuit_breaker.budget}) — " \
+             "triggering rolling synthesis, resetting budget"
+        @on_gas_exhausted&.call(clause_ids)
       end
 
       private def default_chunk(chunk)

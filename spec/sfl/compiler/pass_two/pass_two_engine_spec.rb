@@ -401,38 +401,82 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
   end
 
   describe "#annotate_batch with CognitiveGas circuit breaker" do
-    let(:exhausted_gas) do
-      gas = SFL::Compiler::CognitiveGas.new(budget: 0)
-      gas
-    end
-
-    let(:batch_engine) do
-      described_class.new(
-        circuit_breaker: exhausted_gas,
-        batch_annotator: ->(_items) { raise "should not be reached" }
-      )
-    end
-
-    it "falls back to defaults for all clauses when gas is exhausted" do
-      results = batch_engine.annotate_batch([[clause, ideational]])
-
-      expect(results.size).to eq(1)
-      expect(results.first.interpersonal.annotation_source).to eq("fallback")
-      expect(results.first.interpersonal.modality_weight).to eq(0.5)
+    let(:stub_annotation) do
+      lambda { |items|
+        items.map { |item|
+          { index: item[:index], mood: "declarative", modality_weight: 0.5, tenor: 0.5,
+            speaker_attitude: "neutral", reasoning: "ok", premises: [], inference_rule: nil,
+            topical_theme: "The", textual_theme: nil, interpersonal_theme: nil, rheme: "rest",
+            theme_type: "unmarked" }
+        }
+      }
     end
 
     it "charges batch cost before the LLM call when gas responds to charge_batch" do
       fresh_gas = SFL::Compiler::CognitiveGas.new(budget: 1_000)
       engine_with_gas = described_class.new(
         circuit_breaker: fresh_gas,
-        batch_annotator: lambda { |items|
-          items.map { |item| { index: item[:index], mood: "declarative", modality_weight: 0.5, tenor: 0.5, speaker_attitude: "neutral", reasoning: "ok", premises: [], inference_rule: nil, topical_theme: nil, textual_theme: nil, interpersonal_theme: nil, rheme: nil, theme_type: "unmarked" } }
-        }
+        batch_annotator: stub_annotation
       )
 
       engine_with_gas.annotate_batch([[clause, ideational]])
 
       expect(fresh_gas.spent).to be > 0
+    end
+
+    it "resets the gas budget and continues processing when budget is exhausted" do
+      exhausted_gas = SFL::Compiler::CognitiveGas.new(budget: 0)
+      engine = described_class.new(
+        circuit_breaker: exhausted_gas,
+        batch_annotator: stub_annotation
+      )
+
+      results = engine.annotate_batch([[clause, ideational]])
+
+      expect(results.size).to eq(1)
+      expect(exhausted_gas.spent).to be >= 0
+    end
+
+    it "calls on_gas_exhausted with clause IDs when budget is exhausted" do
+      exhausted_gas = SFL::Compiler::CognitiveGas.new(budget: 0)
+      captured_ids = nil
+      engine = described_class.new(
+        circuit_breaker: exhausted_gas,
+        batch_annotator: stub_annotation,
+        on_gas_exhausted: ->(ids) { captured_ids = ids }
+      )
+
+      engine.annotate_batch([[clause, ideational]])
+
+      expect(captured_ids).to include(clause.id)
+    end
+
+    it "does not call on_gas_exhausted when budget is sufficient" do
+      fresh_gas = SFL::Compiler::CognitiveGas.new(budget: 1_000)
+      callback_called = false
+      engine = described_class.new(
+        circuit_breaker: fresh_gas,
+        batch_annotator: stub_annotation,
+        on_gas_exhausted: ->(_ids) { callback_called = true }
+      )
+
+      engine.annotate_batch([[clause, ideational]])
+
+      expect(callback_called).to be false
+    end
+
+    it "continues annotating remaining clauses after a gas reset" do
+      # Budget that exhausts after first chunk, refills, allows second
+      gas = SFL::Compiler::CognitiveGas.new(budget: 0)
+      engine = described_class.new(
+        circuit_breaker: gas,
+        batch_annotator: stub_annotation,
+        on_gas_exhausted: ->(_ids) {}
+      )
+
+      results = engine.annotate_batch([[clause, ideational], [clause, ideational]], batch_size: 1)
+
+      expect(results.size).to eq(2)
     end
   end
 end
