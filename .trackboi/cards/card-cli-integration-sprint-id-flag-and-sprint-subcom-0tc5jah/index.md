@@ -5,13 +5,13 @@ title: "CLI: extend --sprint-id to conversation command"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-cross-document-g-del-encoded-question-graph-1bo8p33"
-column: "todo"
-rank: "yjU"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T01:24:26.341Z"
-updatedAt: "2026-06-26T05:42:23.298Z"
+updatedAt: "2026-07-02T19:24:11.173Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

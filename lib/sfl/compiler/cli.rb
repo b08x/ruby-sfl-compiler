@@ -461,11 +461,15 @@ module SFL
 
         report = Analysis::NarrativeGenerator.new(narrator:).generate(digest)
 
+        source_clauses    = Array(parsed["turns"]).flat_map { |t| Array(t["clauses"]) }
+        narrative_text    = report_sections_text(report)
+        citation_check    = Analysis::CitationGroundingChecker.new.check(narrative_text, source_clauses)
+
         dir = options[:output_dir] || File.dirname(input)
         require "fileutils"
         FileUtils.mkdir_p(dir)
         path = File.join(dir, "narrative_report.md")
-        Formatters::NarrativeFormatter.new(report).write_to(path)
+        Formatters::NarrativeFormatter.new(report, citation_check:).write_to(path)
         puts "Generated:\n  NARRATIVE: #{path}"
       end
 
@@ -561,13 +565,21 @@ module SFL
       # Best-effort: the analysis trio is already on disk; a narrative
       # failure downgrades to a warning rather than failing the run.
       module_function def write_narrative(result, output_dir)
-        digest = Analysis::NarrativeGenerator::Digest.from_result(result)
-        report = Analysis::NarrativeGenerator.new.generate(digest)
+        digest         = Analysis::NarrativeGenerator::Digest.from_result(result)
+        report         = Analysis::NarrativeGenerator.new.generate(digest)
+        source_clauses = result.turns.flat_map(&:clauses)
+        narrative_text = report_sections_text(report)
+        citation_check = Analysis::CitationGroundingChecker.new.check(narrative_text, source_clauses)
         path = File.join(output_dir, "narrative_report.md")
-        Formatters::NarrativeFormatter.new(report).write_to(path)
+        Formatters::NarrativeFormatter.new(report, citation_check:).write_to(path)
         puts "  NARRATIVE: #{path}"
       rescue NarrativeError => e
         warn "[WARN] narrative generation failed: #{e.message}"
+      end
+
+      module_function def report_sections_text(report)
+        %i[overview cast_and_roles interpersonal_dynamics conversational_arc data_quality takeaways]
+          .map { |k| report.public_send(k) }.join("\n\n")
       end
 
       module_function def finish_report(result, output_dir)
