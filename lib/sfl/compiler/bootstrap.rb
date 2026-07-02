@@ -2,6 +2,7 @@
 
 require "dotenv"
 require "dspy"
+require "ruby_llm"
 require "opentelemetry-instrumentation-ruby_llm"
 
 # `require "dspy"` (above) transitively requires dspy-o11y-langfuse (dspy
@@ -29,6 +30,16 @@ module SFL
         "google/" => "GOOGLE_API_KEY",
         "openai/" => "OPENAI_API_KEY",
         "anthropic/" => "ANTHROPIC_API_KEY",
+      }.freeze
+
+      # RubyLLM.configure setter name for each provider prefix.
+      # ImageLoader uses RubyLLM.chat directly (not DSPy), so the same key
+      # must be set on RubyLLM's global config in addition to DSPy::LM.
+      RUBY_LLM_KEY_SETTER = {
+        "openrouter/" => :openrouter_api_key=,
+        "google/"     => :gemini_api_key=,
+        "openai/"     => :openai_api_key=,
+        "anthropic/"  => :anthropic_api_key=,
       }.freeze
 
       module_function
@@ -66,6 +77,18 @@ module SFL
         apply_request_timeout(lm, key, (env["SFL_LLM_TIMEOUT"] || DEFAULT_LLM_TIMEOUT).to_f)
         apply_generation_params(lm, env)
         DSPy.configure { |c| c.lm = lm }
+        configure_ruby_llm_provider(provider, key)
+      end
+
+      # Mirror the provider API key into RubyLLM.configure so that callers
+      # using RubyLLM.chat directly (ImageLoader) get the same credentials
+      # that DSPy::LM received. DSPy uses per-instance injection; RubyLLM
+      # uses a global singleton config — both must be set for the same key.
+      def configure_ruby_llm_provider(provider, key)
+        setter = RUBY_LLM_KEY_SETTER.find { |prefix, _| provider.start_with?(prefix) }&.last
+        return unless setter
+
+        ::RubyLLM.configure { |c| c.public_send(setter, key) }
       end
 
       # Inject temperature/top_p/top_k from SFL_* env vars into the adapter's

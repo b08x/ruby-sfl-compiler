@@ -38,6 +38,20 @@ RSpec.describe SFL::Compiler::Bootstrap do
     end
   end
 
+  describe "RubyLLM provider configuration (ImageLoader path)" do
+    it "sets openrouter_api_key on RubyLLM.config when DSPY_PROVIDER is openrouter" do
+      call({ "DSPY_PROVIDER" => "openrouter/some/model",
+             "OPENROUTER_API_KEY" => "sk-or-ruby-llm" })
+      expect(RubyLLM.config.openrouter_api_key).to eq("sk-or-ruby-llm")
+    end
+
+    it "sets openai_api_key on RubyLLM.config when DSPY_PROVIDER is openai" do
+      call({ "DSPY_PROVIDER" => "openai/gpt-4o-mini",
+             "OPENAI_API_KEY" => "sk-openai-ruby-llm" })
+      expect(RubyLLM.config.openai_api_key).to eq("sk-openai-ruby-llm")
+    end
+  end
+
   describe "LLM request timeout" do
     def configured_client
       DSPy.config.lm.instance_variable_get(:@adapter).instance_variable_get(:@client)
