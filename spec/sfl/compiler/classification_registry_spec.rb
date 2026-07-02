@@ -80,6 +80,23 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:theme_type, "textual_theme")).to eq(["textual", :exact])
         expect(described_class.normalize(:theme_type, "theme_unmarked")).to eq(["unmarked", :exact])
       end
+
+      it "recognizes circumstantial as a canonical theme type" do
+        expect(described_class.normalize(:theme_type, "circumstantial")).to eq(["circumstantial", :exact])
+      end
+
+      it "strips _theme suffix so circumstantial_theme resolves to circumstantial" do
+        expect(described_class.normalize(:theme_type, "circumstantial_theme")).to eq(["circumstantial", :exact])
+      end
+
+      it "maps circumstantial sub-types to the circumstantial canonical" do
+        expect(described_class.normalize(:theme_type, "temporal")).to eq(["circumstantial", :aliased])
+        expect(described_class.normalize(:theme_type, "spatial")).to eq(["circumstantial", :aliased])
+        expect(described_class.normalize(:theme_type, "causal")).to eq(["circumstantial", :aliased])
+        expect(described_class.normalize(:theme_type, "conditional")).to eq(["circumstantial", :aliased])
+        expect(described_class.normalize(:theme_type, "concessive")).to eq(["circumstantial", :aliased])
+        expect(described_class.normalize(:theme_type, "manner")).to eq(["circumstantial", :aliased])
+      end
     end
   end
 end

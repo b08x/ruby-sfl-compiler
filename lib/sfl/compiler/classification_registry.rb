@@ -51,6 +51,7 @@ module SFL
           interpersonal
           predicated
           predicator
+          circumstantial
         ].freeze,
         aliases: {
           "topual" => "topical",
@@ -59,6 +60,15 @@ module SFL
           "process" => "predicator",
           "modal" => "interpersonal",
           "interjectional" => "interjection",
+          # Circumstantial theme sub-types — a circumstantial adjunct
+          # (time, place, manner, cause) occupying thematic position.
+          # e.g. "On Monday, the system crashed." All map to circumstantial.
+          "temporal" => "circumstantial",
+          "spatial" => "circumstantial",
+          "causal" => "circumstantial",
+          "conditional" => "circumstantial",
+          "concessive" => "circumstantial",
+          "manner" => "circumstantial",
         }.freeze,
         transforms: [
           lambda do |val|
