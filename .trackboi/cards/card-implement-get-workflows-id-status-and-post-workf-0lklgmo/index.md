@@ -5,13 +5,13 @@ title: "Implement GET /workflows/:id/status and POST /workflows (Gush workflow m
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-falcon-async-http-api-1vlq3hz"
-column: "backlog"
-rank: "yj"
+column: "done"
+rank: "yyU"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:14:26.921Z"
-updatedAt: "2026-06-26T04:14:26.921Z"
+updatedAt: "2026-07-02T19:09:10.803Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

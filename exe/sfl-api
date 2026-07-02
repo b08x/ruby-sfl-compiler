@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# Starts the SFL Compiler HTTP API server via Falcon.
+# Usage: bundle exec sfl-api [PORT=3001]
+#
+# Requires Redis + a running Sidekiq worker for workflow endpoints.
+# Does NOT start spaCy/PyCall — Pass 1 runs inside Sidekiq processes only.
+
+lib = File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift(lib) if File.directory?(lib) && !$LOAD_PATH.include?(lib)
+
+$stdout.sync = true
+
+port = ENV.fetch("PORT", "3001")
+exec "bundle", "exec", "falcon", "serve", "config.ru",
+     "-b", "http://localhost:#{port}"

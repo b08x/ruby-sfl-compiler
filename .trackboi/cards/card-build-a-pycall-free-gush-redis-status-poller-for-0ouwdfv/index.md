@@ -5,13 +5,13 @@ title: "Build a PyCall-free Gush/Redis status poller for the TUI"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-tui-overhaul-gush-sidekiq-backed-pycall-safe-0d27wx2"
-column: "todo"
+column: "done"
 rank: "yj7"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T00:40:10.607Z"
-updatedAt: "2026-06-25T01:51:41.392Z"
+updatedAt: "2026-06-26T14:03:54.748Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

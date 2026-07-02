@@ -5,13 +5,13 @@ title: "Verify --live end-to-end: no segfault, real Sidekiq worker, real progres
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-tui-overhaul-gush-sidekiq-backed-pycall-safe-0d27wx2"
-column: "todo"
+column: "done"
 rank: "yr"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T00:40:17.647Z"
-updatedAt: "2026-06-25T01:51:34.679Z"
+updatedAt: "2026-06-26T14:57:42.221Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

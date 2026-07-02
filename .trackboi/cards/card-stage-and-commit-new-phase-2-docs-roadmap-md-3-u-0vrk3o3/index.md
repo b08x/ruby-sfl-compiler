@@ -5,13 +5,13 @@ title: "Stage and commit new Phase 2 docs: ROADMAP.md + 3 untracked doc files"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-documentation-deep-dive-with-constraint-pinning-06mnjm7"
-column: "todo"
+column: "done"
 rank: "yv"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:13:46.093Z"
-updatedAt: "2026-06-26T04:13:46.093Z"
+updatedAt: "2026-07-02T18:46:39.677Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

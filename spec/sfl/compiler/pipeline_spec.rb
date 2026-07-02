@@ -99,7 +99,7 @@ RSpec.describe SFL::Compiler::Pipeline do
       it "annotates all clauses in one batched PassTwoEngine call" do
         pipeline.compile("Hello world", document_id: "doc-1")
         expect(pass_two).to have_received(:annotate_batch)
-          .with([[clause, ideational]]).once
+          .with([[clause, ideational]], semantic_coherence_score: nil, on_chunk_done: nil).once
         expect(pass_two).not_to have_received(:annotate)
       end
 
@@ -182,7 +182,7 @@ RSpec.describe SFL::Compiler::Pipeline do
       before do
         allow(pass_one).to receive(:process).and_return([])
         # mirror the real engine: an empty batch annotates to an empty array
-        allow(pass_two).to receive(:annotate_batch).with([]).and_return([])
+        allow(pass_two).to receive(:annotate_batch).with([], semantic_coherence_score: nil, on_chunk_done: nil).and_return([])
       end
 
       it "returns an empty array" do
@@ -253,7 +253,7 @@ RSpec.describe SFL::Compiler::Pipeline do
         allow(ideational_extractor).to receive(:extract).with(clause).and_return(ideational)
         allow(ideational_extractor).to receive(:extract).with(clause_2).and_return(ideational_2)
         allow(pass_two).to receive(:annotate_batch)
-          .with([[clause, ideational], [clause_2, ideational_2]])
+          .with([[clause, ideational], [clause_2, ideational_2]], semantic_coherence_score: nil, on_chunk_done: nil)
           .and_return([annotated_clause, annotated_clause_2])
       end
 
@@ -265,7 +265,7 @@ RSpec.describe SFL::Compiler::Pipeline do
       it "pairs the right ideational payload with each clause in the batch" do
         pipeline.compile("...")
         expect(pass_two).to have_received(:annotate_batch)
-          .with([[clause, ideational], [clause_2, ideational_2]])
+          .with([[clause, ideational], [clause_2, ideational_2]], semantic_coherence_score: nil, on_chunk_done: nil)
       end
     end
   end

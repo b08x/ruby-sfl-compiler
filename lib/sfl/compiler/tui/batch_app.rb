@@ -34,6 +34,7 @@ module SFL
           @poller         = WorkflowPoller.new(workflow_id)
           @current_file   = files.first
           @current_turn   = nil
+          @chunk_progress = {}
           @done           = false
           @error          = nil
           @result         = nil
@@ -94,6 +95,7 @@ module SFL
           @started_at   ||= Time.now if newly_done.positive? && @last_completed == newly_done
 
           progress.running_jobs.each { |label| @current_turn = label }
+          @chunk_progress = progress.chunk_progress || {}
         end
 
         private def schedule_poll
@@ -180,7 +182,17 @@ module SFL
           if @done && !@error
             ""
           elsif @current_turn
-            "#{@pastel.cyan('→')}  #{@pastel.bold(@current_turn)}"
+            chunk_info = @chunk_progress[@current_turn]
+            suffix = if chunk_info && chunk_info[:chunks_total].to_i > 0
+              done  = chunk_info[:chunks_done].to_i
+              total = chunk_info[:chunks_total].to_i
+              ratio = done.to_f / total
+              mini_bar = ("█" * (ratio * 12).floor) + ("░" * (12 - (ratio * 12).floor))
+              "  #{@pastel.dim(mini_bar)}  #{@pastel.dim("#{done}/#{total} chunks")}"
+            else
+              ""
+            end
+            "#{@pastel.cyan('→')}  #{@pastel.bold(@current_turn)}#{suffix}"
           else
             @pastel.dim("  waiting for workers…")
           end

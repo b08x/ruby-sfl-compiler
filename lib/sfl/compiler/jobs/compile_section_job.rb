@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "gush"
+require "redis"
+require "json"
 
 module SFL
   module Compiler
@@ -17,8 +19,9 @@ module SFL
         section_id = params.fetch(:section_id)
         store      = params.fetch(:store, false)
         pre_turn   = pre_turn_for(section_id)
+        on_chunk_done = chunk_progress_reporter
 
-        clauses = pipeline.compile(datum[:text], **compile_kwargs(datum, store, pre_turn))
+        clauses = pipeline.compile(datum[:text], **compile_kwargs(datum, store, pre_turn), on_chunk_done:)
 
         avg_tenor    = mean(clauses.map { |c| c.interpersonal.tenor })
         avg_modality = mean(clauses.map { |c| c.interpersonal.modality_weight })
@@ -70,6 +73,17 @@ module SFL
 
       private def topic_payload
         @topic_payload ||= Array(payloads).find { |p| p[:class] == TopicModelJob.to_s }&.fetch(:output)
+      end
+
+      private def chunk_progress_reporter
+        key = "sfl:chunk:#{workflow_id}:#{name}"
+        ->(done, total) {
+          redis.set(key, JSON.dump(chunks_done: done, chunks_total: total), ex: 3600)
+        }
+      end
+
+      private def redis
+        @redis ||= Redis.new(url: Gush.configuration.redis_url)
       end
 
       private def pipeline

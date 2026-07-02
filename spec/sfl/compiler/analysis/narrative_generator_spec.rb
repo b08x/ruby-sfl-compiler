@@ -194,3 +194,122 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
     end
   end
 end
+
+RSpec.describe SFL::Compiler::Analysis::MultiModelNarrator do
+  let(:gen_model) { "openrouter/anthropic/claude-haiku-4" }
+  let(:ver_model) { "openrouter/anthropic/claude-sonnet-4-5" }
+
+  # Canned DSPy result doubles — respond to public_send for any section key.
+  def propose_result(draft: "A draft narrative.", claims: "1. Claim A")
+    obj = Object.new
+    obj.define_singleton_method(:narrative_draft) { draft }
+    obj.define_singleton_method(:claims)          { claims }
+    obj
+  end
+
+  def challenge_result(coverage:, challenges: "")
+    obj = Object.new
+    obj.define_singleton_method(:citation_coverage) { coverage }
+    obj.define_singleton_method(:challenges)        { challenges }
+    obj
+  end
+
+  def verify_result(sections = {})
+    defaults = {
+      overview: "Overview.", cast_and_roles: "Cast.",
+      interpersonal_dynamics: "Dynamics.", conversational_arc: "Arc.",
+      data_quality: "Quality.", takeaways: "Takeaways.",
+    }
+    merged = defaults.merge(sections)
+    obj = Object.new
+    merged.each { |k, v| obj.define_singleton_method(k) { v } }
+    obj
+  end
+
+  describe ".new" do
+    it "raises ArgumentError when generation_model and verification_model are identical" do
+      expect {
+        described_class.new(generation_model: gen_model, verification_model: gen_model)
+      }.to raise_error(ArgumentError, /must differ/)
+    end
+
+    it "accepts distinct models without raising" do
+      expect {
+        described_class.new(generation_model: gen_model, verification_model: ver_model)
+      }.not_to raise_error
+    end
+  end
+
+  describe "#call" do
+    let(:digest_text) { "== METADATA ==\nconversation_id: test" }
+
+    def stub_predictors(narrator, propose_results:, challenge_results:, verify_result: nil)
+      call_idx_propose   = -1
+      call_idx_challenge = -1
+
+      allow(narrator).to receive(:run_achilles) do
+        call_idx_propose += 1
+        propose_results[call_idx_propose] || propose_results.last
+      end
+
+      allow(narrator).to receive(:run_tortoise) do |_digest, _draft|
+        call_idx_challenge += 1
+        challenge_results[call_idx_challenge] || challenge_results.last
+      end
+
+      allow(narrator).to receive(:finalize) do |_digest, _draft, _challenges|
+        SFL::Compiler::Analysis::NarrativeGenerator::SECTION_KEYS
+          .to_h { |k| [k, (verify_result || self.verify_result).public_send(k)] }
+      end
+    end
+
+    it "returns sections directly when citation_coverage meets threshold on first attempt" do
+      narrator = described_class.new(generation_model: gen_model, verification_model: ver_model)
+      allow(narrator).to receive(:run_achilles).and_return(propose_result)
+      allow(narrator).to receive(:run_tortoise).and_return(challenge_result(coverage: 0.9))
+      allow(narrator).to receive(:finalize).and_return(
+        SFL::Compiler::Analysis::NarrativeGenerator::SECTION_KEYS.to_h { |k| [k, k.to_s] }
+      )
+
+      result = narrator.call(digest_text)
+
+      expect(narrator).to have_received(:run_achilles).once
+      expect(narrator).to have_received(:finalize).once
+      expect(result[:overview]).to eq("overview")
+    end
+
+    it "re-runs Achilles when citation_coverage is below threshold, succeeds on second attempt" do
+      narrator = described_class.new(generation_model: gen_model, verification_model: ver_model)
+      allow(narrator).to receive(:run_achilles).and_return(propose_result)
+      allow(narrator).to receive(:run_tortoise)
+        .and_return(challenge_result(coverage: 0.5), challenge_result(coverage: 0.85))
+      allow(narrator).to receive(:finalize).and_return(
+        SFL::Compiler::Analysis::NarrativeGenerator::SECTION_KEYS.to_h { |k| [k, "final"] }
+      )
+
+      result = narrator.call(digest_text)
+
+      expect(narrator).to have_received(:run_achilles).twice
+      expect(narrator).to have_received(:finalize).once
+      expect(result[:takeaways]).to eq("final")
+    end
+
+    it "falls back to best-effort after max attempts and appends warning to data_quality" do
+      narrator = described_class.new(generation_model: gen_model, verification_model: ver_model)
+      allow(narrator).to receive(:run_achilles).and_return(propose_result)
+      allow(narrator).to receive(:run_tortoise).and_return(challenge_result(coverage: 0.3))
+      allow(narrator).to receive(:finalize).and_return(
+        SFL::Compiler::Analysis::NarrativeGenerator::SECTION_KEYS.to_h do |k|
+          [k, k == :data_quality ? "Annotation notes." : "content"]
+        end
+      )
+
+      result = narrator.call(digest_text)
+
+      expect(narrator).to have_received(:run_achilles)
+        .exactly(SFL::Compiler::Analysis::MultiModelNarrator::MAX_ATTEMPTS).times
+      expect(result[:data_quality]).to include("Low citation coverage")
+      expect(result[:data_quality]).to include("Annotation notes.")
+    end
+  end
+end

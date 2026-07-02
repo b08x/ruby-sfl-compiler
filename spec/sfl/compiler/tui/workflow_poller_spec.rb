@@ -6,9 +6,11 @@ require_relative "../../../../lib/sfl/compiler/tui/workflow_poller"
 
 RSpec.describe SFL::Compiler::TUI::WorkflowPoller do
   # Build a minimal fake Gush job without loading Redis/ActiveJob.
-  def fake_job(klass:, finished: false, running: false, failed: false, params: {}, output: nil)
+  def fake_job(klass:, finished: false, running: false, failed: false, params: {}, output: nil,
+               name: "#{klass}|stub-id")
     double("Gush::Job",
       klass: klass,
+      name: name,
       finished?: finished,
       running?: running,
       failed?: failed,

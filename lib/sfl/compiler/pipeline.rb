@@ -41,7 +41,7 @@ module SFL
       # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
       #   fit, attached to every clause stored from this call
       # @return [Array<Types::AnnotatedClause>]
-      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil, semantic_coherence_score: nil)
+      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil, semantic_coherence_score: nil, on_chunk_done: nil)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
@@ -75,11 +75,9 @@ module SFL
         annotated = if resume && @cache
           compile_with_cache(document_id, pairs, correlation_id, semantic_coherence_score)
         else
-          if semantic_coherence_score.nil?
-            @pass_two.annotate_batch(pairs)
-          else
-            @pass_two.annotate_batch(pairs, semantic_coherence_score: semantic_coherence_score)
-          end
+          @pass_two.annotate_batch(pairs,
+            semantic_coherence_score: semantic_coherence_score,
+            on_chunk_done: on_chunk_done)
         end
 
         # === Cache store after successful Pass 2 ===

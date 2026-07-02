@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "redis"
+require "json"
+
 module SFL
   module Compiler
     module TUI
@@ -15,13 +18,14 @@ module SFL
         # All fields are read-only after construction.
         Progress = Struct.new(
           :workflow_id,
-          :status,        # Symbol — :pending/:running/:finished/:failed/:stopped
-          :total,         # Integer — number of compile-stage jobs
-          :completed,     # Integer — compile jobs that have finished
-          :running_jobs,  # Array<String> — human labels for in-flight jobs
-          :failed_jobs,   # Array<String> — class names of any failed jobs
-          :result,        # Hash? — reduce job's output_payload; non-nil only when :finished
-          :error,         # String? — first failed job class name; non-nil only when :failed
+          :status,          # Symbol — :pending/:running/:finished/:failed/:stopped
+          :total,           # Integer — number of compile-stage jobs
+          :completed,       # Integer — compile jobs that have finished
+          :running_jobs,    # Array<String> — human labels for in-flight jobs
+          :failed_jobs,     # Array<String> — class names of any failed jobs
+          :result,          # Hash? — reduce job's output_payload; non-nil only when :finished
+          :error,           # String? — first failed job class name; non-nil only when :failed
+          :chunk_progress,  # Hash<String,Hash> — {label => {chunks_done:, chunks_total:}}
           keyword_init: true
         )
 
@@ -68,20 +72,37 @@ module SFL
           compile_jobs = @workflow.jobs.select { |j| COMPILE_JOB_CLASSES.include?(j.klass.to_s) }
           reduce_job   = @workflow.jobs.find   { |j| REDUCE_JOB_CLASSES.include?(j.klass.to_s) }
 
-          completed   = compile_jobs.count(&:finished?)
-          running_now = compile_jobs.select(&:running?).map { |j| job_label(j) }
-          failed_now  = @workflow.jobs.select(&:failed?).map { |j| j.klass.to_s }
+          completed    = compile_jobs.count(&:finished?)
+          running_now  = compile_jobs.select(&:running?)
+          failed_now   = @workflow.jobs.select(&:failed?).map { |j| j.klass.to_s }
+          chunk_prog   = read_chunk_progress(running_now)
 
           Progress.new(
-            workflow_id: @workflow_id,
-            status:       @workflow.status,
-            total:        compile_jobs.size,
+            workflow_id:    @workflow_id,
+            status:         @workflow.status,
+            total:          compile_jobs.size,
             completed:,
-            running_jobs: running_now,
-            failed_jobs:  failed_now,
-            result:       reduce_job&.finished? ? reduce_job.output_payload : nil,
-            error:        failed_now.first,
+            running_jobs:   running_now.map { |j| job_label(j) },
+            failed_jobs:    failed_now,
+            result:         reduce_job&.finished? ? reduce_job.output_payload : nil,
+            error:          failed_now.first,
+            chunk_progress: chunk_prog,
           )
+        end
+
+        private def read_chunk_progress(running_jobs)
+          running_jobs.each_with_object({}) do |job, h|
+            key = "sfl:chunk:#{@workflow_id}:#{job.name}"
+            raw = redis.get(key)
+            next unless raw
+            h[job_label(job)] = JSON.parse(raw, symbolize_names: true)
+          rescue StandardError
+            # Redis read failure is non-fatal — omit chunk progress for this job
+          end
+        end
+
+        private def redis
+          @redis ||= Redis.new(url: Gush.configuration.redis_url)
         end
 
         # Best-effort human label extracted from the job's params. Falls back

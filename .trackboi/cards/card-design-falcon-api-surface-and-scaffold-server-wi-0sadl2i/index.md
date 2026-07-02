@@ -5,13 +5,13 @@ title: "Design Falcon API surface and scaffold server with Bootstrap wiring"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-falcon-async-http-api-1vlq3hz"
-column: "backlog"
-rank: "yj"
+column: "done"
+rank: "yx"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:14:13.737Z"
-updatedAt: "2026-06-26T04:14:13.737Z"
+updatedAt: "2026-07-02T18:50:53.322Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

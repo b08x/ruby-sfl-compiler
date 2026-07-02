@@ -29,7 +29,11 @@ module SFL
       # cover every hang (observed: response bytes sitting unread in the
       # socket while the async reactor deadlocks on a mutex), so the worker
       # thread gets a hard Timeout that the retry/fallback ladder catches.
-      DEFAULT_CHUNK_TIMEOUT = ENV.fetch("SFL_CHUNK_TIMEOUT", 180).to_f
+      # Lowered from 180s: observed p50 is ~35s, p95 ~90s. 120s gives
+      # legitimate slow calls room to complete while cutting worst-case
+      # per-attempt wait from 3min to 2min (total: 3×120s = 6min max vs
+      # 3×180s = 9min). Override with SFL_CHUNK_TIMEOUT=N in .env.
+      DEFAULT_CHUNK_TIMEOUT = ENV.fetch("SFL_CHUNK_TIMEOUT", 120).to_f
 
       # Total attempts per chunk before falling back to defaults. Raised
       # from 2 (one retry) after a live reproduction against the real
@@ -44,14 +48,16 @@ module SFL
       DEFAULT_BATCH_ATTEMPTS = ENV.fetch("SFL_BATCH_ATTEMPTS", 3).to_i
 
       def initialize(provider: nil, circuit_breaker: nil, batch_annotator: nil,
-        chunk_timeout: DEFAULT_CHUNK_TIMEOUT, batch_attempts: DEFAULT_BATCH_ATTEMPTS
+        chunk_timeout: DEFAULT_CHUNK_TIMEOUT, batch_attempts: DEFAULT_BATCH_ATTEMPTS,
+        provider_chain: nil
       )
         @provider = provider || SFL::Compiler.config.dspy_provider
         @logger = Journald::Logger.new("sfl-compiler-pass-two")
         @chunk_timeout = chunk_timeout
         @batch_attempts = batch_attempts
         @circuit_breaker = circuit_breaker || default_circuit_breaker
-        @batch_annotator = batch_annotator || default_batch_annotator
+        @batch_annotator = batch_annotator  # nil = auto-build per entry in chain
+        @provider_chain  = provider_chain || ProviderFallback.build_chain(@provider)
       end
 
       # Annotate many clauses with batched, concurrent LLM calls.
@@ -61,7 +67,8 @@ module SFL
       # @param concurrency [Integer] concurrent LLM calls
       # @return [Array<Types::AnnotatedClause>] in input order; clauses the
       #   LLM missed or returned invalid values for carry fallback defaults
-      def annotate_batch(pairs, batch_size: DEFAULT_BATCH_SIZE, concurrency: DEFAULT_CONCURRENCY, semantic_coherence_score: nil)
+      def annotate_batch(pairs, batch_size: DEFAULT_BATCH_SIZE, concurrency: DEFAULT_CONCURRENCY,
+                         semantic_coherence_score: nil, on_chunk_done: nil)
         return [] if pairs.empty?
 
         start_time = Time.now
@@ -73,16 +80,29 @@ module SFL
         chunks = indexed.each_slice([batch_size, 1].max).to_a
 
         @logger.send_message(
-          message: "pass_two_batch_started",
+          message: "pass_two_batch_started provider=#{@provider} clauses=#{pairs.size} chunks=#{chunks.size} batch_size=#{batch_size} timeout=#{@chunk_timeout}s attempts=#{@batch_attempts}",
           priority: Journald::LOG_INFO,
           correlation_id:,
           clause_count: pairs.size,
           chunk_count: chunks.size,
-          concurrency:
+          concurrency:,
+          provider: @provider,
+          batch_size:,
+          chunk_timeout: @chunk_timeout,
+          batch_attempts: @batch_attempts
         )
 
+        total = chunks.size
+        done_count = 0
+        done_mutex = on_chunk_done ? Mutex.new : nil
+
         annotated = parallel_map(chunks, concurrency) do |chunk|
-          annotate_chunk(chunk, correlation_id, semantic_coherence_score)
+          result = annotate_chunk(chunk, correlation_id, semantic_coherence_score)
+          if on_chunk_done
+            n = done_mutex.synchronize { done_count += 1 }
+            on_chunk_done.call(n, total)
+          end
+          result
         end.flatten
 
         elapsed_ms = ((Time.now - start_time) * 1000).round(2)
@@ -113,7 +133,8 @@ module SFL
           priority: Journald::LOG_INFO,
           correlation_id:,
           clause_id: clause.id,
-          text_length: clause.text.length
+          text_length: clause.text.length,
+          provider: @provider
         )
 
         # Run DSPy annotation for Interpersonal features
@@ -201,13 +222,17 @@ module SFL
         handler
       end
 
-      # items: [{index:, context:}] → [{index:, mood:, modality_weight:, ...}]
-      private def default_batch_annotator
-        -> (items) { SFLBatchAnnotator.new(items).call }
+      # Build an annotator lambda for a specific provider LM entry.
+      private def annotator_for(entry)
+        if @batch_annotator
+          @batch_annotator  # test-injected override
+        else
+          -> (items) { SFLBatchAnnotator.new(items, lm: entry.lm).call }
+        end
       end
 
-      # Run one chunk through the LLM. A failed call defaults the whole
-      # chunk; a missing or invalid annotation defaults only that clause.
+      # Run one chunk through the provider chain. Tries each provider in
+      # order (primary first, then fallbacks); on exhaustion, defaults.
       private def annotate_chunk(chunk, correlation_id, semantic_coherence_score = nil)
         items = chunk.map do |entry|
           {
@@ -216,12 +241,9 @@ module SFL
           }
         end
 
-        # @batch_attempts attempts for transient provider errors, all
-        # within one circuit_breaker.call — so the breaker's own failure
-        # count records one outcome per chunk (success or exhausted),
-        # not one per internal attempt. An open circuit means the
-        # provider is known-bad, so don't hammer it again.
-        results = @circuit_breaker.call { call_annotator_with_retries(items) }
+        results = try_providers(items, correlation_id, chunk)
+        return default_chunk(chunk) if results.nil?
+
         by_index = results.to_h { |r| [r[:index], r] }
 
         chunk.map do |entry|
@@ -239,15 +261,67 @@ module SFL
           end
           annotated_clause(entry, interpersonal, textual)
         end
-      rescue CircuitBreaker::CircuitBrokenException
-        log_and_warn("pass_two_circuit_open", correlation_id, chunk.first[:clause],
-          "Circuit breaker open — defaults applied to #{chunk.size} clauses")
-        chunk.map do |entry|
-          annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id))
+      end
+
+      # Try each provider in the chain until one succeeds. Returns results
+      # array on success, nil if every provider (and the circuit breaker)
+      # is exhausted. Semantic error messages replace raw exception strings.
+      #
+      # When @batch_annotator is set (test-injected override), bypass the
+      # provider chain entirely — the injected lambda IS the annotator.
+      private def try_providers(items, correlation_id, chunk)
+        if @batch_annotator
+          begin
+            return @circuit_breaker.call { call_with_retries(items, @batch_annotator) }
+          rescue CircuitBreaker::CircuitBrokenException
+            log_and_warn("pass_two_circuit_open", correlation_id, chunk.first[:clause],
+              "Circuit breaker open — defaults applied to #{chunk.size} clauses",
+              error_class: "CircuitBreaker::CircuitBrokenException")
+            return nil
+          rescue => e
+            log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
+              "#{ProviderFallback.classify_error(e, provider: @provider, timeout: @chunk_timeout)} — all providers exhausted, defaults applied to #{chunk.size} clauses",
+              error_class: e.class.name,
+              error_message: e.message)
+            return nil
+          end
         end
-      rescue => e
-        log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
-          "Batch annotation failed: #{e.message} — defaults applied to #{chunk.size} clauses")
+
+        last_error = nil
+        @provider_chain.each_with_index do |entry, idx|
+          begin
+            annotator = annotator_for(entry)
+            return @circuit_breaker.call { call_with_retries(items, annotator) }
+          rescue CircuitBreaker::CircuitBrokenException
+            log_and_warn("pass_two_circuit_open", correlation_id, chunk.first[:clause],
+              "Circuit breaker open — skipping remaining providers",
+              error_class: "CircuitBreaker::CircuitBrokenException",
+              provider: entry.provider)
+            return nil
+          rescue => e
+            last_error = e
+            semantic = ProviderFallback.classify_error(e, provider: entry.provider, timeout: @chunk_timeout)
+            next_provider = @provider_chain[idx + 1]&.provider
+
+            if next_provider
+              log_and_warn("pass_two_provider_failed", correlation_id, chunk.first[:clause],
+                "#{semantic} — trying #{next_provider}",
+                error_class: e.class.name,
+                provider: entry.provider,
+                next_provider:)
+            else
+              log_and_warn("pass_two_batch_failed", correlation_id, chunk.first[:clause],
+                "#{semantic} — all providers exhausted, defaults applied to #{chunk.size} clauses",
+                error_class: e.class.name,
+                error_message: e.message,
+                provider: entry.provider)
+            end
+          end
+        end
+        nil
+      end
+
+      private def default_chunk(chunk)
         chunk.map do |entry|
           annotated_clause(entry, default_interpersonal(entry[:clause].id), default_textual(entry[:clause].id))
         end
@@ -256,23 +330,22 @@ module SFL
       # Timeout::Error is a StandardError, so a hung call flows through the
       # same retry-once-then-default path as any provider exception. A
       # timeout of 0/nil disables the watchdog.
-      private def call_annotator_with_watchdog(items)
-        return @batch_annotator.call(items) if @chunk_timeout.nil? || @chunk_timeout.zero?
+      private def call_with_watchdog(items, annotator)
+        return annotator.call(items) if @chunk_timeout.nil? || @chunk_timeout.zero?
 
         Timeout.timeout(@chunk_timeout, Timeout::Error,
           "LLM call exceeded #{@chunk_timeout}s chunk timeout") do
-          @batch_annotator.call(items)
+          annotator.call(items)
         end
       end
 
-      # Up to @batch_attempts independent tries at the same chunk. Each
-      # try gets its own watchdog window; the last error propagates once
-      # every attempt is exhausted, for annotate_chunk's own rescue to
-      # default the chunk.
-      private def call_annotator_with_retries(items)
+      # Up to @batch_attempts independent tries with the given annotator.
+      # The last error propagates once every attempt is exhausted so
+      # try_providers can log it and advance to the next provider.
+      private def call_with_retries(items, annotator)
         last_error = nil
         @batch_attempts.times do
-          return call_annotator_with_watchdog(items)
+          return call_with_watchdog(items, annotator)
         rescue => e
           last_error = e
         end
@@ -285,7 +358,8 @@ module SFL
         if status == :unknown
           log_and_warn("pass_two_schema_gap", correlation_id, clause,
             "Invalid mood '#{result[:mood]}' normalized to '#{mood}'. " \
-            "Consider adding it to ClassificationRegistry::MOOD.")
+            "Consider adding it to ClassificationRegistry::MOOD.",
+            unknown_value: result[:mood].to_s)
         end
 
         modality_weight = clamp01(result[:modality_weight] || 0.5)
@@ -350,7 +424,8 @@ module SFL
         if status == :unknown
           log_and_warn("pass_two_schema_gap", correlation_id, clause,
             "Invalid theme_type '#{result[:theme_type]}' normalized to '#{theme_type}'. " \
-            "Consider adding it to ClassificationRegistry::THEME_TYPE.")
+            "Consider adding it to ClassificationRegistry::THEME_TYPE.",
+            unknown_value: result[:theme_type].to_s)
         end
 
         Types::TextualPayload.new(
@@ -405,13 +480,38 @@ module SFL
       end
 
       private def annotate_interpersonal(clause, ideational, correlation_id, semantic_coherence_score = nil)
-        # Build the syntactic context for the LLM
         syntactic_context = format_syntactic_context(clause, ideational, semantic_coherence_score)
 
-        # Call DSPy through circuit breaker for resilience
-        result = @circuit_breaker.call do
-          sfl_annotator = SFLAnnotator.new(syntactic_context)
-          sfl_annotator.call
+        result = nil
+        last_error = nil
+        @provider_chain.each do |entry|
+          begin
+            result = @circuit_breaker.call do
+              SFLAnnotator.new(syntactic_context, lm: entry.lm).call
+            end
+            break
+          rescue CircuitBreaker::CircuitBrokenException
+            cb_msg = last_error \
+              ? "DSPy annotation failed: #{last_error.message} (circuit breaker open — defaults applied)" \
+              : "Circuit breaker open — defaults applied"
+            log_and_warn("pass_two_circuit_open", correlation_id, clause, cb_msg,
+              error_class: "CircuitBreaker::CircuitBrokenException")
+            return [default_interpersonal(clause.id), default_textual(clause.id)]
+          rescue => e
+            last_error = e
+            semantic = ProviderFallback.classify_error(e, provider: entry.provider, timeout: @chunk_timeout)
+            log_and_warn("pass_two_llm_failed", correlation_id, clause,
+              semantic,
+              error_class: e.class.name,
+              provider: entry.provider)
+          end
+        end
+
+        if result.nil?
+          log_and_warn("pass_two_llm_failed", correlation_id, clause,
+            "DSPy annotation failed: #{last_error&.message || 'unknown'}",
+            error_class: last_error&.class&.name)
+          return [default_interpersonal(clause.id), default_textual(clause.id)]
         end
 
         interpersonal = interpersonal_from(clause, result, correlation_id)
@@ -421,13 +521,11 @@ module SFL
         textual ||= default_textual(clause.id)
 
         [interpersonal, textual]
-      rescue CircuitBreaker::CircuitBrokenException
-        log_and_warn("pass_two_circuit_open", correlation_id, clause,
-          "Circuit breaker open — defaults applied")
-        [default_interpersonal(clause.id), default_textual(clause.id)]
       rescue => e
         log_and_warn("pass_two_llm_failed", correlation_id, clause,
-          "DSPy annotation failed: #{e.message}")
+          "DSPy annotation failed: #{e.message}",
+          error_class: e.class.name,
+          error_message: e.message)
         [default_interpersonal(clause.id), default_textual(clause.id)]
       end
 
@@ -494,12 +592,15 @@ module SFL
         normalized.clamp(0.0, 1.0)
       end
 
-      private def log_and_warn(message, correlation_id, clause, human_message)
+      private def log_and_warn(message, correlation_id, clause, human_message, **extra)
+        journal_message = extra[:error_class] ? "#{message} error=#{extra[:error_class]}" : message
+        journal_message += " unknown_value=#{extra[:unknown_value]}" if extra[:unknown_value]
         @logger.send_message(
-          message:,
+          message: journal_message,
           priority: Journald::LOG_WARNING,
           correlation_id:,
-          clause_id: clause.id
+          clause_id: clause.id,
+          **extra
         )
         warn "[WARN] Pass 2 (#{clause.id}): #{human_message}"
       end
@@ -564,8 +665,9 @@ module SFL
 
     # DSPy annotator module using ChainOfThought for reasoning.
     class SFLAnnotator
-      def initialize(syntactic_context)
+      def initialize(syntactic_context, lm: nil)
         @context = syntactic_context
+        @lm = lm
       end
 
       def call
@@ -573,6 +675,7 @@ module SFL
         inputs = parse_context(@context)
 
         predictor = DSPy::ChainOfThought.new(SFLSignature)
+        predictor.configure { |c| c.lm = @lm } if @lm
         result = predictor.call(**inputs)
 
         {
@@ -663,8 +766,10 @@ module SFL
     # DSPy annotator for batched clause annotation.
     class SFLBatchAnnotator
       # @param items [Array<Hash>] [{index: Integer, context: String}]
-      def initialize(items)
+      # @param lm [DSPy::LM, nil] per-provider LM instance; falls back to DSPy.config.lm
+      def initialize(items, lm: nil)
         @items = items
+        @lm = lm
       end
 
       # @return [Array<Hash>] one hash per annotation the LLM returned
@@ -674,6 +779,7 @@ module SFL
         end.join("\n")
 
         predictor = DSPy::ChainOfThought.new(SFLBatchSignature)
+        predictor.configure { |c| c.lm = @lm } if @lm
         result = predictor.call(clauses: input_text)
 
         result.annotations.map do |a|

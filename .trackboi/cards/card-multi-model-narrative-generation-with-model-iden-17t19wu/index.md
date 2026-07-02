@@ -5,13 +5,13 @@ title: "Multi-model narrative generation with model identity enforcement"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-narrative-generation-as-strange-loop-closure-0r3gaye"
-column: "todo"
-rank: "yjF"
+column: "done"
+rank: "yy"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T01:23:08.088Z"
-updatedAt: "2026-06-25T01:51:40.291Z"
+updatedAt: "2026-07-02T18:59:06.028Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

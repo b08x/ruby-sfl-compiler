@@ -64,7 +64,32 @@ module SFL
         key = api_key_for(provider, env)
         lm = DSPy::LM.new(provider, api_key: key, structured_outputs: true)
         apply_request_timeout(lm, key, (env["SFL_LLM_TIMEOUT"] || DEFAULT_LLM_TIMEOUT).to_f)
+        apply_generation_params(lm, env)
         DSPy.configure { |c| c.lm = lm }
+      end
+
+      # Inject temperature/top_p/top_k from SFL_* env vars into the adapter's
+      # prepare_chat_instance. Called for both the primary LM (here) and each
+      # fallback LM (ProviderFallback.build_lm) so generation params apply
+      # uniformly across the whole provider chain.
+      def apply_generation_params(lm, env)
+        temperature = env["SFL_TEMPERATURE"]&.then { |v| v.empty? ? nil : v.to_f }
+        top_p       = env["SFL_TOP_P"]&.then       { |v| v.empty? ? nil : v.to_f }
+        top_k       = env["SFL_TOP_K"]&.then       { |v| v.empty? ? nil : v.to_i }
+
+        return if temperature.nil? && top_p.nil? && top_k.nil?
+
+        adapter = lm.instance_variable_get(:@adapter)
+        return unless adapter
+
+        extra = { top_p:, top_k: }.compact
+        original_prepare = adapter.method(:prepare_chat_instance)
+        adapter.define_singleton_method(:prepare_chat_instance) do |chat_instance, messages, signature|
+          ci = original_prepare.call(chat_instance, messages, signature)
+          ci = ci.with_temperature(temperature) if temperature
+          ci = ci.with_params(**extra)          unless extra.empty?
+          ci
+        end
       end
 
       # The openai-gem client behind the openai/ and openrouter/ adapters

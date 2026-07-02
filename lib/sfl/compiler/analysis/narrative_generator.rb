@@ -224,6 +224,87 @@ module SFL
         end
       end
 
+      # DSPy signature: Achilles role — proposes a draft narrative from the digest.
+      # Outputs the draft plus a numbered list of grounded claims for Tortoise to challenge.
+      class NarrativeProposeSignature < DSPy::Signature
+        description "Draft an interpretive analytical narrative of a conversation analyzed " \
+          "with Systemic Functional Linguistics. Ground every claim in the supplied " \
+          "statistics or message previews. Produce a single continuous prose draft " \
+          "covering: overview, speakers' roles, interpersonal dynamics, conversational arc, " \
+          "data quality caveats, and key takeaways. Then enumerate all factual claims you " \
+          "made, each citing a specific statistic or quote from the digest."
+
+        input do
+          const :analysis_digest, String,
+            description: "Statistics, speaker profiles, correlations, and per-turn stance rows"
+        end
+
+        output do
+          const :narrative_draft, String,
+            description: "Complete first-draft narrative prose covering all six analytical sections"
+          const :claims, String,
+            description: "Numbered list of factual claims in the draft, each citing a specific " \
+              "statistic or quote from the analysis digest (one claim per line)"
+        end
+      end
+
+      # DSPy signature: Tortoise role — skeptical challenge of the proposed draft.
+      # Produces challenges and a citation_coverage float (0.0–1.0).
+      class NarrativeChallengeSignature < DSPy::Signature
+        description "You are a skeptical reviewer of an SFL analytical narrative. " \
+          "Read the draft and its claim list against the original analysis digest. " \
+          "For each claim, determine whether it is genuinely grounded in a statistic, " \
+          "quote, or pattern from the digest. Identify overstated, unsupported, or " \
+          "interpretively inflated claims. Compute the fraction of claims that are " \
+          "fully grounded (citation_coverage). A claim is grounded only if a reader " \
+          "could verify it directly from the digest numbers or previews — inference " \
+          "alone is not grounding."
+
+        input do
+          const :analysis_digest, String,
+            description: "The original analysis data the narrative should be grounded in"
+          const :narrative_draft, String,
+            description: "The proposed draft narrative with its claim list"
+        end
+
+        output do
+          const :challenges, String,
+            description: "Specific challenges to ungrounded or overstated claims (one per line). " \
+              "Empty string if all claims are grounded."
+          const :citation_coverage, Float,
+            description: "Fraction of claims fully grounded in the digest (0.0 = none, 1.0 = all)"
+        end
+      end
+
+      # DSPy signature: Genie role — final synthesis incorporating Tortoise's challenges.
+      # Produces the six polished narrative sections.
+      class NarrativeVerifySignature < DSPy::Signature
+        description "You are the final author of an SFL analytical narrative. " \
+          "You have a draft narrative, a skeptical challenger's notes on ungrounded claims, " \
+          "and the original analysis digest. Revise the draft to address all challenges: " \
+          "remove or qualify unsupported claims, sharpen grounded ones, and ensure every " \
+          "interpretive statement is traceable to the digest. Output the six standard " \
+          "analytical sections as refined, publication-ready prose."
+
+        input do
+          const :analysis_digest, String,
+            description: "The original analysis statistics and turn data"
+          const :narrative_draft, String,
+            description: "Achilles's proposed draft narrative"
+          const :challenges, String,
+            description: "Tortoise's challenges to ungrounded claims in the draft"
+        end
+
+        output do
+          const :overview, String, description: "What this conversation is: topic, participants, setting"
+          const :cast_and_roles, String, description: "Each speaker's role as the grammar reveals it"
+          const :interpersonal_dynamics, String, description: "Tenor/modality patterns and shifts between speakers"
+          const :conversational_arc, String, description: "Phases, pivots, and how the interaction resolves"
+          const :data_quality, String, description: "Annotation coverage caveats; which turns are unmeasured"
+          const :takeaways, String, description: "Three to five grounded conclusions"
+        end
+      end
+
       # DSPy signature: one call produces all six narrative sections.
       class NarrativeSignature < DSPy::Signature
         description "Write an interpretive analytical narrative of a " \
@@ -268,6 +349,95 @@ module SFL
         def call
           result = DSPy::ChainOfThought.new(NarrativeSignature).call(analysis_digest: @digest_text)
           NarrativeGenerator::SECTION_KEYS.to_h { |key| [key, result.public_send(key)] }
+        end
+      end
+
+      # Multi-model narrator: Achilles proposes, Tortoise challenges (with
+      # citation_coverage), Genie synthesizes the final narrative. Retries
+      # Achilles up to MAX_ATTEMPTS times when citation_coverage is below
+      # CITATION_THRESHOLD; falls back to best-effort with a warning in
+      # data_quality after all attempts are exhausted.
+      #
+      # @example
+      #   narrator = MultiModelNarrator.new(
+      #     generation_model: "openrouter/anthropic/claude-haiku-4",
+      #     verification_model: "openrouter/anthropic/claude-sonnet-4-5"
+      #   )
+      #   NarrativeGenerator.new(narrator:).generate(digest)
+      class MultiModelNarrator
+        MAX_ATTEMPTS       = 2
+        CITATION_THRESHOLD = 0.8
+
+        # @param generation_model  [String] DSPy provider string for Achilles (propose)
+        # @param verification_model [String] DSPy provider string for Genie (verify)
+        # @param tortoise_model    [String, nil] defaults to generation_model
+        # @raise [ArgumentError] if generation_model == verification_model
+        def initialize(generation_model:, verification_model:, tortoise_model: nil)
+          if generation_model == verification_model
+            raise ArgumentError,
+              "generation_model and verification_model must differ " \
+              "(got '#{generation_model}' for both) — using the same model " \
+              "for generation and verification defeats the RLHF-style " \
+              "cross-checking purpose of multi-model narration"
+          end
+
+          @achilles_lm = generation_model
+          @genie_lm    = verification_model
+          @tortoise_lm = tortoise_model || generation_model
+        end
+
+        # @param digest_text [String] output of NarrativeGenerator::Digest#to_text
+        # @return [Hash] symbol-keyed sections (same shape as SFLNarrator)
+        def call(digest_text)
+          last = nil
+
+          MAX_ATTEMPTS.times do |attempt|
+            draft     = run_achilles(digest_text)
+            challenge = run_tortoise(digest_text, draft.narrative_draft)
+            coverage  = challenge.citation_coverage.to_f
+            last      = { draft:, challenge:, coverage: }
+
+            if coverage >= CITATION_THRESHOLD
+              return finalize(digest_text, draft.narrative_draft, challenge.challenges)
+            end
+
+            warn "[WARN] NarrativeGenerator: citation_coverage #{coverage.round(2)} below " \
+              "#{CITATION_THRESHOLD} (attempt #{attempt + 1}/#{MAX_ATTEMPTS}), regenerating…"
+          end
+
+          # Best-effort: Genie synthesizes anyway; warning surfaces in report
+          sections = finalize(digest_text, last[:draft].narrative_draft, last[:challenge].challenges)
+          coverage_note = "\n\n⚠️ Low citation coverage (#{last[:coverage].round(2)}) after " \
+            "#{MAX_ATTEMPTS} attempts — narrative may contain ungrounded claims."
+          sections.merge(data_quality: sections[:data_quality] + coverage_note)
+        end
+
+        private
+
+        def run_achilles(digest_text)
+          predictor(NarrativeProposeSignature, @achilles_lm)
+            .call(analysis_digest: digest_text)
+        end
+
+        def run_tortoise(digest_text, narrative_draft)
+          predictor(NarrativeChallengeSignature, @tortoise_lm)
+            .call(analysis_digest: digest_text, narrative_draft: narrative_draft)
+        end
+
+        def finalize(digest_text, narrative_draft, challenges)
+          result = predictor(NarrativeVerifySignature, @genie_lm)
+            .call(analysis_digest: digest_text, narrative_draft: narrative_draft, challenges: challenges)
+          NarrativeGenerator::SECTION_KEYS.to_h { |key| [key, result.public_send(key)] }
+        end
+
+        def predictor(signature_class, lm_provider)
+          p = DSPy::ChainOfThought.new(signature_class)
+          p.configure { |c| c.lm = build_lm(lm_provider) }
+          p
+        end
+
+        def build_lm(provider)
+          DSPy::LM.new(provider, api_key: Bootstrap.api_key_for(provider, ENV))
         end
       end
     end

@@ -60,7 +60,7 @@ RSpec.describe SFL::Compiler::CompileSectionJob do
     job.perform
 
     expect(pipeline).to have_received(:compile)
-      .with("It works.", document_id: "sample#introduction", store: false, embed: false, resume: false)
+      .with("It works.", hash_including(document_id: "sample#introduction", store: false, embed: false, resume: false))
 
     turn = SFL::Compiler::Types.load_conversation_turn(
       JSON.parse(JSON.generate(job.output_payload), symbolize_names: true)
@@ -89,7 +89,7 @@ RSpec.describe SFL::Compiler::CompileSectionJob do
     job.perform
 
     expect(pipeline).to have_received(:compile)
-      .with("It works.", document_id: "sample#introduction", store: true, embed: true, resume: false)
+      .with("It works.", hash_including(document_id: "sample#introduction", store: true, embed: true, resume: false))
   end
 
   describe "with a TopicModelJob dependency" do
@@ -119,8 +119,8 @@ RSpec.describe SFL::Compiler::CompileSectionJob do
       job.perform
 
       expect(pipeline).to have_received(:compile).with(
-        "It works.", document_id: "sample#introduction", store: false, embed: false, resume: false,
-        topic: { id: 0, label: "deploy" }, semantic_coherence_score: 0.72
+        "It works.", hash_including(document_id: "sample#introduction", store: false, embed: false, resume: false,
+                                   topic: { id: 0, label: "deploy" }, semantic_coherence_score: 0.72)
       )
     end
 
@@ -130,7 +130,7 @@ RSpec.describe SFL::Compiler::CompileSectionJob do
       job.perform
 
       expect(pipeline).to have_received(:compile)
-        .with("It works.", document_id: "sample#introduction", store: false, embed: false, resume: false)
+        .with("It works.", hash_including(document_id: "sample#introduction", store: false, embed: false, resume: false))
     end
   end
 end

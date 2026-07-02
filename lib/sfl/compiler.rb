@@ -136,4 +136,5 @@ loader.ignore("#{__dir__}/compiler/formatters")
 loader.ignore("#{__dir__}/compiler/chat")
 loader.ignore("#{__dir__}/compiler/tui")
 loader.ignore("#{__dir__}/compiler/tui/wizards")
+loader.ignore("#{__dir__}/compiler/api")
 loader.setup

@@ -29,8 +29,10 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
   spec.bindir = "exe"
-  spec.executables = %w[sfl-analyze sfl-tui]
+  spec.executables = %w[sfl-analyze sfl-tui sfl-api]
 
+  spec.add_dependency "async", "~> 2.21"
+  spec.add_dependency "falcon", "~> 0.48"
   spec.add_dependency "bubbles", "~> 0.1"
   spec.add_dependency "bubbletea", "~> 0.1"
   spec.add_dependency "circuit_breaker", "~> 1.1"

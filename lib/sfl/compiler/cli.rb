@@ -175,9 +175,15 @@ module SFL
       end
 
       module_function def parse_narrate_options(argv)
-        options = { output_dir: nil }
+        options = { output_dir: nil, generation_model: nil, verification_model: nil }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
+          opt.on("--generation-model MODEL",
+                 "DSPy provider for narrative drafting (Achilles role)") { |v| options[:generation_model] = v }
+          opt.on("--verification-model MODEL",
+                 "DSPy provider for narrative verification (Genie role); must differ from --generation-model") do |v|
+            options[:verification_model] = v
+          end
           add_tracing_option(opt, options)
         end.parse!(argv)
         options
@@ -431,6 +437,14 @@ module SFL
       module_function def run_narrate(input, options)
         raise UsageError, "No such file: #{input}" unless File.file?(input)
 
+        gen_model = options[:generation_model]
+        ver_model = options[:verification_model]
+
+        if gen_model.nil? != ver_model.nil?
+          raise UsageError,
+            "--generation-model and --verification-model must both be set or both omitted"
+        end
+
         parsed = begin
           JSON.parse(File.read(input))
         rescue JSON::ParserError => e
@@ -439,7 +453,13 @@ module SFL
 
         Bootstrap.call(require_db: false, require_observability: !options[:disable_tracing])
         digest = Analysis::NarrativeGenerator::Digest.from_json(parsed)
-        report = Analysis::NarrativeGenerator.new.generate(digest)
+
+        narrator = gen_model ? Analysis::MultiModelNarrator.new(
+          generation_model:  gen_model,
+          verification_model: ver_model
+        ) : nil
+
+        report = Analysis::NarrativeGenerator.new(narrator:).generate(digest)
 
         dir = options[:output_dir] || File.dirname(input)
         require "fileutils"
