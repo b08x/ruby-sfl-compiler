@@ -5,13 +5,13 @@ title: "Design IntermediateGenieJob: trigger conditions and Axiomatic summary sc
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-rolling-synthesis-fractal-graphs-0bhnviv"
-column: "backlog"
-rank: "x"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:13:02.306Z"
-updatedAt: "2026-06-26T04:13:02.306Z"
+updatedAt: "2026-07-02T20:00:35.969Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

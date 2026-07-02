@@ -3,7 +3,7 @@ id: "track-phase-2-runtime-decoupling-distributed-scaling-0q7iouw"
 title: "Phase 2 — Runtime Decoupling (Distributed Scaling)"
 slug: "phase-2-runtime-decoupling-distributed-scaling"
 createdAt: "2026-06-26T04:11:56.998Z"
-updatedAt: "2026-06-26T04:11:56.998Z"
+updatedAt: "2026-07-02T20:18:12.459Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

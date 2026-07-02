@@ -5,13 +5,13 @@ title: "Citation grounding checker for narrative claims"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-narrative-generation-as-strange-loop-closure-0r3gaye"
-column: "todo"
-rank: "yl"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T01:23:10.209Z"
-updatedAt: "2026-06-25T01:51:36.933Z"
+updatedAt: "2026-07-02T20:00:46.016Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

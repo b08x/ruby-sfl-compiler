@@ -5,13 +5,13 @@ title: "Implement ConvergenceDetector: pgvector cosine checkpoint for reasoning 
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-semantic-convergence-entropy-collapse-de-1p60as8"
-column: "backlog"
-rank: "yj"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:13:33.511Z"
-updatedAt: "2026-06-26T04:13:33.511Z"
+updatedAt: "2026-07-02T20:01:06.326Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

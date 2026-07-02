@@ -5,13 +5,13 @@ title: "Implement CognitiveGas and inject into PassTwoEngine circuit breaker slo
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-cognitive-gas-semantic-circuit-breaker-0xefy41"
-column: "backlog"
-rank: "yj"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:13:24.559Z"
-updatedAt: "2026-06-26T04:13:24.559Z"
+updatedAt: "2026-07-02T19:48:14.843Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

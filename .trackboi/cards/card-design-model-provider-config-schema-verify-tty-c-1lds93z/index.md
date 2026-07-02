@@ -5,13 +5,13 @@ title: "Design model-provider config schema + verify tty-config API via Context7
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-model-provider-configuration-1xkfb58"
-column: "backlog"
-rank: "v"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-25T04:35:31.146Z"
-updatedAt: "2026-06-26T04:14:51.543Z"
+updatedAt: "2026-07-02T20:23:20.115Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

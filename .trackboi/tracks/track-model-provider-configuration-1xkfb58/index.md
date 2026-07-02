@@ -3,7 +3,7 @@ id: "track-model-provider-configuration-1xkfb58"
 title: "Model Provider Configuration"
 slug: "model-provider-configuration"
 createdAt: "2026-06-25T04:35:17.762Z"
-updatedAt: "2026-06-25T04:35:17.762Z"
+updatedAt: "2026-07-02T20:20:39.046Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
