@@ -66,6 +66,10 @@ module SFL
               "#{provider} rejected the request body — check model name or prompt format"
             elsif msg.match?(/502|503|504|unavailable/i)
               "#{provider} temporarily unavailable (#{msg[/\d{3}/] || 'upstream error'})"
+            elsif msg.match?(/Prediction validation failed|Missing required prop/i)
+              "#{provider} returned a response that does not match the SFL schema " \
+                "(structured_outputs: true requires a model that reliably follows JSON schema — " \
+                "reasoning/vision models often fail this; try a different DSPY_PROVIDER)"
             elsif msg.match?(/json|parse|unexpected.token/i)
               "#{provider} returned malformed JSON — structured output may not be supported by this model"
             else
