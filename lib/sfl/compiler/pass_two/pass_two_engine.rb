@@ -234,6 +234,8 @@ module SFL
       # Run one chunk through the provider chain. Tries each provider in
       # order (primary first, then fallbacks); on exhaustion, defaults.
       private def annotate_chunk(chunk, correlation_id, semantic_coherence_score = nil)
+        @circuit_breaker.charge_batch(chunk) if @circuit_breaker.respond_to?(:charge_batch)
+
         items = chunk.map do |entry|
           {
             index: entry[:index],

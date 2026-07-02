@@ -399,4 +399,40 @@ RSpec.describe SFL::Compiler::PassTwoEngine do
       end
     end
   end
+
+  describe "#annotate_batch with CognitiveGas circuit breaker" do
+    let(:exhausted_gas) do
+      gas = SFL::Compiler::CognitiveGas.new(budget: 0)
+      gas
+    end
+
+    let(:batch_engine) do
+      described_class.new(
+        circuit_breaker: exhausted_gas,
+        batch_annotator: ->(_items) { raise "should not be reached" }
+      )
+    end
+
+    it "falls back to defaults for all clauses when gas is exhausted" do
+      results = batch_engine.annotate_batch([[clause, ideational]])
+
+      expect(results.size).to eq(1)
+      expect(results.first.interpersonal.annotation_source).to eq("fallback")
+      expect(results.first.interpersonal.modality_weight).to eq(0.5)
+    end
+
+    it "charges batch cost before the LLM call when gas responds to charge_batch" do
+      fresh_gas = SFL::Compiler::CognitiveGas.new(budget: 1_000)
+      engine_with_gas = described_class.new(
+        circuit_breaker: fresh_gas,
+        batch_annotator: lambda { |items|
+          items.map { |item| { index: item[:index], mood: "declarative", modality_weight: 0.5, tenor: 0.5, speaker_attitude: "neutral", reasoning: "ok", premises: [], inference_rule: nil, topical_theme: nil, textual_theme: nil, interpersonal_theme: nil, rheme: nil, theme_type: "unmarked" } }
+        }
+      )
+
+      engine_with_gas.annotate_batch([[clause, ideational]])
+
+      expect(fresh_gas.spent).to be > 0
+    end
+  end
 end
