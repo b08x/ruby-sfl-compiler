@@ -42,6 +42,7 @@ module SFL
         create_ideational_table
         create_interpersonal_table
         create_embeddings_table
+        create_question_edges_table
         create_indices
         backfill_columns
         @logger.send_message(
@@ -121,6 +122,19 @@ module SFL
 
           index %i[clause_id model], unique: true
           index :embedding, type: :ivfflat, opclass: :vector_cosine_ops
+        end
+      end
+
+      private def create_question_edges_table
+        @db.create_table?(:question_edges) do
+          primary_key :id
+          String :parent_id, null: false
+          String :child_id,  null: false
+          Integer :depth,    null: false, default: 0
+          DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+
+          index [:parent_id, :child_id], unique: true, name: :idx_question_edges_pair
+          index :child_id, name: :idx_question_edges_child
         end
       end
 
