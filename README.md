@@ -1,7 +1,5 @@
 # ruby-sfl-compiler
 
-**Phase 1 Prototype — Active Proof of Concept**
-
 A Ruby gem that compiles natural language into structured Systemic Functional
 Linguistics (SFL) annotations for Retrieval-Augmented Generation (RAG). Where
 conventional RAG retrieves by topic alone, this compiler also indexes
@@ -49,55 +47,6 @@ governs what evidence reaches the model's context window in the first place.
 
 ---
 
-## Project Status: Phase 1 Prototype
-
-This is an **active proof of concept**, not a production system. The current
-implementation was built to establish the two-pass SFL annotation pipeline and
-begin testing the Safe RAG hypothesis on real data.
-
-### What Phase 1 Established
-
-The Ruby/PyCall architecture and the math-based DAG (Directed Acyclic Graph)
-tracking — inspired by Gödel numbering — have successfully established the
-full pipeline:
-
-- **Two-pass annotation** from raw text through SFL-tagged, embedding-ready
-  clauses stored in PostgreSQL.
-- **Hybrid retrieval** combining semantic vector search, keyword matching, and
-  scalar stance filters via Reciprocal Rank Fusion.
-- **Provenance tracking** — every clause carries an `annotation_source` marker
-  so fallback or placeholder data is never silently presented as measurement.
-
-We are currently working out the practical proofs and use cases on local data
-— validating which SFL filter combinations produce materially different
-retrieval outcomes and whether stance filtering demonstrably changes the
-quality and objectivity of LLM-generated answers.
-
-### Architectural Decisions Suited to Research, Not Production
-
-The Phase 1 architecture was deliberately optimized for reproducibility,
-traceability, and rapid iteration — not for throughput, horizontal
-scalability, or production deployment:
-
-- **Ruby + Python via PyCall.** Pass 1 delegates to spaCy through PyCall,
-  which bridges Ruby and an embedded Python interpreter in a single process.
-  This eliminated serialization overhead during research but introduces a
-  single-threaded constraint (PyCall does not support multi-threaded use) and
-  couples two language runtimes tightly.
-
-- **Gödel-numbered DAG tracking.** Clause relationships and analysis
-  dependencies are tracked through mathematical encodings rather than
-  conventional graph data structures. This approach was valuable for academic
-  validation — every transformation is provably traceable — but it is
-  hardware-bound and not suited to distributed or high-volume processing.
-
-- **Low-volume by design.** The pipeline processes clauses sequentially (or
-  across Sidekiq worker processes for parallelism), stores results in a local
-  PostgreSQL instance, and targets corpus sizes typical of academic
-  experiments and single-document analysis.
-
----
-
 ## Architectural Lineage: A Composite Design
 
 This project is a composite architecture — a system built by
@@ -108,8 +57,6 @@ existential philosophy, the Unix philosophy, and cybersecurity practice.
 
 For the full intellectual lineage of every engineering pattern in the
 compiler, see [docs/architectural-lineage.md](docs/architectural-lineage.md).
-
----
 
 ## Architecture
 
@@ -194,6 +141,40 @@ Analysis layer (UI-agnostic, used by the CLI):
 - An **LLM API key** for Pass 2 (OpenRouter, Google, OpenAI, or Anthropic)
 - **Redis** — only if running conversation analysis in parallel via the Gush
   workflow (see [Parallel Conversation Analysis](#parallel-conversation-analysis-gush--sidekiq)); not needed for the default `sfl-analyze conversation` command
+
+## Documentation
+
+Detailed documentation lives in `docs/`:
+
+| Document | Purpose |
+|----------|---------|
+| [Architecture](docs/architecture.md) | System component relationships and execution models |
+| [Data Flow](docs/data-flow.md) | Sequence diagrams, trace paths with file:line references |
+| [Knowledge Base](docs/knowledge-base.md) | KB analysis pipeline overview |
+| [Design Decisions](docs/decisions.md) | Rationale behind key choices |
+| [Modules](docs/modules/README.md) | Per-module documentation index |
+
+### Trace Paths
+
+For detailed call chains from CLI entry to output, see [Data Flow](docs/data-flow.md):
+
+- **Conversation Analysis (In-Process)** — `cli.rb:218` → `conversation_analyzer.rb:61`
+- **Conversation Analysis (Gush/Live)** — `cli.rb:276` → `conversation_analysis_workflow.rb:24`
+- **Knowledge Base Analysis** — `cli.rb:357` → `knowledge_base_analyzer.rb:47`
+
+### Module Documentation
+
+Per-module docs with transformation contracts, dependency mapping, and interaction diagrams:
+
+| Module | Location | Description |
+|--------|----------|-------------|
+| [ConversationAnalyzer](docs/modules/conversation_analyzer.md) | `lib/sfl/compiler/analysis/conversation_analyzer.rb` | Turn-level aggregation and insights |
+| [KnowledgeBaseAnalyzer](docs/modules/knowledge_base_analyzer.md) | `lib/sfl/compiler/analysis/knowledge_base_analyzer.rb` | Document collection analysis and migration readiness |
+| [PassTwoEngine](docs/modules/pass_two_engine.md) | `lib/sfl/compiler/pass_two/pass_two_engine.rb` | LLM annotation engine |
+| [PipelineCache](docs/modules/pipeline_cache.md) | `lib/sfl/compiler/storage/pipeline_cache.rb` | Disk-based resume cache |
+| [CompileTurnJob](docs/modules/compile_turn_job.md) | `lib/sfl/compiler/jobs/compile_turn_job.rb` | Gush parallel turn compilation |
+| [SprintWorkflow](docs/modules/sprint_workflow.md) | `lib/sfl/compiler/workflows/sprint_workflow.rb` | Multi-stage analysis workflow |
+| [CrossDocumentGraph](docs/modules/cross_document_graph.md) | `lib/sfl/compiler/cross_document_graph.rb` | Multi-source reasoning graph |
 
 ## Installation
 
@@ -529,6 +510,46 @@ The interpersonal payload supports scalar metadata filtering:
 ```bash
 bundle install
 bundle exec rspec spec/        # unit suite
+bundle exec rubocop            # lint
+```
+
+### CLI Commands
+
+```bash
+# Analyze a conversation
+bundle exec sfl-analyze conversation chat.jsonl --output-dir ./output
+
+# Analyze documentation
+bundle exec sfl-analyze documentation docs/ --store --output-dir ./output
+
+# Query the stored corpus
+bundle exec sfl-analyze context "what is scalar filtering used for?" \
+  --min-modality 0.7 --limit 5
+
+# Analyze a knowledge base
+bundle exec sfl-analyze knowledge-base ~/Notebook/ --output-dir ./output/kb
+
+# Generate narrative report
+bundle exec sfl-analyze narrate ./output/conversation_analysis.json --output-dir ./output
+```
+
+### Library Usage
+
+```ruby
+require "sfl-compiler"
+
+ctx = SFL::Compiler::Bootstrap.call
+pipeline = SFL::Compiler::Pipeline.new(db: ctx.db)
+
+# Full pipeline
+annotated = pipeline.compile("Your text here", document_id: "doc-1")
+
+# Pass 1 only (no LLM)
+pairs = pipeline.compile_pass_one("Your text here")
+
+# Retrieval with stance filters
+retriever = SFL::Compiler::HybridRetriever.new(db: ctx.db)
+results = retriever.retrieve("query", filters: { min_modality: 0.7 })
 ```
 
 See `docs/guides/USAGE.md` for the operator-focused guide,
@@ -537,14 +558,7 @@ and `CLAUDE.md` for the agent/contributor codebase map.
 
 ---
 
-## Roadmap to Phase 2
-
-Phase 1 established the pipeline. Phase 2 tests the Safe RAG hypothesis at
-scale.
-
-To test these proofs on massive enterprise datasets, the next iteration
-focuses on replacing the hardware-bound limits of Phase 1 with sustainable
-context management.
+## Roadmap
 
 ### Rolling Synthesis
 
@@ -572,10 +586,6 @@ cost.
   density, tenor shifts) and allocates retrieval and generation budget
   accordingly. This replaces the math-based DAG with a dynamic, semantically
   grounded approach to context management.
-
-Phase 2 is in the design stage. The Phase 1 codebase remains the active
-foundation for ongoing proof-of-concept work and the reference implementation
-as the architecture evolves.
 
 For the full engineering roadmap — including Rolling Synthesis (Fractal
 Graphs), Cognitive Gas, and Semantic Convergence — see

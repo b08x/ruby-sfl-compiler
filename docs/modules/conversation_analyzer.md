@@ -111,6 +111,35 @@ flowchart TD
 
 ---
 
+## Trace Path
+
+### In-Process Mode
+
+```
+CLI.run_conversation (cli.rb:218)
+  └─ ConversationAnalyzer.analyze (conversation_analyzer.rb:61)
+       ├─ load_jsonl (conversation_analyzer.rb:47)
+       ├─ compile_turn (conversation_analyzer.rb:281)
+       │   └─ Pipeline.compile → Pass 1 + Pass 2
+       └─ build_result (conversation_analyzer.rb:119)
+            ├─ TenorTracker.new.calculate_shifts
+            ├─ CohesionAnalyzer.new.analyze
+            ├─ SpeakerProfiler.build_profiles
+            └─ CorrelationAnalyzer.new.correlate_process_tenor
+```
+
+### Gush/Live Mode
+
+```
+ConversationAnalysisWorkflow.configure (conversation_analysis_workflow.rb:24)
+  ├─ CompileTurnJob.perform (compile_turn_job.rb:21)
+  │   └─ pipeline.compile → Types::ConversationTurn
+  └─ ReduceTurnsJob
+       └─ ConversationAnalyzer.build_result
+```
+
+---
+
 ## What Users / Developers Experience *(Mental Processes)*
 
 - **First encounter**: Users **typically** see turn-level metrics first **and** then drill into speaker profiles or key moments.

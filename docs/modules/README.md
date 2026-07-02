@@ -11,6 +11,7 @@ This directory contains detailed documentation for each major module in the sfl-
 | **PassTwoEngine** | `lib/sfl/compiler/pass_two/pass_two_engine.rb` | Core LLM annotation engine for interpersonal and textual metafunctions |
 | **PipelineCache** | `lib/sfl/compiler/storage/pipeline_cache.rb` | Disk-based cache enabling resume after partial failures |
 | **ConversationAnalyzer** | `lib/sfl/compiler/analysis/conversation_analyzer.rb` | Aggregates annotations into turn-level metrics and insights |
+| **KnowledgeBaseAnalyzer** | `lib/sfl/compiler/analysis/knowledge_base_analyzer.rb` | Analyzes document collections for content type, quality, and migration readiness |
 | **CompileTurnJob** | `lib/sfl/compiler/jobs/compile_turn_job.rb` | Sidekiq/Gush job that compiles one conversation turn in isolation |
 | **LangfuseReachability** | `lib/sfl/compiler/langfuse_reachability.rb` | Pre-flight check that verifies Langfuse is reachable before enabling tracing |
 | **CrossDocumentGraph** | `lib/sfl/compiler/cross_document_graph.rb` | Query-time graph across stored documents for multi-source synthesis |
@@ -40,6 +41,7 @@ The modules are organized by their functional communities:
 
 ### Analysis & Aggregation
 - ConversationAnalyzer
+- KnowledgeBaseAnalyzer
 - CohesionAnalyzer
 - SpeakerProfiler
 - TenorTracker

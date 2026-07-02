@@ -71,7 +71,7 @@ module SFL
           # Backfill migration_action/reason from manifest into artifacts so
           # the artifact structs are self-contained (report consumers don't
           # need to cross-reference).
-          manifest_index = manifest.index_by(&:artifact_id)
+          manifest_index = manifest.to_h { |m| [m.artifact_id, m] }
           artifacts = artifacts.map do |a|
             entry = manifest_index[a.artifact_id]
             a.new(migration_action: entry.action, migration_reason: entry.reason)

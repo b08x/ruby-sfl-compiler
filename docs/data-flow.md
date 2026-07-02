@@ -49,6 +49,78 @@ CLI ──► Bootstrap ──► Workflow ──► Pipeline (per turn) ──�
 
 ---
 
+## Conversation Analysis Trace Path (In-Process)
+
+```
+CLI.run_conversation (cli.rb:218)
+  ├─ StopFlag.new + install_interrupt_trap (cli.rb:220-221)
+  ├─ Bootstrap.call (cli.rb:231)
+  ├─ Pipeline.new (cli.rb:232)
+  ├─ ConversationAnalyzer.new (cli.rb:234-239)
+  └─ analyzer.analyze (cli.rb:247)
+       │
+       ├─ ConversationAnalyzer.analyze (conversation_analyzer.rb:61)
+       │   ├─ load_jsonl (conversation_analyzer.rb:47)
+       │   ├─ [optional] TopicModeler.new.fit (conversation_analyzer.rb:75-84)
+       │   ├─ raw_turns.each → compile_turn (conversation_analyzer.rb:86-99)
+       │   └─ build_result (conversation_analyzer.rb:119)
+       │
+       └─ Output
+           ├─ finish_report (cli.rb:253)
+           └─ write_narrative (cli.rb:254)
+```
+
+---
+
+## Conversation Analysis Trace Path (Gush/Live Mode)
+
+```
+CLI.run_conversation_live (cli.rb:276)
+  ├─ ConversationAnalysisWorkflow.create (conversation_analysis_workflow.rb:24)
+  │   ├─ load_jsonl
+  │   ├─ [optional] TopicModelJob
+  │   ├─ CompileTurnJob × N (compile_turn_job.rb:21)
+  │   │   └─ pipeline.compile → Pass 1 + Pass 2
+  │   └─ ReduceTurnsJob
+  └─ TUI::BatchApp.new.run
+```
+
+---
+
+## Knowledge Base Analysis Trace Path
+
+```
+CLI.run_knowledge_base (cli.rb:357)
+  ├─ Bootstrap.call (cli.rb:364)
+  ├─ Pipeline.new (cli.rb:365-370)
+  ├─ KnowledgeBaseAnalyzer.new (cli.rb:375-379)
+  └─ analyzer.analyze (cli.rb:381-386)
+       │
+       ├─ KnowledgeBaseAnalyzer.analyze (knowledge_base_analyzer.rb:47)
+       │   ├─ load_all_sections (knowledge_base_analyzer.rb:99)
+       │   │   ├─ collect_files (knowledge_base_analyzer.rb:114)
+       │   │   └─ loader_for (knowledge_base_analyzer.rb:126)
+       │   │       ├─ .md → MarkdownLoader.load
+       │   │       ├─ .pdf → PdfLoader.load
+       │   │       └─ .png/.jpg → ImageLoader.new.sections
+       │   │
+       │   ├─ tuples.each → compile_artifact (knowledge_base_analyzer.rb:139)
+       │   │   ├─ pipeline.compile
+       │   │   ├─ ContentTypeClassifier.classify (content_type_classifier.rb:31)
+       │   │   └─ QualityScorer.score (quality_scorer.rb:22)
+       │   │
+       │   ├─ MigrationAssessor.assess (migration_assessor.rb:26)
+       │   └─ Types::KnowledgeBaseReport.new (knowledge_base_analyzer.rb:82)
+       │
+       └─ Output
+           └─ KBReportWriter.write (cli.rb:388)
+               ├─ kb_migration.csv
+               ├─ kb_migration.json
+               └─ kb_migration.md
+```
+
+---
+
 ## Per-Turn Compilation (Inside CompileTurnJob)
 
 ```
