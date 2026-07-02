@@ -43,6 +43,7 @@ module SFL
         create_interpersonal_table
         create_embeddings_table
         create_question_edges_table
+        create_axiomatic_summaries_table
         create_indices
         backfill_columns
         @logger.send_message(
@@ -135,6 +136,26 @@ module SFL
 
           index [:parent_id, :child_id], unique: true, name: :idx_question_edges_pair
           index :child_id, name: :idx_question_edges_child
+        end
+      end
+
+      private def create_axiomatic_summaries_table
+        @db.create_table?(:axiomatic_summaries) do
+          String :id, primary_key: true  # UUID
+          String :workflow_id, null: false, default: "standalone"
+          column :source_clause_ids, :jsonb, default: "[]"
+          String :summary_text, text: true, null: false
+          String :core_claim, text: true
+          column :process_type_distribution, :jsonb, default: "{}"
+          Float :avg_tenor, default: 0.5
+          Float :avg_modality, default: 0.5
+          column :mood_distribution, :jsonb, default: "{}"
+          column :key_participants, :jsonb, default: "[]"
+          Integer :clause_count, default: 0
+          DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+
+          index :workflow_id, name: :idx_axiomatic_summaries_workflow
+          index :created_at, name: :idx_axiomatic_summaries_created_at
         end
       end
 
