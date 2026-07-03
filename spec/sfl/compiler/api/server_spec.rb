@@ -291,16 +291,17 @@ RSpec.describe SFL::Compiler::API::Server do
 
     context "when workflow is running" do
       it "returns status and job list without output" do
-        t = Time.at(1_750_000_000)
+        # Gush::Job#started_at/#finished_at are Unix integers
+        # (Time.now.to_i), never Time objects — regression coverage for
+        # the NoMethodError this previously caused.
         job = instance_double("Gush::Job",
           name:        "SFL::Compiler::CompileTurnJob|abc",
           failed?:     false,
           finished?:   false,
           running?:    true,
-          started_at:  t,
+          started_at:  1_750_000_000,
           finished_at: nil)
         allow(job).to receive(:is_a?).with(SFL::Compiler::ReduceTurnsJob).and_return(false)
-        allow(t).to receive(:iso8601).and_return("2026-07-02T00:00:00Z")
 
         flow = instance_double("Gush::Workflow",
           id:        "wf-running",
@@ -316,6 +317,8 @@ RSpec.describe SFL::Compiler::API::Server do
         body = JSON.parse(last_response.body)
         expect(body["status"]).to eq("running")
         expect(body["jobs"].size).to eq(1)
+        expect(body["jobs"].first["started_at"]).to eq(Time.at(1_750_000_000).utc.iso8601)
+        expect(body["jobs"].first["finished_at"]).to be_nil
         expect(body).not_to have_key("output")
       end
     end
@@ -323,10 +326,6 @@ RSpec.describe SFL::Compiler::API::Server do
     context "when workflow is finished" do
       it "returns status, jobs, and output from ReduceTurnsJob" do
         output_data = { "metadata" => { "turn_count" => 1 }, "turns" => [] }
-        t0 = Time.at(0)
-        t1 = Time.at(1)
-        allow(t0).to receive(:iso8601).and_return("1970-01-01T00:00:00Z")
-        allow(t1).to receive(:iso8601).and_return("1970-01-01T00:00:01Z")
 
         reduce_job = instance_double(SFL::Compiler::ReduceTurnsJob,
           name:           "SFL::Compiler::ReduceTurnsJob|xyz",
@@ -334,8 +333,8 @@ RSpec.describe SFL::Compiler::API::Server do
           finished?:      true,
           running?:       false,
           output_payload: output_data,
-          started_at:     t0,
-          finished_at:    t1)
+          started_at:     0,
+          finished_at:    1)
         allow(reduce_job).to receive(:is_a?).with(SFL::Compiler::ReduceTurnsJob).and_return(true)
 
         flow = instance_double("Gush::Workflow",

@@ -178,8 +178,8 @@ module SFL
             jobs:        flow.jobs.map { |j|
               { name:          j.name,
                 status:        job_status(j),
-                started_at:    j.started_at&.iso8601,
-                finished_at:   j.finished_at&.iso8601 }
+                started_at:    unix_iso8601(j.started_at),
+                finished_at:   unix_iso8601(j.finished_at) }
             }
           }
 
@@ -301,6 +301,13 @@ module SFL
           return headers unless CORS_ORIGINS.include?(origin)
 
           headers.merge(CORS_HEADERS).merge("access-control-allow-origin" => origin)
+        end
+
+        # Gush::Job#started_at/#finished_at are Unix integers
+        # (Time.now.to_i in gush's own #start!/#finish!), not Time
+        # objects — Integer has no #iso8601.
+        def unix_iso8601(unix_ts)
+          unix_ts && Time.at(unix_ts).utc.iso8601
         end
 
         def job_status(job)
