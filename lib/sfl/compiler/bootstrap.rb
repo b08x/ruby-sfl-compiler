@@ -25,6 +25,17 @@ module SFL
     module Bootstrap
       Context = Struct.new(:db, :config, keyword_init: true)
 
+      # ext/sfl_compiler/extconf.rb vendors spaCy + its model into
+      # vendor/python at install time and records which interpreter it
+      # used. Nothing else in this gem points PyCall at that vendor dir
+      # by default — without this, ruby-spacy silently falls back to
+      # whatever `python3` resolves to on the host, which may have a
+      # different (or no) spaCy install.
+      GEM_ROOT = File.expand_path("../../..", __dir__)
+      VENDOR_PYTHON_DIR = File.join(GEM_ROOT, "vendor", "python")
+      VENDOR_PYTHON_MARKER = File.join(VENDOR_PYTHON_DIR, ".sfl_compiler_installed")
+      VENDOR_PYTHON_INTERPRETER_FILE = File.join(VENDOR_PYTHON_DIR, ".sfl_compiler_python_path")
+
       KEY_ENV_BY_PREFIX = {
         "openrouter/" => "OPENROUTER_API_KEY",
         "google/" => "GOOGLE_API_KEY",
@@ -52,6 +63,7 @@ module SFL
       # @return [Context]
       def call(require_db: true, require_llm: true, require_observability: true, require_jobs: false, env: ENV, load_dotenv: true)
         Dotenv.load if load_dotenv
+        configure_vendored_python(env)
 
         config = SFL::Compiler.config
         config.database_url = env["DATABASE_URL"] if env["DATABASE_URL"]
@@ -67,6 +79,29 @@ module SFL
         db = connect_db(config) if require_db
 
         Context.new(db:, config:)
+      end
+
+      # Points PyCall (via ruby-spacy) at the interpreter + packages
+      # ext/sfl_compiler/extconf.rb vendored at install time, if present.
+      # Must run before anything `require "ruby-spacy"`s — that require
+      # triggers PyCall.init(ENV['PYTHON']) at load time, a one-shot
+      # decision same as the LM/Langfuse ones documented at the top of
+      # this file. PassOneEngine is Zeitwerk-autoloaded (not eagerly
+      # required), and every entry point calls Bootstrap.call before the
+      # first Pipeline.new, so this is early enough everywhere: the CLI,
+      # Gush/Sidekiq jobs (sidekiq_boot.rb), and scripts/*.rb alike.
+      #
+      # An explicit ENV['PYTHON'] (e.g. SFL_PYTHON at install time, or a
+      # user override) always wins — this only fills in what's unset.
+      def configure_vendored_python(env)
+        return if env["PYTHON"]
+        return unless File.exist?(VENDOR_PYTHON_MARKER) && File.exist?(VENDOR_PYTHON_INTERPRETER_FILE)
+
+        interpreter = File.read(VENDOR_PYTHON_INTERPRETER_FILE).strip
+        return if interpreter.empty?
+
+        ENV["PYTHON"] = interpreter
+        ENV["PYTHONPATH"] = [VENDOR_PYTHON_DIR, env["PYTHONPATH"]].compact.reject(&:empty?).join(File::PATH_SEPARATOR)
       end
 
       DEFAULT_LLM_TIMEOUT = 120.0

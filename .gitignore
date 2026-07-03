@@ -49,3 +49,8 @@ db/dumps/*
 
 .bundle/plugin/
 .claude/skills/
+
+# ext/sfl_compiler/extconf.rb vendors spaCy + its model here at install
+# time (via uv); this is a build artifact, never source.
+/vendor/
+ext/sfl_compiler/Makefile

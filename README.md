@@ -137,7 +137,9 @@ Analysis layer (UI-agnostic, used by the CLI):
 
 - **Ruby** >= 3.3.0
 - **PostgreSQL** with the `vector` (pgvector) and `pg_trgm` extensions
-- **Python spaCy** with the `en_core_web_sm` model
+- **Python spaCy** with the `en_core_web_sm` model — `gem install sfl-compiler`
+  vendors this automatically (see [Installation](#installation)); repo
+  checkouts built via `bundle install` need it set up manually (below)
 - An **LLM API key** for Pass 2 (OpenRouter, Google, OpenAI, or Anthropic)
 - **Redis** — only if running conversation analysis in parallel via the Gush
   workflow (see [Parallel Conversation Analysis](#parallel-conversation-analysis-gush--sidekiq)); not needed for the default `sfl-analyze conversation` command
@@ -184,11 +186,41 @@ Add to your Gemfile:
 gem "sfl-compiler"
 ```
 
-Install the Python side:
+### Python side: vendored automatically
+
+`gem install sfl-compiler` (a real package install, not a `path`/`gemspec`
+checkout — see note below) runs `ext/sfl_compiler/extconf.rb`, which:
+
+1. Uses `uv` if it's on `PATH`, otherwise installs it into the gem's own
+   `vendor/uv/` via the official installer — nothing touches your system
+   `uv`, if you have one.
+2. Has `uv` provision a standalone Python (`3.12` by default, independent of
+   whatever `python3` resolves to on the host) and `pip install --target`
+   spaCy + `en_core_web_sm` into the gem's own `vendor/python/` — fully
+   self-contained, no system or user site-packages touched.
+3. At runtime, `SFL::Compiler::Bootstrap.call` points `ruby-spacy`/PyCall at
+   that vendored interpreter automatically (`ENV['PYTHON']`/`PYTHONPATH`),
+   unless you've already set `ENV['PYTHON']` yourself.
+
+Override with `SFL_PYTHON_VERSION`, `SPACY_MODEL`, or `SFL_PYTHON` (skips
+vendoring, uses this interpreter as-is) as env vars at install time.
+`SFL_FORCE_PYTHON_VENDOR=1` re-runs vendoring even if it already ran.
+
+**If you're developing against a repo checkout** (`bundle install` with
+this gem sourced via `gemspec`/`path` in your Gemfile), extension build
+scripts don't run — Bundler treats path-sourced gems as already "installed"
+in place. Set up spaCy manually instead:
 
 ```bash
 pip install spacy
 python -m spacy download en_core_web_sm
+```
+
+Or run the vendoring script by hand from the repo root to get the same
+self-contained `vendor/` setup a real `gem install` would produce:
+
+```bash
+ruby ext/sfl_compiler/extconf.rb
 ```
 
 ## Environment Configuration
