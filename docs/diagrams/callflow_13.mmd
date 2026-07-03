@@ -1,16 +1,35 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Speaker Profiler (4 nodes, 3 edges)
-    chat_menu_menu_46f79af4("Menu<br/><small>compiler/chat/menu.rb</small>")
-    chat_menu_menu_initialize_e6293780("initialize()<br/><small>compiler/chat/menu.rb</small>")
-    chat_menu_menu_run_912643f3("run()<br/><small>compiler/chat/menu.rb</small>")
-    chat_menu_268fcb71("menu.rb")
-    chat_menu_menu_46f79af4 -->|method| chat_menu_menu_initialize_e6293780
-    chat_menu_menu_46f79af4 -->|method| chat_menu_menu_run_912643f3
-    class chat_menu_menu_46f79af4 klass;
-    class chat_menu_menu_initialize_e6293780 function;
-    class chat_menu_menu_run_912643f3 function;
-    class chat_menu_268fcb71 module;
+    %% Section: Falcon API (10 nodes, 14 edges)
+    compiler_pdf_loader_pdfloader_86f94cae("PdfLoader<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_pdf_frontmatter_ab90f274("pdf_frontmatter()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_pdfloader_each_section_4226a628("each_section()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_pdfloader_load_8bf8dd66("load()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_pdfloader_initialize_cfe3b42b("initialize()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_pdfloader_to_a_f18fe2b9("to_a()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_build_section_6adf4105("build_section()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_non_blank_df99352a("non_blank()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_parse_pdf_date_3b373456("parse_pdf_date()<br/><small>sfl/compiler/pdf_loader.rb</small>")
+    compiler_pdf_loader_eaf7d5ae("pdf_loader.rb")
+    compiler_pdf_loader_pdfloader_86f94cae -->|method| compiler_pdf_loader_pdfloader_each_section_4226a628
+    compiler_pdf_loader_pdfloader_86f94cae -->|method| compiler_pdf_loader_pdfloader_initialize_cfe3b42b
+    compiler_pdf_loader_pdfloader_86f94cae -->|method| compiler_pdf_loader_pdfloader_load_8bf8dd66
+    compiler_pdf_loader_pdfloader_86f94cae -->|method| compiler_pdf_loader_pdfloader_to_a_f18fe2b9
+    compiler_pdf_loader_pdfloader_load_8bf8dd66 -->|calls| compiler_pdf_loader_pdfloader_to_a_f18fe2b9
+    compiler_pdf_loader_pdfloader_each_section_4226a628 -->|calls| compiler_pdf_loader_build_section_6adf4105
+    compiler_pdf_loader_pdfloader_each_section_4226a628 -->|calls| compiler_pdf_loader_pdf_frontmatter_ab90f274
+    compiler_pdf_loader_pdf_frontmatter_ab90f274 -->|calls| compiler_pdf_loader_non_blank_df99352a
+    compiler_pdf_loader_pdf_frontmatter_ab90f274 -->|calls| compiler_pdf_loader_parse_pdf_date_3b373456
+    class compiler_pdf_loader_pdfloader_86f94cae klass;
+    class compiler_pdf_loader_pdf_frontmatter_ab90f274 function;
+    class compiler_pdf_loader_pdfloader_each_section_4226a628 function;
+    class compiler_pdf_loader_pdfloader_load_8bf8dd66 function;
+    class compiler_pdf_loader_pdfloader_initialize_cfe3b42b function;
+    class compiler_pdf_loader_pdfloader_to_a_f18fe2b9 function;
+    class compiler_pdf_loader_build_section_6adf4105 function;
+    class compiler_pdf_loader_non_blank_df99352a function;
+    class compiler_pdf_loader_parse_pdf_date_3b373456 function;
+    class compiler_pdf_loader_eaf7d5ae module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

@@ -1,11 +1,71 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: CLI & Skill Installers (2 nodes, 1 edges)
-    openai_trackboi_6d5136dc("trackboi Agent<br/><small>agents/openai.yaml</small>")
-    openai_orient_agent_95654355("orient_agent<br/><small>agents/openai.yaml</small>")
-    openai_trackboi_6d5136dc -->|calls| openai_orient_agent_95654355
-    class openai_trackboi_6d5136dc function;
-    class openai_orient_agent_95654355 function;
+    %% Section: Serving API (86 nodes, 131 edges)
+    subgraph serve_api_compiler_api_server_rb_7acf9baa["compiler/api/server.rb"]
+        api_server_server_b73b68f0("Server<br/><small>compiler/api/server.rb</small>")
+        api_server_server_dispatch_95012b2d("dispatch()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_call_d439926e("call()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_compile_pipeline_d05425bc("compile_pipeline()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_create_workflow_0121334e("create_workflow()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_initialize_403940b8("initialize()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_job_status_fa57d229("job_status()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_json_e9e7077b("json()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_parse_body_ff64a080("parse_body()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_preflight_0b443a8f("preflight()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_respond_5be34ce0("respond()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_retrieve_4cd48a75("retrieve()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_symbolize_keys_b96ee3c4("symbolize_keys()<br/><small>compiler/api/server.rb</small>")
+        api_server_server_synthesize_18ed72be("synthesize()<br/><small>compiler/api/server.rb</small>")
+    end
+    subgraph serve_api_compiler_chat_app_rb_9b5becc9["compiler/chat/app.rb"]
+        chat_app_app_147c126d("App<br/><small>compiler/chat/app.rb</small>")
+        chat_app_app_update_4faadb04("update()<br/><small>compiler/chat/app.rb</small>")
+    end
+    compiler_convergence_detector_convergencedetecto_2544966d("ConvergenceDetector<br/><small>sfl/compiler/convergence_detector.rb</small>")
+    compiler_image_loader_imageloader_4a189d7b("ImageLoader<br/><small>sfl/compiler/image_loader.rb</small>")
+    api_server_server_b73b68f0 -->|method| api_server_server_call_d439926e
+    api_server_server_b73b68f0 -->|method| api_server_server_compile_pipeline_d05425bc
+    api_server_server_b73b68f0 -->|method| api_server_server_create_workflow_0121334e
+    api_server_server_b73b68f0 -->|method| api_server_server_dispatch_95012b2d
+    api_server_server_b73b68f0 -->|method| api_server_server_initialize_403940b8
+    api_server_server_b73b68f0 -->|method| api_server_server_job_status_fa57d229
+    api_server_server_b73b68f0 -->|method| api_server_server_json_e9e7077b
+    api_server_server_b73b68f0 -->|method| api_server_server_parse_body_ff64a080
+    api_server_server_b73b68f0 -->|method| api_server_server_preflight_0b443a8f
+    api_server_server_b73b68f0 -->|method| api_server_server_respond_5be34ce0
+    api_server_server_b73b68f0 -->|method| api_server_server_retrieve_4cd48a75
+    api_server_server_b73b68f0 -->|method| api_server_server_symbolize_keys_b96ee3c4
+    api_server_server_b73b68f0 -->|method| api_server_server_synthesize_18ed72be
+    api_server_server_call_d439926e -->|calls| api_server_server_preflight_0b443a8f
+    api_server_server_call_d439926e -->|calls| api_server_server_respond_5be34ce0
+    api_server_server_respond_5be34ce0 -->|calls| api_server_server_dispatch_95012b2d
+    api_server_server_respond_5be34ce0 -->|calls| api_server_server_json_e9e7077b
+    api_server_server_dispatch_95012b2d -->|calls| api_server_server_compile_pipeline_d05425bc
+    api_server_server_dispatch_95012b2d -->|calls| api_server_server_create_workflow_0121334e
+    api_server_server_dispatch_95012b2d -->|calls| api_server_server_json_e9e7077b
+    api_server_server_dispatch_95012b2d -->|calls| api_server_server_retrieve_4cd48a75
+    api_server_server_dispatch_95012b2d -->|calls| api_server_server_synthesize_18ed72be
+    api_server_server_compile_pipeline_d05425bc -->|calls| api_server_server_json_e9e7077b
+    api_server_server_compile_pipeline_d05425bc -->|calls| api_server_server_parse_body_ff64a080
+    %% Omitted for readability: 68 nodes, 9 edges
+    class api_server_server_b73b68f0 klass;
+    class api_server_server_dispatch_95012b2d function;
+    class api_server_server_call_d439926e function;
+    class api_server_server_compile_pipeline_d05425bc function;
+    class api_server_server_create_workflow_0121334e function;
+    class api_server_server_initialize_403940b8 function;
+    class api_server_server_job_status_fa57d229 function;
+    class api_server_server_json_e9e7077b function;
+    class api_server_server_parse_body_ff64a080 function;
+    class api_server_server_preflight_0b443a8f function;
+    class api_server_server_respond_5be34ce0 function;
+    class api_server_server_retrieve_4cd48a75 function;
+    class api_server_server_symbolize_keys_b96ee3c4 function;
+    class api_server_server_synthesize_18ed72be function;
+    class chat_app_app_147c126d klass;
+    class chat_app_app_update_4faadb04 function;
+    class compiler_convergence_detector_convergencedetecto_2544966d klass;
+    class compiler_image_loader_imageloader_4a189d7b klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

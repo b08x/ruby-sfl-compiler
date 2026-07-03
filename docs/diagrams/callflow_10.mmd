@@ -1,59 +1,47 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Hybrid Retriever (18 nodes, 17 edges)
-    compiler_types_0103137e("types.rb")
-    compiler_types_analysisresult_7beff7c2("AnalysisResult<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_annotatedclause_ffd3d9b3("AnnotatedClause<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_cohesionmetrics_bf728e18("CohesionMetrics<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_conversationturn_3fe64342("ConversationTurn<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_dispatchdecision_5fa64a85("DispatchDecision<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_examplepassage_1bda8070("ExamplePassage<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_ideationalpayload_fdfaf973("IdeationalPayload<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_interpersonalpayload_09352c53("InterpersonalPayload<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_keymoment_0c86f98e("KeyMoment<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_narrativereport_b9e8b3f0("NarrativeReport<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_participant_f44bd4e8("Participant<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_speakerprofile_ec550106("SpeakerProfile<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_syntacticclause_db1f85c9("SyntacticClause<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_syntactictoken_a2705bcd("SyntacticToken<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_synthesisresult_d025be6a("SynthesisResult<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_taskresult_a1ef7e9f("TaskResult<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_textualpayload_5d74bbc5("TextualPayload<br/><small>sfl/compiler/types.rb</small>")
-    compiler_types_0103137e -->|contains| compiler_types_analysisresult_7beff7c2
-    compiler_types_0103137e -->|contains| compiler_types_annotatedclause_ffd3d9b3
-    compiler_types_0103137e -->|contains| compiler_types_cohesionmetrics_bf728e18
-    compiler_types_0103137e -->|contains| compiler_types_conversationturn_3fe64342
-    compiler_types_0103137e -->|contains| compiler_types_dispatchdecision_5fa64a85
-    compiler_types_0103137e -->|contains| compiler_types_examplepassage_1bda8070
-    compiler_types_0103137e -->|contains| compiler_types_ideationalpayload_fdfaf973
-    compiler_types_0103137e -->|contains| compiler_types_interpersonalpayload_09352c53
-    compiler_types_0103137e -->|contains| compiler_types_keymoment_0c86f98e
-    compiler_types_0103137e -->|contains| compiler_types_narrativereport_b9e8b3f0
-    compiler_types_0103137e -->|contains| compiler_types_participant_f44bd4e8
-    compiler_types_0103137e -->|contains| compiler_types_speakerprofile_ec550106
-    compiler_types_0103137e -->|contains| compiler_types_syntacticclause_db1f85c9
-    compiler_types_0103137e -->|contains| compiler_types_syntactictoken_a2705bcd
-    compiler_types_0103137e -->|contains| compiler_types_synthesisresult_d025be6a
-    compiler_types_0103137e -->|contains| compiler_types_taskresult_a1ef7e9f
-    compiler_types_0103137e -->|contains| compiler_types_textualpayload_5d74bbc5
-    class compiler_types_0103137e module;
-    class compiler_types_analysisresult_7beff7c2 klass;
-    class compiler_types_annotatedclause_ffd3d9b3 klass;
-    class compiler_types_cohesionmetrics_bf728e18 klass;
-    class compiler_types_conversationturn_3fe64342 klass;
-    class compiler_types_dispatchdecision_5fa64a85 klass;
-    class compiler_types_examplepassage_1bda8070 klass;
-    class compiler_types_ideationalpayload_fdfaf973 klass;
-    class compiler_types_interpersonalpayload_09352c53 klass;
-    class compiler_types_keymoment_0c86f98e klass;
-    class compiler_types_narrativereport_b9e8b3f0 klass;
-    class compiler_types_participant_f44bd4e8 klass;
-    class compiler_types_speakerprofile_ec550106 klass;
-    class compiler_types_syntacticclause_db1f85c9 klass;
-    class compiler_types_syntactictoken_a2705bcd klass;
-    class compiler_types_synthesisresult_d025be6a klass;
-    class compiler_types_taskresult_a1ef7e9f klass;
-    class compiler_types_textualpayload_5d74bbc5 klass;
+    %% Section: Database Migrations (13 nodes, 21 edges)
+    subgraph database_migrations_compiler_jobs_crab_constrain_29040600["compiler/jobs/crab_constraint_job.rb"]
+        jobs_crab_constraint_job_first_violation_dbd2754a("first_violation()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_violation_for_6e283f21("violation_for()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_crabconstraintjob_11ea4959("CrabConstraintJob<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_crabconstraintjob_perfo_e1dbcc3e("perform()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_fetch_either_8412ca20("fetch_either()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_derivation_hash_violati_0eb5d99b("derivation_hash_violation()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_field_violation_9bb29b02("field_violation()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_claims_field_656f9bc6("claims_field()<br/><small>compiler/jobs/crab_constraint_job.rb</small>")
+        jobs_crab_constraint_job_a673a1d5("crab_constraint_job.rb")
+    end
+    subgraph database_migrations_sfl_compiler_derivation_hash_56a8862f["sfl/compiler/derivation_hash.rb"]
+        compiler_derivation_hash_compute_54d2d4c2("compute()<br/><small>sfl/compiler/derivation_hash.rb</small>")
+        compiler_derivation_hash_normalized_premises_67a03f12("normalized_premises()<br/><small>sfl/compiler/derivation_hash.rb</small>")
+        compiler_derivation_hash_stringify_keys_4209ee42("stringify_keys()<br/><small>sfl/compiler/derivation_hash.rb</small>")
+        compiler_derivation_hash_051e1a27("derivation_hash.rb")
+    end
+    compiler_derivation_hash_compute_54d2d4c2 -->|calls| compiler_derivation_hash_normalized_premises_67a03f12
+    compiler_derivation_hash_compute_54d2d4c2 -->|calls| compiler_derivation_hash_stringify_keys_4209ee42
+    compiler_derivation_hash_normalized_premises_67a03f12 -->|calls| compiler_derivation_hash_stringify_keys_4209ee42
+    jobs_crab_constraint_job_crabconstraintjob_11ea4959 -->|method| jobs_crab_constraint_job_crabconstraintjob_perfo_e1dbcc3e
+    jobs_crab_constraint_job_crabconstraintjob_perfo_e1dbcc3e -->|calls| jobs_crab_constraint_job_first_violation_dbd2754a
+    jobs_crab_constraint_job_first_violation_dbd2754a -->|calls| jobs_crab_constraint_job_fetch_either_8412ca20
+    jobs_crab_constraint_job_first_violation_dbd2754a -->|calls| jobs_crab_constraint_job_violation_for_6e283f21
+    jobs_crab_constraint_job_violation_for_6e283f21 -->|calls| jobs_crab_constraint_job_derivation_hash_violati_0eb5d99b
+    jobs_crab_constraint_job_violation_for_6e283f21 -->|calls| jobs_crab_constraint_job_field_violation_9bb29b02
+    jobs_crab_constraint_job_derivation_hash_violati_0eb5d99b -->|calls| jobs_crab_constraint_job_fetch_either_8412ca20
+    jobs_crab_constraint_job_field_violation_9bb29b02 -->|calls| jobs_crab_constraint_job_fetch_either_8412ca20
+    class jobs_crab_constraint_job_first_violation_dbd2754a function;
+    class jobs_crab_constraint_job_violation_for_6e283f21 function;
+    class jobs_crab_constraint_job_crabconstraintjob_11ea4959 klass;
+    class jobs_crab_constraint_job_crabconstraintjob_perfo_e1dbcc3e function;
+    class jobs_crab_constraint_job_fetch_either_8412ca20 function;
+    class jobs_crab_constraint_job_derivation_hash_violati_0eb5d99b function;
+    class jobs_crab_constraint_job_field_violation_9bb29b02 function;
+    class jobs_crab_constraint_job_claims_field_656f9bc6 function;
+    class jobs_crab_constraint_job_a673a1d5 module;
+    class compiler_derivation_hash_compute_54d2d4c2 function;
+    class compiler_derivation_hash_normalized_premises_67a03f12 function;
+    class compiler_derivation_hash_stringify_keys_4209ee42 function;
+    class compiler_derivation_hash_051e1a27 module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Rack entry point for `bundle exec falcon serve` / `bundle exec sfl-api`.
 
 lib = File.expand_path("lib", __dir__)
@@ -7,7 +8,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "dotenv"
 begin
   Dotenv.load
-rescue StandardError => e
+rescue => e
   warn "[WARN] .env failed to load: #{e.message}"
 end
 

@@ -1,19 +1,22 @@
-# ROADMAP: From Pipeline Proof to Enterprise-Scale Validation
+# ROADMAP: SFL Compiler Evolution
 
-**Status:** Phase 1 Active — Phase 2 Design Stage
+**Status:** Operational — Multi-Mode Pipeline
 **Parent:** [README — The Core Hypothesis: Stance-Filtered RAG (Safe RAG)](README.md#the-core-hypothesis-stance-filtered-rag-safe-rag)
 
 ---
 
-## Current State: Phase 1 — Pipeline Established
+## Current State: Operational Pipeline
 
-The two-pass SFL compiler is operational. Raw text flows through Pass 1
-(spaCy syntactic extraction) and Pass 2 (DSPy.rb LLM annotation), producing
-structured clauses with ideational, interpersonal, and textual payloads.
-Those clauses are stored in PostgreSQL with pgvector embeddings, retrievable
-via hybrid Reciprocal Rank Fusion with scalar stance filters.
+The two-pass SFL compiler is operational with multiple execution modes. Raw text flows through Pass 1 (spaCy syntactic extraction) and Pass 2 (DSPy.rb LLM annotation), producing structured clauses with ideational, interpersonal, and textual payloads. Those clauses are stored in PostgreSQL with pgvector embeddings, retrievable via hybrid Reciprocal Rank Fusion with scalar stance filters.
 
-The mechanical pipeline works. What we are testing now is what it means.
+### Execution Modes
+
+| Mode | Trigger | Use Case |
+|------|---------|----------|
+| Conversation Analysis | `--mode conversation` | Turn-level aggregation, speaker profiling |
+| Knowledge Base Analysis | `--mode documentation` | Multi-file doc analysis, migration assessment |
+| Parallel Conversation | `--mode conversation --parallel` | Gush workflows, process isolation |
+| Sprint Analysis | SprintWorkflow | Multi-agent reasoning sprints |
 
 ### Active Proofs
 
@@ -34,11 +37,22 @@ Two security hypotheses are under active investigation on local data:
    processing. See
    [docs/use-cases/llm-role-isolation.md](docs/use-cases/llm-role-isolation.md).
 
-### The Constraint We Have Hit
+### What We Have Built
 
-Phase 1 was deliberately optimized for reproducibility, traceability, and
+- **Two-pass pipeline**: spaCy → GC → LLM → Store → Embed
+- **Multiple analyzers**: Conversation, Knowledge Base, Documentation
+- **Parallel execution**: Gush workflows with Sidekiq workers
+- **Hybrid retrieval**: RRF fusion (semantic + keyword + scalar filters)
+- **Knowledge base analysis**: Content typing, quality scoring, migration assessment
+- **QuestionGraph**: In-memory adjacency list with topological ordering
+- **Observability**: Langfuse pre-flight checks, Journald logging
+- **Trace paths**: `file:line` references for all analysis pipelines
+
+### The Constraint We Are Addressing
+
+The initial pipeline was optimized for reproducibility, traceability, and
 rapid iteration. One architectural choice in particular has served its
-research purpose and is now blocking scale:
+research purpose and is now addressing scale:
 
 **Sequential context accumulation.** The `SprintWorkflow` runs a single
 Genie synthesis at the end of each sprint — one LLM call summarizing
@@ -63,12 +77,12 @@ incrementally rather than accumulate exhaustively.
 
 ---
 
-## Phase 2: Infinite Context & Sustainable Scaling
+## Future Enhancements: Infinite Context & Sustainable Scaling
 
 To properly test deep reasoning, we must abandon arbitrary math limits and
 build semantic circuit breakers.
 
-Phase 2 replaces the hardware-bound constraints of Phase 1 with sustainable
+The following enhancements replace hardware-bound constraints with sustainable
 context management — three architectural patterns that allow the system to
 operate over arbitrarily large corpora without proportional hardware cost,
 while preserving the SFL annotation pipeline that makes stance-filtered
@@ -97,9 +111,9 @@ approaches a configured threshold.
 
 The Genie is the synthesis stage of the existing SprintWorkflow (see
 `lib/sfl/compiler/workflows/sprint_workflow.rb`: the four-stage
-Achilles → Tortoise → Crab → Genie pipeline). In Phase 1, the Genie
-synthesizes once, at the end of a sprint. In Phase 2, the Genie fires
-intermittently throughout processing.
+Achilles → Tortoise → Crab → Genie pipeline). Currently, the Genie
+synthesizes once, at the end of a sprint. With Rolling Synthesis, the Genie
+fires intermittently throughout processing.
 
 Each intermediate synthesis:
 
@@ -180,15 +194,15 @@ continues rather than accumulating until the context window saturates.
 
 The `CircuitBreaker::CircuitHandler` placeholder in `PassTwoEngine` (see
 `lib/sfl/compiler/pass_two/pass_two_engine.rb`, line 173, and
-`docs/decisions.md`, "Circuit Breaker Implementation"). The Phase 1
+`docs/decisions.md`, "Circuit Breaker Implementation"). The current
 circuit breaker is a no-op pass-through (`lambda { |&block| block.call }`)
-that never trips. Phase 2 replaces it with a semantically grounded budget
+that never trips. Cognitive Gas replaces it with a semantically grounded budget
 model that trips based on cognitive cost, not call count.
 
 ### What It Preserves
 
-The degradation ladder. Phase 1's principle that "Pass 1 data is always
-preserved" extends to Phase 2: when a reasoning loop exhausts its gas
+The degradation ladder. The principle that "Pass 1 data is always
+preserved" extends to future enhancements: when a reasoning loop exhausts its gas
 budget, the clauses it has already processed are not lost — they are
 summarized and stored. The annotation pipeline's provenance tracking
 (`annotation_source: "llm" | "fallback" | "stub"`) carries through to
@@ -206,11 +220,10 @@ argument, or cycles through equivalent clauses without making progress
 is stuck. In a token-budgeted system, this manifests as slow waste — the
 loop burns tokens without converging.
 
-In Phase 2, where context windows are unbounded and reasoning depth is
-limited only by semantic relevance, the stuck-loop problem becomes
-critical. Without a circuit breaker, a reasoning loop can run indefinitely
-— consuming LLM calls, database queries, and compute without producing
-a result.
+With unbounded context windows and reasoning depth limited only by semantic
+relevance, the stuck-loop problem becomes critical. Without a circuit breaker,
+a reasoning loop can run indefinitely — consuming LLM calls, database queries,
+and compute without producing a result.
 
 ### The Pattern
 
@@ -243,9 +256,9 @@ When entropy collapse is detected, the system forces a circuit break:
 
 The no-op circuit breaker in `PassTwoEngine` (see
 `lib/sfl/compiler/pass_two/pass_two_engine.rb`, the
-`default_circuit_breaker` lambda that never trips). Phase 1 has no runaway
+`default_circuit_breaker` lambda that never trips). Currently there is no runaway
 loop detection — a stuck reasoning loop burns LLM calls indefinitely.
-Phase 2 replaces this with a deliberate, semantically grounded circuit
+Semantic Convergence replaces this with a deliberate, semantically grounded circuit
 breaker: the system halts because the reasoning has stopped producing new
 information, which is the correct reason to stop.
 
@@ -260,10 +273,10 @@ reasoning-loop health monitoring.
 
 ---
 
-## Architecture: Phase 1 to Phase 2
+## Architecture: Current State vs. Future Enhancements
 
 ```
-PHASE 1 (Current)                          PHASE 2 (Target)
+CURRENT STATE                              FUTURE ENHANCEMENTS
 ─────────────────────                      ──────────────────────
 Raw Text → Pass 1 → Pass 2 → Store        Raw Text → Pass 1 → Pass 2 → Store
          (sequential, PyCall)                       (decoupled runtimes)
@@ -296,10 +309,9 @@ intermediate Genie syntheses require concurrent Pass 1 and Pass 2
 operations, which the current single-process PyCall architecture cannot
 support.
 
-See `docs/architecture.md`, "Phase 2 Implementation (Production DAGs)" for
-the three candidate replacement approaches (adjacency lists, Postgres
-Ltree, array tracking) — all of which eliminate the integer overflow
-ceiling.
+See `docs/architecture.md` for the three candidate replacement approaches
+(adjacency lists, Postgres Ltree, array tracking) — all of which eliminate
+the integer overflow ceiling.
 
 ### Standard Relational Graph Storage
 
@@ -312,8 +324,7 @@ available storage, not by `BIGINT`'s maximum value.
 
 ## Validation Path
 
-Phase 2 is in the design stage. The Phase 1 codebase remains the active
-foundation for ongoing proof-of-concept work and the reference
+The codebase remains the active foundation for ongoing proof-of-concept work and the reference
 implementation as the architecture evolves.
 
 The validation sequence is:
@@ -347,11 +358,11 @@ The validation sequence is:
 
 - [docs/architectural-lineage.md](docs/architectural-lineage.md) — interdisciplinary design synthesis
 - [README — The Core Hypothesis: Stance-Filtered RAG (Safe RAG)](README.md#the-core-hypothesis-stance-filtered-rag-safe-rag)
-- [README — Roadmap to Phase 2](README.md#roadmap-to-phase-2)
 - [docs/use-cases/llm-role-isolation.md](docs/use-cases/llm-role-isolation.md) — the Rhetorical Firewall hypothesis
-- [docs/architecture.md](docs/architecture.md) — QuestionGraph, Gödel numbering, Phase 2 DAG replacements
-- [docs/decisions.md](docs/decisions.md) — Circuit Breaker Implementation decision
-- [lib/sfl/compiler/question_graph.rb](lib/sfl/compiler/question_graph.rb) — the Gödel-numbered DAG (Phase 1)
+- [docs/architecture.md](docs/architecture.md) — system overview, QuestionGraph, trace paths
+- [docs/data-flow.md](docs/data-flow.md) — trace paths with file:line references
+- [docs/decisions.md](docs/decisions.md) — Architecture Decision Records
+- [lib/sfl/compiler/question_graph.rb](lib/sfl/compiler/question_graph.rb) — the adjacency-list graph
 - [lib/sfl/compiler/workflows/sprint_workflow.rb](lib/sfl/compiler/workflows/sprint_workflow.rb) — Achilles → Tortoise → Crab → Genie
 - [lib/sfl/compiler/pass_two/pass_two_engine.rb](lib/sfl/compiler/pass_two/pass_two_engine.rb) — circuit breaker placeholder (line 173)
 - [lib/sfl/compiler/retrieval/embedder.rb](lib/sfl/compiler/retrieval/embedder.rb) — the Embedder reused for Semantic Convergence

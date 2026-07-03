@@ -1,71 +1,66 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Graph Build (23 nodes, 34 edges)
+    %% Section: Graph Build (188 nodes, 244 edges)
+    subgraph build_graph_compiler_analysis_citation_grounding_4d2a7bd5["compiler/analysis/citation_grounding_checker.rb"]
+        analysis_citation_grounding_checker_citationgrou_2798c5ff("CitationGroundingChecker<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_c97ac1d1("build_index()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_04c11fb9("check()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_42350c0e("content_words()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_fa657202("extract_citations()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_e17eef68("extract_sentences()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_0f6fe658("keyword_match?()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+        analysis_citation_grounding_checker_citationgrou_d0f33efe("resolve()<br/><small>compiler/analysis/citation_grounding_checker.rb</small>")
+    end
     subgraph build_graph_compiler_analysis_conversation_analy_517b4a8a["compiler/analysis/conversation_analyzer.rb"]
         analysis_conversation_analyzer_conversationanaly_22cc21a4("ConversationAnalyzer<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
         analysis_conversation_analyzer_conversationanaly_11a87abc("analyze()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_51faa16e("compile_turn()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_8c9e44a2("compile_clauses()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_7da27936("detect_example_passages()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_cc598ed8("detect_key_moments()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_08944a90("field_evolution()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_b28b8629("generate_insights()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
+        analysis_conversation_analyzer_conversationanaly_ba1553e9("build_result()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
+        analysis_conversation_analyzer_conversationanaly_5d789cfa("initialize()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
         analysis_conversation_analyzer_conversationanaly_1f8808fa("load_jsonl()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_2ca6ac64("mean()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_8c73969d("parse_timestamp()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_eafa79dc("report_progress()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_049a3b17("tenor_timeline()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
-        analysis_conversation_analyzer_conversationanaly_cce05129("topic_evolution()<br/><small>compiler/analysis/conversation_analyzer.rb</small>")
     end
-    subgraph build_graph_compiler_formatters_json_formatter_r_91d3a391["compiler/formatters/json_formatter.rb"]
-        formatters_json_formatter_jsonformatter_a9d3f8de("JSONFormatter<br/><small>compiler/formatters/json_formatter.rb</small>")
-        formatters_json_formatter_jsonformatter_annotati_45808425("annotation_coverage()<br/><small>compiler/formatters/json_formatter.rb</small>")
-        formatters_json_formatter_jsonformatter_build_ha_76b6e714("build_hash()<br/><small>compiler/formatters/json_formatter.rb</small>")
-        formatters_json_formatter_jsonformatter_format_m_58768623("format_metadata()<br/><small>compiler/formatters/json_formatter.rb</small>")
-    end
+    analysis_narrative_generator_digest_de4de09b("Digest<br/><small>compiler/analysis/narrative_generator.rb</small>")
+    analysis_narrative_self_analyzer_narrativeselfan_04827294("NarrativeSelfAnalyzer<br/><small>compiler/analysis/narrative_self_analyzer.rb</small>")
+    analysis_topic_modeler_topicmodeler_7c56ddc2("TopicModeler<br/><small>compiler/analysis/topic_modeler.rb</small>")
+    jobs_intermediate_genie_job_intermediategeniejob_a5ee5a60("IntermediateGenieJob<br/><small>compiler/jobs/intermediate_genie_job.rb</small>")
+    compiler_question_graph_questiongraph_90eaea00("QuestionGraph<br/><small>sfl/compiler/question_graph.rb</small>")
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_c97ac1d1
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_04c11fb9
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_42350c0e
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_fa657202
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_e17eef68
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_0f6fe658
+    analysis_citation_grounding_checker_citationgrou_2798c5ff -->|method| analysis_citation_grounding_checker_citationgrou_d0f33efe
+    analysis_citation_grounding_checker_citationgrou_04c11fb9 -->|calls| analysis_citation_grounding_checker_citationgrou_c97ac1d1
+    analysis_citation_grounding_checker_citationgrou_04c11fb9 -->|calls| analysis_citation_grounding_checker_citationgrou_fa657202
+    analysis_citation_grounding_checker_citationgrou_04c11fb9 -->|calls| analysis_citation_grounding_checker_citationgrou_e17eef68
+    analysis_citation_grounding_checker_citationgrou_04c11fb9 -->|calls| analysis_citation_grounding_checker_citationgrou_0f6fe658
+    analysis_citation_grounding_checker_citationgrou_04c11fb9 -->|calls| analysis_citation_grounding_checker_citationgrou_d0f33efe
+    analysis_citation_grounding_checker_citationgrou_0f6fe658 -->|calls| analysis_citation_grounding_checker_citationgrou_42350c0e
     analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_11a87abc
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_8c9e44a2
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_51faa16e
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_7da27936
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_cc598ed8
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_08944a90
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_b28b8629
+    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_ba1553e9
+    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_5d789cfa
     analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_1f8808fa
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_2ca6ac64
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_8c73969d
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_eafa79dc
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_049a3b17
-    analysis_conversation_analyzer_conversationanaly_22cc21a4 -->|method| analysis_conversation_analyzer_conversationanaly_cce05129
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_51faa16e
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_7da27936
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_cc598ed8
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_08944a90
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_b28b8629
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_1f8808fa
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_eafa79dc
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_049a3b17
-    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_cce05129
-    analysis_conversation_analyzer_conversationanaly_51faa16e -->|calls| analysis_conversation_analyzer_conversationanaly_8c9e44a2
-    analysis_conversation_analyzer_conversationanaly_51faa16e -->|calls| analysis_conversation_analyzer_conversationanaly_2ca6ac64
-    %% Omitted for readability: 5 nodes, 4 edges
+    analysis_conversation_analyzer_conversationanaly_1f8808fa -->|calls| analysis_conversation_analyzer_conversationanaly_11a87abc
+    analysis_conversation_analyzer_conversationanaly_11a87abc -->|calls| analysis_conversation_analyzer_conversationanaly_ba1553e9
+    %% Omitted for readability: 170 nodes, 0 edges
+    class analysis_citation_grounding_checker_citationgrou_2798c5ff klass;
+    class analysis_citation_grounding_checker_citationgrou_c97ac1d1 function;
+    class analysis_citation_grounding_checker_citationgrou_04c11fb9 function;
+    class analysis_citation_grounding_checker_citationgrou_42350c0e function;
+    class analysis_citation_grounding_checker_citationgrou_fa657202 function;
+    class analysis_citation_grounding_checker_citationgrou_e17eef68 function;
+    class analysis_citation_grounding_checker_citationgrou_0f6fe658 function;
+    class analysis_citation_grounding_checker_citationgrou_d0f33efe function;
     class analysis_conversation_analyzer_conversationanaly_22cc21a4 klass;
     class analysis_conversation_analyzer_conversationanaly_11a87abc function;
-    class analysis_conversation_analyzer_conversationanaly_51faa16e function;
-    class analysis_conversation_analyzer_conversationanaly_8c9e44a2 function;
-    class analysis_conversation_analyzer_conversationanaly_7da27936 function;
-    class analysis_conversation_analyzer_conversationanaly_cc598ed8 function;
-    class analysis_conversation_analyzer_conversationanaly_08944a90 function;
-    class analysis_conversation_analyzer_conversationanaly_b28b8629 function;
+    class analysis_conversation_analyzer_conversationanaly_ba1553e9 function;
+    class analysis_conversation_analyzer_conversationanaly_5d789cfa function;
     class analysis_conversation_analyzer_conversationanaly_1f8808fa function;
-    class analysis_conversation_analyzer_conversationanaly_2ca6ac64 function;
-    class analysis_conversation_analyzer_conversationanaly_8c73969d function;
-    class analysis_conversation_analyzer_conversationanaly_eafa79dc function;
-    class analysis_conversation_analyzer_conversationanaly_049a3b17 function;
-    class analysis_conversation_analyzer_conversationanaly_cce05129 function;
-    class formatters_json_formatter_jsonformatter_a9d3f8de klass;
-    class formatters_json_formatter_jsonformatter_annotati_45808425 function;
-    class formatters_json_formatter_jsonformatter_build_ha_76b6e714 function;
-    class formatters_json_formatter_jsonformatter_format_m_58768623 function;
+    class analysis_narrative_generator_digest_de4de09b klass;
+    class analysis_narrative_self_analyzer_narrativeselfan_04827294 klass;
+    class analysis_topic_modeler_topicmodeler_7c56ddc2 klass;
+    class jobs_intermediate_genie_job_intermediategeniejob_a5ee5a60 klass;
+    class compiler_question_graph_questiongraph_90eaea00 klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

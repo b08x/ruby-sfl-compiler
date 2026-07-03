@@ -1,30 +1,61 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (9 nodes, 2 edges)
-    subgraph other_experiments_02_id3_feature_importance_rb_dd68e326["experiments/02_id3_feature_importance.rb"]
-        experiments_02_id3_feature_importance_5024f2d6("02_id3_feature_importance.rb")
-        experiments_02_id3_feature_importance_extract_fe_7d76e0e5("extract_features()<br/><small>experiments/02_id3_feature_importance.rb</small>")
+    %% Section: Other (103 nodes, 99 edges)
+    subgraph other_compiler_analysis_chunk_artifact_detector_e3272b98["compiler/analysis/chunk_artifact_detector.rb"]
+        analysis_chunk_artifact_detector_chunkartifactde_0ef3ba36("ChunkArtifactDetector<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_chunkartifactde_bf6fa4ab("detect()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_chunkartifactde_af2df4ac("initialize()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_mid_sentence_sp_6d69e870("mid_sentence_split?()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_continuation_st_6078b843("continuation_start?()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_terminal_punctu_16387866("terminal_punctuation?()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
+        analysis_chunk_artifact_detector_lowercase_start_05c99068("lowercase_start?()<br/><small>compiler/analysis/chunk_artifact_detector.rb</small>")
     end
-    subgraph other_scripts_process_incidents_rb_65e61696["scripts/process_incidents.rb"]
-        scripts_process_incidents_f749399e("process_incidents.rb")
-        scripts_process_incidents_compile_pass_one_only_11a722d6("compile_pass_one_only()<br/><small>scripts/process_incidents.rb</small>")
+    subgraph other_lib_sfl_compiler_rb_2fefadc7["lib/sfl/compiler.rb"]
+        sfl_compiler_configuration_739af243("Configurationlib/<br/><small>sfl/compiler.rb</small>")
+        sfl_compiler_configuration_initialize_58eebd82("initialize()lib/sfl/compiler.rb")
+        sfl_compiler_configuration_validate_cbb39c18("validate!()lib/sfl/compiler.rb")
     end
-    chat_styles_a129d0fa("styles.rb")
-    compiler_analysis_8f972526("analysis.rb")
-    compiler_chat_cc273e26("chat.rb")
-    compiler_formatters_a381510d("formatters.rb")
-    compiler_version_39975b2e("version.rb")
-    experiments_02_id3_feature_importance_5024f2d6 -->|contains| experiments_02_id3_feature_importance_extract_fe_7d76e0e5
-    scripts_process_incidents_f749399e -->|contains| scripts_process_incidents_compile_pass_one_only_11a722d6
-    class experiments_02_id3_feature_importance_5024f2d6 module;
-    class experiments_02_id3_feature_importance_extract_fe_7d76e0e5 function;
-    class scripts_process_incidents_f749399e module;
-    class scripts_process_incidents_compile_pass_one_only_11a722d6 function;
-    class chat_styles_a129d0fa module;
-    class compiler_analysis_8f972526 module;
-    class compiler_chat_cc273e26 module;
-    class compiler_formatters_a381510d module;
-    class compiler_version_39975b2e module;
+    subgraph other_ext_sfl_compiler_extconf_rb_97a04bad["ext/sfl_compiler/extconf.rb"]
+        sfl_compiler_extconf_run_163c61cb("run!()ext/sfl_compiler/extconf.rb")
+        sfl_compiler_extconf_bootstrap_uv_af1bbffe("bootstrap_uv!()ext/sfl_compiler/extconf.rb")
+    end
+    subgraph other_sfl_compiler_bootstrap_rb_f5bd94b7["sfl/compiler/bootstrap.rb"]
+        compiler_bootstrap_safecompletionsproxy_c94cc066("SafeCompletionsProxy<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_safecompletionsproxy_initiali_9ff5391a("initialize()<br/><small>sfl/compiler/bootstrap.rb</small>")
+    end
+    storage_axiomatic_summary_repository_axiomaticsu_c1d221a6("AxiomaticSummaryRepository<br/><small>compiler/storage/axiomatic_summary_repository.rb</small>")
+    storage_embedding_repository_embeddingrepository_d1b42d88("EmbeddingRepository<br/><small>compiler/storage/embedding_repository.rb</small>")
+    tui_batch_app_batchapp_2a64bf25("BatchApp<br/><small>compiler/tui/batch_app.rb</small>")
+    compiler_langfuse_reachability_decide_a994c213("decide()<br/><small>sfl/compiler/langfuse_reachability.rb</small>")
+    sfl_compiler_extconf_run_163c61cb -->|calls| sfl_compiler_extconf_bootstrap_uv_af1bbffe
+    sfl_compiler_configuration_739af243 -->|method| sfl_compiler_configuration_initialize_58eebd82
+    sfl_compiler_configuration_739af243 -->|method| sfl_compiler_configuration_validate_cbb39c18
+    analysis_chunk_artifact_detector_chunkartifactde_0ef3ba36 -->|method| analysis_chunk_artifact_detector_chunkartifactde_bf6fa4ab
+    analysis_chunk_artifact_detector_chunkartifactde_0ef3ba36 -->|method| analysis_chunk_artifact_detector_chunkartifactde_af2df4ac
+    analysis_chunk_artifact_detector_chunkartifactde_bf6fa4ab -->|calls| analysis_chunk_artifact_detector_mid_sentence_sp_6d69e870
+    analysis_chunk_artifact_detector_mid_sentence_sp_6d69e870 -->|calls| analysis_chunk_artifact_detector_continuation_st_6078b843
+    analysis_chunk_artifact_detector_mid_sentence_sp_6d69e870 -->|calls| analysis_chunk_artifact_detector_terminal_punctu_16387866
+    analysis_chunk_artifact_detector_continuation_st_6078b843 -->|calls| analysis_chunk_artifact_detector_lowercase_start_05c99068
+    compiler_bootstrap_safecompletionsproxy_c94cc066 -->|method| compiler_bootstrap_safecompletionsproxy_initiali_9ff5391a
+    %% Omitted for readability: 85 nodes, 0 edges
+    class analysis_chunk_artifact_detector_chunkartifactde_0ef3ba36 klass;
+    class analysis_chunk_artifact_detector_chunkartifactde_bf6fa4ab function;
+    class analysis_chunk_artifact_detector_chunkartifactde_af2df4ac function;
+    class analysis_chunk_artifact_detector_mid_sentence_sp_6d69e870 function;
+    class analysis_chunk_artifact_detector_continuation_st_6078b843 function;
+    class analysis_chunk_artifact_detector_terminal_punctu_16387866 function;
+    class analysis_chunk_artifact_detector_lowercase_start_05c99068 function;
+    class sfl_compiler_configuration_739af243 klass;
+    class sfl_compiler_configuration_initialize_58eebd82 function;
+    class sfl_compiler_configuration_validate_cbb39c18 function;
+    class sfl_compiler_extconf_run_163c61cb function;
+    class sfl_compiler_extconf_bootstrap_uv_af1bbffe function;
+    class compiler_bootstrap_safecompletionsproxy_c94cc066 klass;
+    class compiler_bootstrap_safecompletionsproxy_initiali_9ff5391a function;
+    class storage_axiomatic_summary_repository_axiomaticsu_c1d221a6 klass;
+    class storage_embedding_repository_embeddingrepository_d1b42d88 klass;
+    class tui_batch_app_batchapp_2a64bf25 klass;
+    class compiler_langfuse_reachability_decide_a994c213 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

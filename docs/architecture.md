@@ -1,6 +1,6 @@
 # Architecture
 
-The sfl-compiler follows a **layered pipeline** with strict separation between syntactic extraction (Pass 1), semantic annotation (Pass 2), and analysis. Today's additions introduce **parallel execution** (Gush workflows), **cross-document reasoning** (CrossDocumentGraph), and **pre-flight observability** (LangfuseReachability).
+The sfl-compiler follows a **layered pipeline** with strict separation between syntactic extraction (Pass 1), semantic annotation (Pass 2), and analysis. The architecture supports **parallel execution** (Gush workflows), **cross-document reasoning** (CrossDocumentGraph), **knowledge base analysis** (KnowledgeBaseAnalyzer), and **pre-flight observability** (LangfuseReachability).
 
 ---
 
@@ -46,6 +46,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
      │ • Narrative    │
      │ • QuestionGraph│
      │ • CrossDocGraph│
+     │ • KBAnalyzer   │
      └────────────────┘
 ```
 
@@ -98,6 +99,21 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
                                             └── Store + Embed
 ```
 
+### 4. Knowledge Base Analysis Pipeline
+
+```
+  CLI ──► KnowledgeBaseAnalyzer ──► Pipeline (synchronous)
+                                            │
+                                            ├── collect_files (.md, .pdf, .png)
+                                            ├── load_sections (MarkdownLoader/PdfLoader/ImageLoader)
+                                            ├── compile_artifact (per section)
+                                            │     ├── Pipeline.compile → AnnotatedClause[]
+                                            │     ├── ContentTypeClassifier.classify
+                                            │     └── QualityScorer.score
+                                            ├── MigrationAssessor.assess
+                                            └── KBReportWriter.write (CSV, JSON, Markdown)
+```
+
 ---
 
 ## Layer Responsibilities
@@ -132,6 +148,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 | Component | Responsibility |
 |-----------|---------------|
 | `ConversationAnalyzer` | Turn-level aggregation |
+| `KnowledgeBaseAnalyzer` | Documentation analysis pipeline (content typing, quality scoring, migration assessment) |
 | `TenorTracker` | Formality shift detection (mutates in-place) |
 | `SpeakerProfiler` | Per-speaker linguistic patterns |
 | `CohesionAnalyzer` | Repetition, conjunction, pronoun density |
@@ -174,6 +191,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 | `TopicModelJob` | Topic modeling pre-pass (Gush job) |
 | `SprintRoleJob` | Generic Achilles/Tortoise/Genie role (Gush job) |
 | `CrabConstraintJob` | Rule-based invariant pinning (Gush job) |
+| `KnowledgeBaseCompileJob` | Per-section KB analysis (in-process, used by KB analyzer) |
 
 ---
 
@@ -203,6 +221,9 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 ├──────────────────┼────────────────┼───────────────────────────────┤
 │ Langfuse         │ No tracing     │ Pre-flight check prompts;     │
 │                  │                │ --disable-tracing always works│
+├──────────────────┼────────────────┼───────────────────────────────┤
+│ Kreuzberg        │ No file I/O    │ KB analyzer fails; raises     │
+│ (PDF/image)      │                │ DocumentLoadError             │
 └──────────────────┴────────────────┴───────────────────────────────┘
 ```
 
@@ -238,20 +259,18 @@ Topological ordering uses Kahn's algorithm. Construction raises
 `QuestionGraphError` on cycles or unresolvable dependency ids, both of
 which prevent the graph from being built.
 
-### Phase 2: Persistent Graph Storage
+### Future: Persistent Graph Storage
 
 The in-memory adjacency list has no overflow ceiling and handles sprint-scale
-graphs (typically < 20 nodes) without issue. Phase 2 will add PostgreSQL
-persistence for cross-session and cross-document reasoning:
+graphs (typically < 20 nodes) without issue. Future enhancements may add
+PostgreSQL persistence for cross-session and cross-document reasoning:
 
 - **Adjacency list table** — `question_edges(parent_id, child_id, depth)` with
   recursive CTEs for reachability and topological ordering.
 - **Postgres Ltree** — path-encoded label strings (`doc0.modality.confidence`)
   enabling subtree queries and depth constraints via native GiST indexing.
 
-Persistence is a prerequisite for Rolling Synthesis: intermediate Axiomatic
-summaries need a durable home when reasoning spans multiple Genie synthesis
-cycles. See `ROADMAP.md` for the Phase 2 design.
+See `ROADMAP.md` for future design details.
 
 ---
 
@@ -305,6 +324,52 @@ cycles. See `ROADMAP.md` for the Phase 2 design.
        │
        └── Journald::Logger on every operation (correlation_id)
 ```
+
+---
+
+## Trace Paths
+
+The codebase provides detailed trace paths for navigating the analysis pipelines. These are documented in the `docs/modules/` directory with `file:line` references for IDE navigation.
+
+### Conversation Analysis (In-Process)
+
+```
+cli.rb:218  CLI.parse(:conversation)
+  └─► conversation_analyzer.rb:61  ConversationAnalyzer.analyze
+       ├─► conversation_analyzer.rb:119  build_result
+       └─► pipeline.rb:45  Pipeline.compile
+            ├─► pipeline.rb:78  pass_one (spaCy)
+            └─► pipeline.rb:112 pass_two (LLM)
+```
+
+### Knowledge Base Analysis
+
+```
+cli.rb:276  CLI.parse(:documentation)
+  └─► knowledge_base_analyzer.rb:47  KnowledgeBaseAnalyzer.analyze
+       ├─► knowledge_base_analyzer.rb:99  load_all_sections
+       ├─► knowledge_base_analyzer.rb:139 compile_artifact
+       │    ├─► pipeline.rb:45  Pipeline.compile
+       │    ├─► content_type_classifier.rb:25  classify
+       │    └─► quality_scorer.rb:33  score
+       ├─► migration_assessor.rb:42  assess
+       └─► kb_report_writer.rb:19  write
+```
+
+### Parallel Conversation Workflow (Gush)
+
+```
+cli.rb:218  CLI.parse(:conversation)
+  └─► conversation_analysis_workflow.rb:24  configure
+       ├─► compile_turn_job.rb:21  perform (N workers)
+       │    ├─► pass_one_engine.rb:42  process
+       │    └─► pass_two_engine.rb:65  process
+       ├─► topic_model_job.rb:18  perform
+       └─► reduce_turns_job.rb:22  perform
+            └─► conversation_analyzer.rb:61  build_result
+```
+
+See `docs/data-flow.md` for complete trace path documentation.
 
 ---
 

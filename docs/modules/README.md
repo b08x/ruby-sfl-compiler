@@ -8,7 +8,9 @@ This directory contains detailed documentation for each major module in the sfl-
 
 | Module | Location | Description |
 |--------|----------|-------------|
+| **PassOneEngine** | `lib/sfl/compiler/pass_one/pass_one_engine.rb` | spaCy-based syntactic extraction engine |
 | **PassTwoEngine** | `lib/sfl/compiler/pass_two/pass_two_engine.rb` | Core LLM annotation engine for interpersonal and textual metafunctions |
+| **Pipeline** | `lib/sfl/compiler/pipeline.rb` | Two-pass compilation orchestrator with caching and storage |
 | **PipelineCache** | `lib/sfl/compiler/storage/pipeline_cache.rb` | Disk-based cache enabling resume after partial failures |
 | **ConversationAnalyzer** | `lib/sfl/compiler/analysis/conversation_analyzer.rb` | Aggregates annotations into turn-level metrics and insights |
 | **KnowledgeBaseAnalyzer** | `lib/sfl/compiler/analysis/knowledge_base_analyzer.rb` | Analyzes document collections for content type, quality, and migration readiness |
@@ -16,6 +18,13 @@ This directory contains detailed documentation for each major module in the sfl-
 | **LangfuseReachability** | `lib/sfl/compiler/langfuse_reachability.rb` | Pre-flight check that verifies Langfuse is reachable before enabling tracing |
 | **CrossDocumentGraph** | `lib/sfl/compiler/cross_document_graph.rb` | Query-time graph across stored documents for multi-source synthesis |
 | **SprintWorkflow** | `lib/sfl/compiler/workflows/sprint_workflow.rb` | Batch workflow that runs analyses and collects per-item failures |
+| **HybridRetriever** | `lib/sfl/compiler/retrieval/hybrid_retriever.rb` | RRF fusion of semantic + keyword search with scalar filters |
+| **Embedder** | `lib/sfl/compiler/retrieval/embedder.rb` | Text → 768-dim vector embedding via Ollama |
+| **TenorTracker** | `lib/sfl/compiler/analysis/tenor_tracker.rb` | Formality shift detection across conversation turns |
+| **CohesionAnalyzer** | `lib/sfl/compiler/analysis/cohesion_analyzer.rb` | Lexical repetition, conjunction, and pronoun density metrics |
+| **SpeakerProfiler** | `lib/sfl/compiler/analysis/speaker_profiler.rb` | Per-speaker linguistic pattern aggregation |
+| **CorrelationAnalyzer** | `lib/sfl/compiler/analysis/correlation_analyzer.rb` | Process type × tenor/modality correlation analysis |
+| **TopicModeler** | `lib/sfl/compiler/analysis/topic_modeler.rb` | LDA/HDP topic clustering for conversation turns |
 
 ---
 
@@ -24,13 +33,14 @@ This directory contains detailed documentation for each major module in the sfl-
 The modules are organized by their functional communities:
 
 ### Core Pipeline
-- PassTwoEngine
 - PassOneEngine
-- SFLAnnotator / SFLBatchAnnotator
+- PassTwoEngine
 - Pipeline
+- IdeationalExtractor
 
 ### Parallel Processing
 - CompileTurnJob
+- CompileSectionJob
 - SprintWorkflow
 
 ### Storage & Caching
@@ -42,11 +52,11 @@ The modules are organized by their functional communities:
 ### Analysis & Aggregation
 - ConversationAnalyzer
 - KnowledgeBaseAnalyzer
+- TenorTracker
 - CohesionAnalyzer
 - SpeakerProfiler
-- TenorTracker
-- TopicModeler
 - CorrelationAnalyzer
+- TopicModeler
 
 ### Retrieval
 - Embedder
@@ -59,6 +69,7 @@ The modules are organized by their functional communities:
 - MarkdownFormatter
 - NarrativeFormatter
 - NarrativeGenerator
+- KBReportWriter
 
 ---
 

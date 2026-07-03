@@ -1,60 +1,48 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Serving API (16 nodes, 22 edges)
-    subgraph serve_api_compiler_retrieval_hybrid_retriever_rb_edab0fcc["compiler/retrieval/hybrid_retriever.rb"]
-        retrieval_hybrid_retriever_hybridretriever_be70b989("HybridRetriever<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b("retrieve()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_apply_95985841("apply_filters()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_initi_33e29682("initialize()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c("keyword_search()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26("reciprocal_rank_fusion()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_hybridretriever_seman_536c621c("semantic_search()<br/><small>compiler/retrieval/hybrid_retriever.rb</small>")
-        retrieval_hybrid_retriever_85ebcc67("hybrid_retriever.rb")
-    end
-    subgraph serve_api_compiler_retrieval_embedder_rb_f1a565d3["compiler/retrieval/embedder.rb"]
-        retrieval_embedder_embedder_18bbb897("Embedder<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_embedder_embed_63c12c1f("embed()<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_embedder_initialize_740507d3("initialize()<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_embedder_call_ruby_llm_df4ff24e("call_ruby_llm()<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9("configure_ruby_llm()<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_embedder_openai_compatible_ba_530b291f("openai_compatible_base()<br/><small>compiler/retrieval/embedder.rb</small>")
-        retrieval_embedder_507174a5("embedder.rb")
-    end
-    sfl_compiler_configure_6d77cc62("configure()<br/><small>lib/sfl/compiler.rb</small>")
-    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_call_ruby_llm_df4ff24e
-    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9
-    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_embed_63c12c1f
-    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_initialize_740507d3
-    retrieval_embedder_embedder_18bbb897 -->|method| retrieval_embedder_embedder_openai_compatible_ba_530b291f
-    retrieval_embedder_embedder_initialize_740507d3 -->|calls| retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9
-    retrieval_embedder_embedder_embed_63c12c1f -->|calls| retrieval_embedder_embedder_call_ruby_llm_df4ff24e
-    retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9 -->|calls| retrieval_embedder_embedder_openai_compatible_ba_530b291f
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_apply_95985841
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_initi_33e29682
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b
-    retrieval_hybrid_retriever_hybridretriever_be70b989 -->|method| retrieval_hybrid_retriever_hybridretriever_seman_536c621c
-    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_apply_95985841
-    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c
-    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26
-    retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b -->|calls| retrieval_hybrid_retriever_hybridretriever_seman_536c621c
-    class retrieval_hybrid_retriever_hybridretriever_be70b989 klass;
-    class retrieval_hybrid_retriever_hybridretriever_retri_614a2f3b function;
-    class retrieval_hybrid_retriever_hybridretriever_apply_95985841 function;
-    class retrieval_hybrid_retriever_hybridretriever_initi_33e29682 function;
-    class retrieval_hybrid_retriever_hybridretriever_keywo_b8a9169c function;
-    class retrieval_hybrid_retriever_hybridretriever_recip_07a4ff26 function;
-    class retrieval_hybrid_retriever_hybridretriever_seman_536c621c function;
-    class retrieval_hybrid_retriever_85ebcc67 module;
-    class retrieval_embedder_embedder_18bbb897 klass;
-    class retrieval_embedder_embedder_embed_63c12c1f function;
-    class retrieval_embedder_embedder_initialize_740507d3 function;
-    class retrieval_embedder_embedder_call_ruby_llm_df4ff24e function;
-    class retrieval_embedder_embedder_configure_ruby_llm_03dfcaa9 function;
-    class retrieval_embedder_embedder_openai_compatible_ba_530b291f function;
-    class retrieval_embedder_507174a5 module;
-    class sfl_compiler_configure_6d77cc62 function;
+    %% Section: Topic Modeling (31 nodes, 35 edges)
+    compiler_types_load_annotated_clause_6124dd4c("load_annotated_clause()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_example_passage_d5d404ae("load_example_passage()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_key_moment_3ca406d6("load_key_moment()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_speaker_profile_bd013460("load_speaker_profile()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_conversation_turn_68ad87d2("load_conversation_turn()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_analysis_result_21b27162("load_analysis_result()<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_analysisresult_7beff7c2("AnalysisResult<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_annotatedclause_ffd3d9b3("AnnotatedClause<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_cohesionmetrics_bf728e18("CohesionMetrics<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_conversationturn_3fe64342("ConversationTurn<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_dispatchdecision_5fa64a85("DispatchDecision<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_examplepassage_1bda8070("ExamplePassage<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_ideationalpayload_fdfaf973("IdeationalPayload<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_interpersonalpayload_09352c53("InterpersonalPayload<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_keymoment_0c86f98e("KeyMoment<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_knowledgeartifact_752c3daa("KnowledgeArtifact<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_knowledgebasereport_b6e407d9("KnowledgeBaseReport<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_migrationmanifestentry_b921c516("MigrationManifestEntry<br/><small>sfl/compiler/types.rb</small>")
+    compiler_types_load_annotated_clause_6124dd4c -->|calls| compiler_types_load_conversation_turn_68ad87d2
+    compiler_types_load_conversation_turn_68ad87d2 -->|calls| compiler_types_load_analysis_result_21b27162
+    compiler_types_load_speaker_profile_bd013460 -->|calls| compiler_types_load_analysis_result_21b27162
+    compiler_types_load_key_moment_3ca406d6 -->|calls| compiler_types_load_analysis_result_21b27162
+    compiler_types_load_example_passage_d5d404ae -->|calls| compiler_types_load_analysis_result_21b27162
+    %% Omitted for readability: 13 nodes, 0 edges
+    class compiler_types_load_annotated_clause_6124dd4c function;
+    class compiler_types_load_example_passage_d5d404ae function;
+    class compiler_types_load_key_moment_3ca406d6 function;
+    class compiler_types_load_speaker_profile_bd013460 function;
+    class compiler_types_load_conversation_turn_68ad87d2 function;
+    class compiler_types_load_analysis_result_21b27162 function;
+    class compiler_types_analysisresult_7beff7c2 klass;
+    class compiler_types_annotatedclause_ffd3d9b3 klass;
+    class compiler_types_cohesionmetrics_bf728e18 klass;
+    class compiler_types_conversationturn_3fe64342 klass;
+    class compiler_types_dispatchdecision_5fa64a85 klass;
+    class compiler_types_examplepassage_1bda8070 klass;
+    class compiler_types_ideationalpayload_fdfaf973 klass;
+    class compiler_types_interpersonalpayload_09352c53 klass;
+    class compiler_types_keymoment_0c86f98e klass;
+    class compiler_types_knowledgeartifact_752c3daa klass;
+    class compiler_types_knowledgebasereport_b6e407d9 klass;
+    class compiler_types_migrationmanifestentry_b921c516 klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

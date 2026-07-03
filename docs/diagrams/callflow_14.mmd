@@ -1,14 +1,35 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Cohesion Analysis (3 nodes, 2 edges)
-    scripts_parse_metacognitive_coprocessor_665feac7("parse_metacognitive_coprocessor.rb")
-    scripts_parse_metacognitive_coprocessor_log_4b3307f5("log()<br/><small>scripts/parse_metacognitive_coprocessor.rb</small>")
-    scripts_parse_metacognitive_coprocessor_separato_39b10a7d("separator()<br/><small>scripts/parse_metacognitive_coprocessor.rb</small>")
-    scripts_parse_metacognitive_coprocessor_665feac7 -->|contains| scripts_parse_metacognitive_coprocessor_log_4b3307f5
-    scripts_parse_metacognitive_coprocessor_665feac7 -->|contains| scripts_parse_metacognitive_coprocessor_separato_39b10a7d
-    class scripts_parse_metacognitive_coprocessor_665feac7 module;
-    class scripts_parse_metacognitive_coprocessor_log_4b3307f5 function;
-    class scripts_parse_metacognitive_coprocessor_separato_39b10a7d function;
+    %% Section: Markdown Loading (10 nodes, 9 edges)
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7("compiler.rb")
+    sfl_compiler_bootstraperror_8501901d("BootstrapErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_configurationerror_243f3225("ConfigurationErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_configure_6d77cc62("configure()lib/sfl/compiler.rb")
+    sfl_compiler_insufficientdataerror_ca67f8d5("InsufficientDataErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_narrativeerror_0a69e4c2("NarrativeErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_passoneerror_aaa79db1("PassOneErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_passtwoerror_952a5c22("PassTwoErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_questiongrapherror_63b07693("QuestionGraphErrorlib/<br/><small>sfl/compiler.rb</small>")
+    sfl_compiler_topicmodelererror_e4ac078f("TopicModelerErrorlib/<br/><small>sfl/compiler.rb</small>")
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_bootstraperror_8501901d
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_configurationerror_243f3225
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_configure_6d77cc62
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_insufficientdataerror_ca67f8d5
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_narrativeerror_0a69e4c2
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_passoneerror_aaa79db1
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_passtwoerror_952a5c22
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_questiongrapherror_63b07693
+    lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 -->|contains| sfl_compiler_topicmodelererror_e4ac078f
+    class lib_sfl_compiler_rb_sfl_compiler_ecdfa8e7 module;
+    class sfl_compiler_bootstraperror_8501901d klass;
+    class sfl_compiler_configurationerror_243f3225 klass;
+    class sfl_compiler_configure_6d77cc62 function;
+    class sfl_compiler_insufficientdataerror_ca67f8d5 klass;
+    class sfl_compiler_narrativeerror_0a69e4c2 klass;
+    class sfl_compiler_passoneerror_aaa79db1 klass;
+    class sfl_compiler_passtwoerror_952a5c22 klass;
+    class sfl_compiler_questiongrapherror_63b07693 klass;
+    class sfl_compiler_topicmodelererror_e4ac078f klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

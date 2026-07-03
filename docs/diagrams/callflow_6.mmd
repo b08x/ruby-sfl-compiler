@@ -1,59 +1,69 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Ingestion & Updates (96 nodes, 143 edges)
-    subgraph ingest_cache_update_compiler_analysis_topic_mode_2a162623["compiler/analysis/topic_modeler.rb"]
-        analysis_topic_modeler_topicmodeler_7c56ddc2("TopicModeler<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f("detect_topic_shifts()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_fit_e9c2e99c("fit()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_initialize_be9d7e39("initialize()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_load_model_5b54b5a8("load_model()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_save_afa76bfb("save()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topicmodeler_turn_distrib_5324a076("turn_distributions()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_tokenize_a0d8fa87("tokenize()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_cosine_distance_f4c683ed("cosine_distance()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_topic_name_b8f92bd8("topic_name()<br/><small>compiler/analysis/topic_modeler.rb</small>")
-        analysis_topic_modeler_assign_topics_to_turns_06b015c2("assign_topics_to_turns()<br/><small>compiler/analysis/topic_modeler.rb</small>")
+    %% Section: Classification Registry (47 nodes, 98 edges)
+    subgraph classification_registry_compiler_pass_two_pass_t_67500f7c["compiler/pass_two/pass_two_engine.rb"]
+        pass_two_pass_two_engine_annotate_chunk_70b2c869("annotate_chunk()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_interpersonal_from_54cfaf6d("interpersonal_from()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_annotate_interpersonal_3d71862d("annotate_interpersonal()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_default_chunk_e7977e94("default_chunk()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_passtwoengine_annotate_997aef16("annotate_batch()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_textual_from_ac6ee295("textual_from()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_passtwoengine_268bffbd("PassTwoEngine<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_passtwoengine_annotate_1ca3b46a("annotate()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_parallel_map_7da56a45("parallel_map()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f("call()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_default_circuit_breaker_629ed319("default_circuit_breaker()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_annotator_for_04789f28("annotator_for()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
+        pass_two_pass_two_engine_try_providers_22b48f36("try_providers()<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
     end
-    subgraph ingest_cache_update_compiler_formatters_markdown_d891989c["compiler/formatters/markdown_formatter.rb"]
-        formatters_markdown_formatter_markdownformatter_a25bab02("MarkdownFormatter<br/><small>compiler/formatters/markdown_formatter.rb</small>")
-        formatters_markdown_formatter_markdownformatter_a2c6e035("actor_label()<br/><small>compiler/formatters/markdown_formatter.rb</small>")
-        formatters_markdown_formatter_markdownformatter_26329071("actors_list_label()<br/><small>compiler/formatters/markdown_formatter.rb</small>")
+    subgraph classification_registry_sfl_compiler_classificat_a72ecc55["sfl/compiler/classification_registry.rb"]
+        compiler_classification_registry_normalize_04e32a67("normalize()<br/><small>sfl/compiler/classification_registry.rb</small>")
+        compiler_classification_registry_dimension_confi_edad6450("dimension_config()<br/><small>sfl/compiler/classification_registry.rb</small>")
+        compiler_classification_registry_fuzzy_lookup_b26dfc3c("fuzzy_lookup()<br/><small>sfl/compiler/classification_registry.rb</small>")
+        compiler_classification_registry_canonical_value_caf1cfa3("canonical_values()<br/><small>sfl/compiler/classification_registry.rb</small>")
+        compiler_classification_registry_signature_descr_eb60eb1a("signature_description()<br/><small>sfl/compiler/classification_registry.rb</small>")
     end
-    chat_app_app_147c126d("App<br/><small>compiler/chat/app.rb</small>")
-    chat_session_session_f70f055a("Session<br/><small>compiler/chat/session.rb</small>")
-    storage_pipeline_cache_pipelinecache_c1343951("PipelineCache<br/><small>compiler/storage/pipeline_cache.rb</small>")
-    compiler_markdown_loader_markdownloader_06e0c660("MarkdownLoader<br/><small>sfl/compiler/markdown_loader.rb</small>")
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_fit_e9c2e99c
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_initialize_be9d7e39
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_load_model_5b54b5a8
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_save_afa76bfb
-    analysis_topic_modeler_topicmodeler_7c56ddc2 -->|method| analysis_topic_modeler_topicmodeler_turn_distrib_5324a076
-    analysis_topic_modeler_topicmodeler_fit_e9c2e99c -->|calls| analysis_topic_modeler_tokenize_a0d8fa87
-    analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f -->|calls| analysis_topic_modeler_cosine_distance_f4c683ed
-    analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f -->|calls| analysis_topic_modeler_topic_name_b8f92bd8
-    analysis_topic_modeler_assign_topics_to_turns_06b015c2 -->|calls| analysis_topic_modeler_tokenize_a0d8fa87
-    formatters_markdown_formatter_markdownformatter_a25bab02 -->|method| formatters_markdown_formatter_markdownformatter_a2c6e035
-    formatters_markdown_formatter_markdownformatter_a25bab02 -->|method| formatters_markdown_formatter_markdownformatter_26329071
-    %% Omitted for readability: 78 nodes, 0 edges
-    class analysis_topic_modeler_topicmodeler_7c56ddc2 klass;
-    class analysis_topic_modeler_topicmodeler_detect_topic_7a164f9f function;
-    class analysis_topic_modeler_topicmodeler_fit_e9c2e99c function;
-    class analysis_topic_modeler_topicmodeler_initialize_be9d7e39 function;
-    class analysis_topic_modeler_topicmodeler_load_model_5b54b5a8 function;
-    class analysis_topic_modeler_topicmodeler_save_afa76bfb function;
-    class analysis_topic_modeler_topicmodeler_turn_distrib_5324a076 function;
-    class analysis_topic_modeler_tokenize_a0d8fa87 function;
-    class analysis_topic_modeler_cosine_distance_f4c683ed function;
-    class analysis_topic_modeler_topic_name_b8f92bd8 function;
-    class analysis_topic_modeler_assign_topics_to_turns_06b015c2 function;
-    class formatters_markdown_formatter_markdownformatter_a25bab02 klass;
-    class formatters_markdown_formatter_markdownformatter_a2c6e035 function;
-    class formatters_markdown_formatter_markdownformatter_26329071 function;
-    class chat_app_app_147c126d klass;
-    class chat_session_session_f70f055a klass;
-    class storage_pipeline_cache_pipelinecache_c1343951 klass;
-    class compiler_markdown_loader_markdownloader_06e0c660 klass;
+    compiler_classification_registry_normalize_04e32a67 -->|calls| compiler_classification_registry_dimension_confi_edad6450
+    compiler_classification_registry_normalize_04e32a67 -->|calls| compiler_classification_registry_fuzzy_lookup_b26dfc3c
+    compiler_classification_registry_canonical_value_caf1cfa3 -->|calls| compiler_classification_registry_dimension_confi_edad6450
+    compiler_classification_registry_signature_descr_eb60eb1a -->|calls| compiler_classification_registry_dimension_confi_edad6450
+    pass_two_pass_two_engine_passtwoengine_268bffbd -->|method| pass_two_pass_two_engine_passtwoengine_annotate_1ca3b46a
+    pass_two_pass_two_engine_passtwoengine_268bffbd -->|method| pass_two_pass_two_engine_passtwoengine_annotate_997aef16
+    pass_two_pass_two_engine_passtwoengine_annotate_997aef16 -->|calls| pass_two_pass_two_engine_annotate_chunk_70b2c869
+    pass_two_pass_two_engine_passtwoengine_annotate_997aef16 -->|calls| pass_two_pass_two_engine_parallel_map_7da56a45
+    pass_two_pass_two_engine_passtwoengine_annotate_997aef16 -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    pass_two_pass_two_engine_passtwoengine_annotate_1ca3b46a -->|calls| pass_two_pass_two_engine_annotate_interpersonal_3d71862d
+    pass_two_pass_two_engine_default_circuit_breaker_629ed319 -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    pass_two_pass_two_engine_annotator_for_04789f28 -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    pass_two_pass_two_engine_annotator_for_04789f28 -->|calls| pass_two_pass_two_engine_try_providers_22b48f36
+    pass_two_pass_two_engine_annotate_chunk_70b2c869 -->|calls| pass_two_pass_two_engine_default_chunk_e7977e94
+    pass_two_pass_two_engine_annotate_chunk_70b2c869 -->|calls| pass_two_pass_two_engine_interpersonal_from_54cfaf6d
+    pass_two_pass_two_engine_annotate_chunk_70b2c869 -->|calls| pass_two_pass_two_engine_textual_from_ac6ee295
+    pass_two_pass_two_engine_annotate_chunk_70b2c869 -->|calls| pass_two_pass_two_engine_try_providers_22b48f36
+    pass_two_pass_two_engine_try_providers_22b48f36 -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    pass_two_pass_two_engine_interpersonal_from_54cfaf6d -->|calls| pass_two_pass_two_engine_annotate_interpersonal_3d71862d
+    pass_two_pass_two_engine_textual_from_ac6ee295 -->|calls| pass_two_pass_two_engine_annotate_interpersonal_3d71862d
+    pass_two_pass_two_engine_parallel_map_7da56a45 -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    pass_two_pass_two_engine_annotate_interpersonal_3d71862d -->|calls| pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f
+    %% Omitted for readability: 29 nodes, 0 edges
+    class pass_two_pass_two_engine_annotate_chunk_70b2c869 function;
+    class pass_two_pass_two_engine_interpersonal_from_54cfaf6d function;
+    class pass_two_pass_two_engine_annotate_interpersonal_3d71862d function;
+    class pass_two_pass_two_engine_default_chunk_e7977e94 function;
+    class pass_two_pass_two_engine_passtwoengine_annotate_997aef16 function;
+    class pass_two_pass_two_engine_textual_from_ac6ee295 function;
+    class pass_two_pass_two_engine_passtwoengine_268bffbd klass;
+    class pass_two_pass_two_engine_passtwoengine_annotate_1ca3b46a function;
+    class pass_two_pass_two_engine_parallel_map_7da56a45 function;
+    class pass_two_pass_two_engine_sflbatchannotator_call_5b68ce6f function;
+    class pass_two_pass_two_engine_default_circuit_breaker_629ed319 function;
+    class pass_two_pass_two_engine_annotator_for_04789f28 function;
+    class pass_two_pass_two_engine_try_providers_22b48f36 function;
+    class compiler_classification_registry_normalize_04e32a67 function;
+    class compiler_classification_registry_dimension_confi_edad6450 function;
+    class compiler_classification_registry_fuzzy_lookup_b26dfc3c function;
+    class compiler_classification_registry_canonical_value_caf1cfa3 function;
+    class compiler_classification_registry_signature_descr_eb60eb1a function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

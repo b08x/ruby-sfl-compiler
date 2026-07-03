@@ -1,21 +1,36 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Markdown Loader (6 nodes, 5 edges)
-    experiments_01_fca_proof_of_concept_simplefca_92ccc686("SimpleFCA<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
-    experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2("find_concepts()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
-    experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9("find_implications()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
-    experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af("initialize()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
-    experiments_01_fca_proof_of_concept_7c5e32ba("01_fca_proof_of_concept.rb")
-    experiments_01_fca_proof_of_concept_extract_attr_19379f6b("extract_attributes()<br/><small>experiments/01_fca_proof_of_concept.rb</small>")
-    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2
-    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9
-    experiments_01_fca_proof_of_concept_simplefca_92ccc686 -->|method| experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af
-    class experiments_01_fca_proof_of_concept_simplefca_92ccc686 klass;
-    class experiments_01_fca_proof_of_concept_simplefca_fi_91c2f2d2 function;
-    class experiments_01_fca_proof_of_concept_simplefca_fi_51459eb9 function;
-    class experiments_01_fca_proof_of_concept_simplefca_in_af3fe7af function;
-    class experiments_01_fca_proof_of_concept_7c5e32ba module;
-    class experiments_01_fca_proof_of_concept_extract_attr_19379f6b function;
+    %% Section: Pass One Engine (10 nodes, 11 edges)
+    compiler_cognitive_gas_cognitivegas_45a7fadf("CognitiveGas<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_charge_batch_d65680d4("charge_batch()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_exhausted_58eeebc1("exhausted?()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_call_c7cc0f67("call()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_charge_4f3cdfc4("charge()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_entry_cost_ee9ad5b5("entry_cost()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_initialize_6a3a6876("initialize()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_remaining_caa501e6("remaining()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_cognitivegas_reset_6cc1d6d6("reset!()<br/><small>sfl/compiler/cognitive_gas.rb</small>")
+    compiler_cognitive_gas_6cb01440("cognitive_gas.rb")
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_call_c7cc0f67
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_charge_4f3cdfc4
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_charge_batch_d65680d4
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_entry_cost_ee9ad5b5
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_exhausted_58eeebc1
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_initialize_6a3a6876
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_remaining_caa501e6
+    compiler_cognitive_gas_cognitivegas_45a7fadf -->|method| compiler_cognitive_gas_cognitivegas_reset_6cc1d6d6
+    compiler_cognitive_gas_cognitivegas_exhausted_58eeebc1 -->|calls| compiler_cognitive_gas_cognitivegas_call_c7cc0f67
+    compiler_cognitive_gas_cognitivegas_charge_batch_d65680d4 -->|calls| compiler_cognitive_gas_cognitivegas_entry_cost_ee9ad5b5
+    class compiler_cognitive_gas_cognitivegas_45a7fadf klass;
+    class compiler_cognitive_gas_cognitivegas_charge_batch_d65680d4 function;
+    class compiler_cognitive_gas_cognitivegas_exhausted_58eeebc1 function;
+    class compiler_cognitive_gas_cognitivegas_call_c7cc0f67 function;
+    class compiler_cognitive_gas_cognitivegas_charge_4f3cdfc4 function;
+    class compiler_cognitive_gas_cognitivegas_entry_cost_ee9ad5b5 function;
+    class compiler_cognitive_gas_cognitivegas_initialize_6a3a6876 function;
+    class compiler_cognitive_gas_cognitivegas_remaining_caa501e6 function;
+    class compiler_cognitive_gas_cognitivegas_reset_6cc1d6d6 function;
+    class compiler_cognitive_gas_6cb01440 module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

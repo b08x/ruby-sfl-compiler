@@ -1,45 +1,47 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>79 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline92 nodes")
     class EXTRACT_PIPELINE_5F350230 module;
-    BUILD_GRAPH_321CBB04("Graph Build<br/><small>23 nodes</small>")
+    BUILD_GRAPH_321CBB04("Graph Build188 nodes")
     class BUILD_GRAPH_321CBB04 module;
-    ANALYSIS_CLUSTERING_C79796DA("Analysis & Clustering<br/><small>35 nodes</small>")
-    class ANALYSIS_CLUSTERING_C79796DA module;
-    OUTPUTS_DOCS_ED82387C("Outputs & Docs<br/><small>62 nodes</small>")
+    OUTPUTS_DOCS_ED82387C("Outputs & Docs165 nodes")
     class OUTPUTS_DOCS_ED82387C module;
-    CLI_SKILLS_9964CBB8("CLI & Skill Installers<br/><small>2 nodes</small>")
-    class CLI_SKILLS_9964CBB8 module;
-    INGEST_CACHE_UPDATE_FF457338("Ingestion & Updates<br/><small>96 nodes</small>")
+    INGEST_CACHE_UPDATE_FF457338("Ingestion & Updates119 nodes")
     class INGEST_CACHE_UPDATE_FF457338 module;
-    SERVE_API_35EC8E86("Serving API<br/><small>16 nodes</small>")
+    SERVE_API_35EC8E86("Serving API86 nodes")
     class SERVE_API_35EC8E86 module;
-    CORRELATION_ANALYSIS_AA399C69("Correlation Analysis<br/><small>28 nodes</small>")
-    class CORRELATION_ANALYSIS_AA399C69 module;
-    CONVERSATION_ANALYSIS_17C283AE("Conversation Analysis<br/><small>27 nodes</small>")
-    class CONVERSATION_ANALYSIS_17C283AE module;
-    HYBRID_RETRIEVER_975D0030("Hybrid Retriever<br/><small>18 nodes</small>")
-    class HYBRID_RETRIEVER_975D0030 module;
-    DATABASE_MIGRATIONS_37A83AD7("Database & Migrations<br/><small>8 nodes</small>")
+    CLASSIFICATION_REGISTRY_D39798EE("Classification Registry47 nodes")
+    class CLASSIFICATION_REGISTRY_D39798EE module;
+    TOPIC_MODELING_68E8584A("Topic Modeling31 nodes")
+    class TOPIC_MODELING_68E8584A module;
+    CHAT_SESSION_F300C146("Chat & Session16 nodes")
+    class CHAT_SESSION_F300C146 module;
+    TYPES_STRUCTS_4188A463("Types & Structs15 nodes")
+    class TYPES_STRUCTS_4188A463 module;
+    DATABASE_MIGRATIONS_37A83AD7("Database Migrations13 nodes")
     class DATABASE_MIGRATIONS_37A83AD7 module;
-    MARKDOWN_LOADER_7351760A("Markdown Loader<br/><small>6 nodes</small>")
-    class MARKDOWN_LOADER_7351760A module;
-    SPEAKER_PROFILER_3A42CFA9("Speaker Profiler<br/><small>4 nodes</small>")
-    class SPEAKER_PROFILER_3A42CFA9 module;
-    COHESION_ANALYSIS_FD1FF4CE("Cohesion Analysis<br/><small>3 nodes</small>")
-    class COHESION_ANALYSIS_FD1FF4CE module;
-    OTHER_D0941E68("Other<br/><small>9 nodes</small>")
+    TENOR_TRACKING_A0CC376F("Tenor Tracking10 nodes")
+    class TENOR_TRACKING_A0CC376F module;
+    PASS_ONE_ENGINE_21E59C8B("Pass One Engine10 nodes")
+    class PASS_ONE_ENGINE_21E59C8B module;
+    FALCON_API_496FAE07("Falcon API10 nodes")
+    class FALCON_API_496FAE07 module;
+    MARKDOWN_LOADING_2E669BB4("Markdown Loading10 nodes")
+    class MARKDOWN_LOADING_2E669BB4 module;
+    OTHER_D0941E68("Other103 nodes")
     class OTHER_D0941E68 module;
-    OUTPUTS_DOCS_ED82387C -->|method x2| INGEST_CACHE_UPDATE_FF457338
-    CORRELATION_ANALYSIS_AA399C69 -->|contains x2| EXTRACT_PIPELINE_5F350230
+    OUTPUTS_DOCS_ED82387C -->|calls x5| BUILD_GRAPH_321CBB04
+    TYPES_STRUCTS_4188A463 -->|contains x5| OTHER_D0941E68
+    BUILD_GRAPH_321CBB04 -->|calls x3| EXTRACT_PIPELINE_5F350230
+    OUTPUTS_DOCS_ED82387C -->|contains x3| INGEST_CACHE_UPDATE_FF457338
+    BUILD_GRAPH_321CBB04 -->|calls x3| INGEST_CACHE_UPDATE_FF457338
+    MARKDOWN_LOADING_2E669BB4 -->|contains x2| OTHER_D0941E68
+    MARKDOWN_LOADING_2E669BB4 -->|contains| OUTPUTS_DOCS_ED82387C
+    MARKDOWN_LOADING_2E669BB4 -->|contains| EXTRACT_PIPELINE_5F350230
     BUILD_GRAPH_321CBB04 -->|method| OUTPUTS_DOCS_ED82387C
-    CONVERSATION_ANALYSIS_17C283AE -->|method| INGEST_CACHE_UPDATE_FF457338
-    OUTPUTS_DOCS_ED82387C -->|method| EXTRACT_PIPELINE_5F350230
-    EXTRACT_PIPELINE_5F350230 -->|contains| INGEST_CACHE_UPDATE_FF457338
-    EXTRACT_PIPELINE_5F350230 -->|contains| SERVE_API_35EC8E86
-    EXTRACT_PIPELINE_5F350230 -->|calls| CORRELATION_ANALYSIS_AA399C69
-    INGEST_CACHE_UPDATE_FF457338 -->|method| ANALYSIS_CLUSTERING_C79796DA
-    ANALYSIS_CLUSTERING_C79796DA -->|calls| INGEST_CACHE_UPDATE_FF457338
+    EXTRACT_PIPELINE_5F350230 -->|contains| OTHER_D0941E68
+    SERVE_API_35EC8E86 -->|method| INGEST_CACHE_UPDATE_FF457338
+    INGEST_CACHE_UPDATE_FF457338 -->|calls| SERVE_API_35EC8E86
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

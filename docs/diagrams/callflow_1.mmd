@@ -1,67 +1,60 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (79 nodes, 104 edges)
-    subgraph extract_pipeline_compiler_llm_tools_theme_rheme_6a5fca88["compiler/llm_tools/theme_rheme_extractor.rb"]
-        llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3("ThemeRhemeExtractor<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
-        llm_tools_theme_rheme_extractor_themerhemeextrac_f230448e("build_sfl_prompt()<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
-        llm_tools_theme_rheme_extractor_themerhemeextrac_94e13851("call_llm()<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
-        llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8("execute()<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
-        llm_tools_theme_rheme_extractor_themerhemeextrac_6ffa85dc("parse_theme_rheme_response()<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
+    %% Section: Extraction Pipeline (92 nodes, 115 edges)
+    subgraph extract_pipeline_sfl_compiler_bootstrap_rb_e74b4ee5["sfl/compiler/bootstrap.rb"]
+        compiler_bootstrap_call_137fcbed("call()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_apply_generation_params_ef5902d0("apply_generation_params()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_configure_jobs_e5647414("configure_jobs()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_configure_llm_d28028e1("configure_llm()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_configure_observability_32ed6f32("configure_observability()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_configure_vendored_python_c6f6b877("configure_vendored_python()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_connect_db_01db0cda("connect_db()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_api_key_for_9cf7eece("api_key_for()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_apply_request_timeout_6cee0ce4("apply_request_timeout()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_configure_ruby_llm_provider_9988fdbc("ruby llm provider()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_safeopenaiclientproxy_7f3bdd0d("SafeOpenAIClientProxy<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_safeopenaiclientproxy_initial_1a035dbb("initialize()<br/><small>sfl/compiler/bootstrap.rb</small>")
+        compiler_bootstrap_safeopenaiclientproxy_method_6d3341c2("method_missing()<br/><small>sfl/compiler/bootstrap.rb</small>")
     end
     subgraph extract_pipeline_compiler_pass_one_ideational_ex_2ca7f799["compiler/pass_one/ideational_extractor.rb"]
         pass_one_ideational_extractor_ideationalextracto_41fbfcca("IdeationalExtractor<br/><small>compiler/pass_one/ideational_extractor.rb</small>")
         pass_one_ideational_extractor_ideationalextracto_c9d244ba("extract()<br/><small>compiler/pass_one/ideational_extractor.rb</small>")
-        pass_one_ideational_extractor_ideationalextracto_fba12c3a("behavioral_verb?()<br/><small>compiler/pass_one/ideational_extractor.rb</small>")
-        pass_one_ideational_extractor_ideationalextracto_55363a1f("build_transitivity_hash()<br/><small>compiler/pass_one/ideational_extractor.rb</small>")
-        pass_one_ideational_extractor_ideationalextracto_601cafa7("classify_process()<br/><small>compiler/pass_one/ideational_extractor.rb</small>")
     end
-    subgraph extract_pipeline_sfl_compiler_bootstrap_rb_e74b4ee5["sfl/compiler/bootstrap.rb"]
-        compiler_bootstrap_call_137fcbed("call()<br/><small>sfl/compiler/bootstrap.rb</small>")
-        compiler_bootstrap_configure_llm_d28028e1("configure_llm()<br/><small>sfl/compiler/bootstrap.rb</small>")
-        compiler_bootstrap_connect_db_01db0cda("connect_db()<br/><small>sfl/compiler/bootstrap.rb</small>")
-        compiler_bootstrap_api_key_for_9cf7eece("api_key_for()<br/><small>sfl/compiler/bootstrap.rb</small>")
-        compiler_bootstrap_apply_request_timeout_6cee0ce4("apply_request_timeout()<br/><small>sfl/compiler/bootstrap.rb</small>")
-    end
-    pass_two_pass_two_engine_sflannotator_728897c4("SFLAnnotator<br/><small>compiler/pass_two/pass_two_engine.rb</small>")
-    storage_clause_repository_clauserepository_362861bc("ClauseRepository<br/><small>compiler/storage/clause_repository.rb</small>")
-    storage_database_migrator_ab243aa2("Migrator<br/><small>compiler/storage/database.rb</small>")
+    llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3("ThemeRhemeExtractor<br/><small>compiler/llm_tools/theme_rheme_extractor.rb</small>")
+    pass_one_pass_one_engine_passoneengine_1967dc5f("PassOneEngine<br/><small>compiler/pass_one/pass_one_engine.rb</small>")
+    compiler_pipeline_pipeline_554e7cf0("Pipeline<br/><small>sfl/compiler/pipeline.rb</small>")
+    compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_apply_generation_params_ef5902d0
+    compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_configure_jobs_e5647414
     compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_configure_llm_d28028e1
+    compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_configure_observability_32ed6f32
+    compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_configure_vendored_python_c6f6b877
     compiler_bootstrap_call_137fcbed -->|calls| compiler_bootstrap_connect_db_01db0cda
     compiler_bootstrap_configure_llm_d28028e1 -->|calls| compiler_bootstrap_api_key_for_9cf7eece
+    compiler_bootstrap_configure_llm_d28028e1 -->|calls| compiler_bootstrap_apply_generation_params_ef5902d0
     compiler_bootstrap_configure_llm_d28028e1 -->|calls| compiler_bootstrap_apply_request_timeout_6cee0ce4
-    llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 -->|method| llm_tools_theme_rheme_extractor_themerhemeextrac_f230448e
-    llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 -->|method| llm_tools_theme_rheme_extractor_themerhemeextrac_94e13851
-    llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 -->|method| llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8
-    llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 -->|method| llm_tools_theme_rheme_extractor_themerhemeextrac_6ffa85dc
-    llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8 -->|calls| llm_tools_theme_rheme_extractor_themerhemeextrac_f230448e
-    llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8 -->|calls| llm_tools_theme_rheme_extractor_themerhemeextrac_94e13851
-    llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8 -->|calls| llm_tools_theme_rheme_extractor_themerhemeextrac_6ffa85dc
-    pass_one_ideational_extractor_ideationalextracto_41fbfcca -->|method| pass_one_ideational_extractor_ideationalextracto_fba12c3a
-    pass_one_ideational_extractor_ideationalextracto_41fbfcca -->|method| pass_one_ideational_extractor_ideationalextracto_55363a1f
-    pass_one_ideational_extractor_ideationalextracto_41fbfcca -->|method| pass_one_ideational_extractor_ideationalextracto_601cafa7
+    compiler_bootstrap_configure_llm_d28028e1 -->|calls| compiler_bootstrap_configure_ruby_llm_provider_9988fdbc
+    compiler_bootstrap_safeopenaiclientproxy_7f3bdd0d -->|method| compiler_bootstrap_safeopenaiclientproxy_initial_1a035dbb
+    compiler_bootstrap_safeopenaiclientproxy_7f3bdd0d -->|method| compiler_bootstrap_safeopenaiclientproxy_method_6d3341c2
     pass_one_ideational_extractor_ideationalextracto_41fbfcca -->|method| pass_one_ideational_extractor_ideationalextracto_c9d244ba
-    pass_one_ideational_extractor_ideationalextracto_c9d244ba -->|calls| pass_one_ideational_extractor_ideationalextracto_55363a1f
-    pass_one_ideational_extractor_ideationalextracto_c9d244ba -->|calls| pass_one_ideational_extractor_ideationalextracto_601cafa7
-    pass_one_ideational_extractor_ideationalextracto_601cafa7 -->|calls| pass_one_ideational_extractor_ideationalextracto_fba12c3a
-    %% Omitted for readability: 61 nodes, 0 edges
-    class llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 klass;
-    class llm_tools_theme_rheme_extractor_themerhemeextrac_f230448e function;
-    class llm_tools_theme_rheme_extractor_themerhemeextrac_94e13851 function;
-    class llm_tools_theme_rheme_extractor_themerhemeextrac_6c9be6f8 function;
-    class llm_tools_theme_rheme_extractor_themerhemeextrac_6ffa85dc function;
-    class pass_one_ideational_extractor_ideationalextracto_41fbfcca klass;
-    class pass_one_ideational_extractor_ideationalextracto_c9d244ba function;
-    class pass_one_ideational_extractor_ideationalextracto_fba12c3a function;
-    class pass_one_ideational_extractor_ideationalextracto_55363a1f function;
-    class pass_one_ideational_extractor_ideationalextracto_601cafa7 function;
+    %% Omitted for readability: 74 nodes, 0 edges
     class compiler_bootstrap_call_137fcbed function;
+    class compiler_bootstrap_apply_generation_params_ef5902d0 function;
+    class compiler_bootstrap_configure_jobs_e5647414 function;
     class compiler_bootstrap_configure_llm_d28028e1 function;
+    class compiler_bootstrap_configure_observability_32ed6f32 function;
+    class compiler_bootstrap_configure_vendored_python_c6f6b877 function;
     class compiler_bootstrap_connect_db_01db0cda function;
     class compiler_bootstrap_api_key_for_9cf7eece api;
     class compiler_bootstrap_apply_request_timeout_6cee0ce4 function;
-    class pass_two_pass_two_engine_sflannotator_728897c4 klass;
-    class storage_clause_repository_clauserepository_362861bc klass;
-    class storage_database_migrator_ab243aa2 klass;
+    class compiler_bootstrap_configure_ruby_llm_provider_9988fdbc function;
+    class compiler_bootstrap_safeopenaiclientproxy_7f3bdd0d entry;
+    class compiler_bootstrap_safeopenaiclientproxy_initial_1a035dbb function;
+    class compiler_bootstrap_safeopenaiclientproxy_method_6d3341c2 function;
+    class pass_one_ideational_extractor_ideationalextracto_41fbfcca klass;
+    class pass_one_ideational_extractor_ideationalextracto_c9d244ba function;
+    class llm_tools_theme_rheme_extractor_themerhemeextrac_e030c4d3 klass;
+    class pass_one_pass_one_engine_passoneengine_1967dc5f klass;
+    class compiler_pipeline_pipeline_554e7cf0 klass;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
