@@ -357,39 +357,42 @@ The codebase provides detailed trace paths for navigating the analysis pipelines
 ### Conversation Analysis (In-Process)
 
 ```
-cli.rb:218  CLI.parse(:conversation)
-  └─► conversation_analyzer.rb:61  ConversationAnalyzer.analyze
-       ├─► conversation_analyzer.rb:119  build_result
-       └─► pipeline.rb:45  Pipeline.compile
-            ├─► pipeline.rb:78  pass_one (spaCy)
-            └─► pipeline.rb:112 pass_two (LLM)
+cli.rb:206  CLI.run  (dispatches via send(:"run_#{command}"))
+  └─► cli.rb:223  run_conversation
+       └─► conversation_analyzer.rb:68  ConversationAnalyzer#analyze
+            ├─► conversation_analyzer.rb:126  build_result
+            └─► pipeline.rb:47  Pipeline#compile
+                 ├─► pipeline.rb:61  @pass_one.process (spaCy)
+                 └─► pipeline.rb:81  @pass_two.annotate_batch (LLM)
 ```
 
 ### Knowledge Base Analysis
 
 ```
-cli.rb:276  CLI.parse(:documentation)
-  └─► knowledge_base_analyzer.rb:47  KnowledgeBaseAnalyzer.analyze
-       ├─► knowledge_base_analyzer.rb:99  load_all_sections
-       ├─► knowledge_base_analyzer.rb:139 compile_artifact
-       │    ├─► pipeline.rb:45  Pipeline.compile
-       │    ├─► content_type_classifier.rb:25  classify
-       │    └─► quality_scorer.rb:33  score
-       ├─► migration_assessor.rb:42  assess
-       └─► kb_report_writer.rb:19  write
+cli.rb:206  CLI.run  (dispatches via send(:"run_#{command}"))
+  └─► cli.rb:362  run_knowledge_base
+       └─► knowledge_base_analyzer.rb:55  KnowledgeBaseAnalyzer#analyze
+            ├─► knowledge_base_analyzer.rb:121  load_all_sections
+            ├─► knowledge_base_analyzer.rb:185  compile_artifact
+            │    ├─► pipeline.rb:47  Pipeline#compile
+            │    ├─► content_type_classifier.rb:31  classify
+            │    └─► quality_scorer.rb:31  score
+            ├─► migration_assessor.rb:33  assess
+            └─► kb_report_writer.rb:19  write
 ```
 
 ### Parallel Conversation Workflow (Gush)
 
 ```
-cli.rb:218  CLI.parse(:conversation)
-  └─► conversation_analysis_workflow.rb:24  configure
-       ├─► compile_turn_job.rb:21  perform (N workers)
-       │    ├─► pass_one_engine.rb:42  process
-       │    └─► pass_two_engine.rb:65  process
-       ├─► topic_model_job.rb:18  perform
-       └─► reduce_turns_job.rb:22  perform
-            └─► conversation_analyzer.rb:61  build_result
+cli.rb:206  CLI.run  (dispatches via send(:"run_#{command}"))
+  └─► cli.rb:281  run_conversation_live
+       └─► conversation_analysis_workflow.rb:24  configure
+            ├─► compile_turn_job.rb:21  perform (N workers)
+            │    ├─► pass_one_engine.rb:33  process
+            │    └─► pass_two_engine.rb:71  annotate_batch
+            ├─► topic_model_job.rb:16  perform
+            └─► reduce_turns_job.rb:19  perform
+                 └─► conversation_analyzer.rb:126  build_result
 ```
 
 ### Falcon API: Synthesize (Concurrent)

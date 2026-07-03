@@ -65,7 +65,7 @@ This affects every concurrent request pair through the Falcon API, not just `/sy
 
 ```
 bootstrap.rb   Bootstrap.call(require_db: true)
-  └─► database.rb:22   Database.connect
+  └─► database.rb:27   Database.connect
        ├─► database.rb (Sequel.extension :fiber_concurrency, module-level, loaded once)
        └─► Sequel.connect(url, pool_class: :timed_queue)
 ```

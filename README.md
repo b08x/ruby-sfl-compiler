@@ -160,9 +160,9 @@ Detailed documentation lives in `docs/`:
 
 For detailed call chains from CLI entry to output, see [Data Flow](docs/data-flow.md):
 
-- **Conversation Analysis (In-Process)** — `cli.rb:218` → `conversation_analyzer.rb:61`
-- **Conversation Analysis (Gush/Live)** — `cli.rb:276` → `conversation_analysis_workflow.rb:24`
-- **Knowledge Base Analysis** — `cli.rb:357` → `knowledge_base_analyzer.rb:47`
+- **Conversation Analysis (In-Process)** — `cli.rb:223 run_conversation` → `conversation_analyzer.rb:68 analyze`
+- **Conversation Analysis (Gush/Live)** — `cli.rb:281 run_conversation_live` → `conversation_analysis_workflow.rb:24 configure`
+- **Knowledge Base Analysis** — `cli.rb:362 run_knowledge_base` → `knowledge_base_analyzer.rb:55 analyze`
 
 ### Module Documentation
 

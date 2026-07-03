@@ -103,10 +103,10 @@ RRF fusion (k=60) balances semantic similarity with lexical matching. Scalar fil
 ## Trace Path
 
 ```
-api/server.rb:85  compile_pipeline
+api/server.rb:96  compile_pipeline
   └─► hybrid_retriever.rb:38  retrieve
        ├─► hybrid_retriever.rb:82  semantic_search
        ├─► hybrid_retriever.rb:112 keyword_search
        ├─► hybrid_retriever.rb:144 reciprocal_rank_fusion
-       └─► hybrid_retriever.rb:170 apply_filters
+       └─► hybrid_retriever.rb:166 apply_filters
 ```
