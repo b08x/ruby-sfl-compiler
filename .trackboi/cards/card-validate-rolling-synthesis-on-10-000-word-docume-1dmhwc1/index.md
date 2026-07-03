@@ -5,13 +5,13 @@ title: "Validate Rolling Synthesis on 10,000-word document: SFL metadata preserv
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-rolling-synthesis-fractal-graphs-0bhnviv"
-column: "backlog"
-rank: "yj"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-06-26T04:13:15.106Z"
-updatedAt: "2026-06-26T04:13:15.106Z"
+updatedAt: "2026-07-03T15:35:45.182Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
