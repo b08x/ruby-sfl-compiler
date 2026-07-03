@@ -3,6 +3,20 @@
 require "spec_helper"
 
 RSpec.describe SFL::Compiler::Bootstrap do
+  # Bootstrap.call mutates the SFL::Compiler.config singleton in place
+  # (dspy_provider gets assigned before configure_llm can raise), so a
+  # real call here leaks a poisoned provider string into every later spec
+  # in the process that relies on the default — e.g. circuit_breaker_spec
+  # picking up "google/gemini-2.0-flash" from the "empty API key" example
+  # below and failing with DSPy::LM::UnsupportedProviderError. Snapshot
+  # and restore the singleton around each example so this file's mutation
+  # never escapes it.
+  around do |example|
+    original = SFL::Compiler.config.dup
+    example.run
+    SFL::Compiler.instance_variable_set(:@config, original)
+  end
+
   # Pass env: as a plain Hash and load_dotenv: false so specs never touch
   # the real .env or process ENV.
   def call(env, require_db: false, require_llm: true, require_observability: false)
