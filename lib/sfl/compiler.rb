@@ -117,7 +117,8 @@ loader.inflector.inflect(
   "cli" => "CLI",
   "tui" => "TUI",
   "rrf" => "RRF",
-  "markdown_loader" => "MarkdownLoader"
+  "markdown_loader" => "MarkdownLoader",
+  "chatgpt_export_loader" => "ChatGPTExportLoader"
 )
 loader.collapse("#{__dir__}/compiler/pass_one")
 loader.collapse("#{__dir__}/compiler/pass_two")

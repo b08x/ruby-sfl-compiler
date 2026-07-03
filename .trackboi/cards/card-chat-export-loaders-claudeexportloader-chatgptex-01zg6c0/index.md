@@ -5,13 +5,13 @@ title: "Chat export loaders: ClaudeExportLoader, ChatGPTExportLoader, MistralExp
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-multi-source-corpus-bridging-chat-exports-obsidi-0dc78vr"
-column: "backlog"
+column: "done"
 rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T06:31:19.578Z"
-updatedAt: "2026-07-03T06:31:19.578Z"
+updatedAt: "2026-07-03T07:35:28.069Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

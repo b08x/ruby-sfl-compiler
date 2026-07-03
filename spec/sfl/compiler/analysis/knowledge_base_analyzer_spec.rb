@@ -405,4 +405,40 @@ RSpec.describe SFL::Compiler::Analysis::KnowledgeBaseAnalyzer do
       expect(clause_repo).to have_received(:delete_by_document).at_least(:once)
     end
   end
+
+  # ──────────────────────────────────────────────────────────────────
+  # source_type tagging (Multi-Source Corpus Bridging track)
+  # ──────────────────────────────────────────────────────────────────
+  describe "source_type tagging by file type" do
+    it "tags markdown and canvas files with distinct source_type values" do
+      canvas_json = JSON.dump(nodes: [
+        { id: "n1", type: "text", x: 0, y: 0, width: 300, height: 200,
+          text: "Canvas node prose long enough to survive the default min_length filter." },
+      ], edges: [])
+
+      Dir.mktmpdir do |dir|
+        write_file(dir, "note.md", research_md)
+        write_file(dir, "board.canvas", canvas_json)
+
+        analyzer.analyze(dir)
+
+        expect(pipeline).to have_received(:compile)
+          .with(anything, hash_including(source_type: "vault_markdown")).at_least(:once)
+        expect(pipeline).to have_received(:compile)
+          .with(anything, hash_including(source_type: "vault_canvas")).at_least(:once)
+      end
+    end
+
+    it "tags a widened kreuzberg format (.html) as vault_html" do
+      Dir.mktmpdir do |dir|
+        write_file(dir, "page.html",
+          "<html><body><h1>Title</h1><p>#{'Enough prose content to clear the extraction min length. ' * 3}</p></body></html>")
+
+        analyzer.analyze(dir)
+
+        expect(pipeline).to have_received(:compile)
+          .with(anything, hash_including(source_type: "vault_html")).at_least(:once)
+      end
+    end
+  end
 end

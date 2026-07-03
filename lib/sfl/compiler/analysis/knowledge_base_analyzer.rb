@@ -16,7 +16,15 @@ module SFL
       class KnowledgeBaseAnalyzer
         include Aggregations
 
-        TEXT_EXTENSIONS  = %w[.md .pdf].freeze
+        # .docx/.xlsx/.pptx/.html route through PdfLoader (kreuzberg-backed
+        # — its Kreuzberg.extract_file_sync call auto-detects format from
+        # the file itself, so nothing about that loader is actually
+        # PDF-specific; verified against real .html and .docx files before
+        # wiring this in rather than trusting kreuzberg's 75+-format claim
+        # blind). .canvas is Obsidian's own JSON node-graph format and
+        # needs its own loader (CanvasLoader), not kreuzberg.
+        KREUZBERG_EXTENSIONS = %w[.pdf .docx .xlsx .pptx .html].freeze
+        TEXT_EXTENSIONS  = (%w[.md .canvas] + KREUZBERG_EXTENSIONS).freeze
         IMAGE_EXTENSIONS = %w[.png .jpg .jpeg .webp].freeze
         STALENESS_MONTHS = 18
 
@@ -129,9 +137,11 @@ module SFL
 
         def source_type_for(ext)
           case ext
-          when ".md"          then "vault_markdown"
-          when ".pdf"         then "vault_pdf"
+          when ".md"             then "vault_markdown"
+          when ".canvas"         then "vault_canvas"
           when *IMAGE_EXTENSIONS then "vault_image"
+          when *KREUZBERG_EXTENSIONS
+            "vault_#{ext.delete_prefix('.')}" # vault_pdf, vault_docx, vault_xlsx, vault_pptx, vault_html
           else "vault_document"
           end
         end
@@ -150,8 +160,10 @@ module SFL
 
         def loader_for(ext, vision_model:)
           case ext
-          when ".md"   then ->(p) { MarkdownLoader.load(p) }
-          when ".pdf"  then ->(p) { PdfLoader.load(p) }
+          when ".md"     then ->(p) { MarkdownLoader.load(p) }
+          when ".canvas" then ->(p) { CanvasLoader.load(p) }
+          when *KREUZBERG_EXTENSIONS
+            ->(p) { PdfLoader.load(p) }
           when *IMAGE_EXTENSIONS
             ->(p) { ImageLoader.new(p, vision_model:).sections }
           end

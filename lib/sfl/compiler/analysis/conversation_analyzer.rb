@@ -30,13 +30,20 @@ module SFL
         #   and returns a partial result covering whatever turns
         #   completed (metadata[:interrupted] is true, metadata[:total]
         #   still reflects the full input size).
-        def initialize(pipeline: nil, pass_one_only: false, on_progress: nil, on_turn_start: nil, stop_requested: nil)
+        # @param source_type [String] provenance tag stamped on every
+        #   clause this analyzer compiles (see ClauseRepository#store) —
+        #   "chat_native" for the built-in {name, mes, send_date} JSONL
+        #   format; pass e.g. "chat_claude"/"chat_chatgpt"/"chat_mistral"
+        #   when analyzing JSONL normalized by one of the chat export
+        #   loaders (ClaudeExportLoader, etc.)
+        def initialize(pipeline: nil, pass_one_only: false, on_progress: nil, on_turn_start: nil, stop_requested: nil, source_type: "chat_native")
           @pipeline = pipeline
           @pass_one_only = pass_one_only
           @on_progress = on_progress
           @on_turn_start = on_turn_start
           @stop_requested = stop_requested
           @resume = pipeline&.cache ? true : false
+          @source_type = source_type
         end
 
         # Skips lines that parse as valid JSON but aren't turn-shaped —
@@ -318,7 +325,7 @@ module SFL
 
         private def compile_clauses(text, document_id, semantic_coherence_score: nil, topic: nil)
           unless @pass_one_only
-            kwargs = { document_id:, store: false, embed: false, resume: @resume, source_type: "chat_native" }
+            kwargs = { document_id:, store: false, embed: false, resume: @resume, source_type: @source_type }
             kwargs[:topic] = topic unless topic.nil?
             kwargs[:semantic_coherence_score] = semantic_coherence_score unless semantic_coherence_score.nil?
             return @pipeline.compile(text, **kwargs)
