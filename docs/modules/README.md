@@ -19,7 +19,9 @@ This directory contains detailed documentation for each major module in the sfl-
 | **CrossDocumentGraph** | `lib/sfl/compiler/cross_document_graph.rb` | Query-time graph across stored documents for multi-source synthesis |
 | **SprintWorkflow** | `lib/sfl/compiler/workflows/sprint_workflow.rb` | Batch workflow that runs analyses and collects per-item failures |
 | **HybridRetriever** | `lib/sfl/compiler/retrieval/hybrid_retriever.rb` | RRF fusion of semantic + keyword search with scalar filters |
+| **ContextSynthesizer** | `lib/sfl/compiler/retrieval/context_synthesizer.rb` | Retrieval → cited, stance-annotated LLM answer synthesis |
 | **Embedder** | `lib/sfl/compiler/retrieval/embedder.rb` | Text → 768-dim vector embedding via Ollama |
+| **Database** | `lib/sfl/compiler/storage/database.rb` | Sequel connection, fiber-safe pool config, extension setup, migrations |
 | **TenorTracker** | `lib/sfl/compiler/analysis/tenor_tracker.rb` | Formality shift detection across conversation turns |
 | **CohesionAnalyzer** | `lib/sfl/compiler/analysis/cohesion_analyzer.rb` | Lexical repetition, conjunction, and pronoun density metrics |
 | **SpeakerProfiler** | `lib/sfl/compiler/analysis/speaker_profiler.rb` | Per-speaker linguistic pattern aggregation |
@@ -61,6 +63,7 @@ The modules are organized by their functional communities:
 ### Retrieval
 - Embedder
 - HybridRetriever
+- ContextSynthesizer
 - CrossDocumentGraph
 
 ### Formatting & Output

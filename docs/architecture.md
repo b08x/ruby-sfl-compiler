@@ -114,6 +114,28 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
                                             └── KBReportWriter.write (CSV, JSON, Markdown)
 ```
 
+### 5. Falcon API Server (Concurrent, Fiber-Based)
+
+```
+  ConvoWorkbench (React) ──► Falcon (Async) ──► Server#respond
+                                                      │
+                                    ┌─────────────────┼─────────────────┐
+                                    ▼                 ▼                 ▼
+                          POST /synthesize   POST /workflows    GET /clauses
+                          (ContextSynthesizer) (Gush dispatch)  (ClauseRepository)
+```
+
+Falcon serves concurrent requests as `Async` fibers cooperatively scheduled
+within a single OS thread per worker process — not one thread per request.
+`Database.connect` (see [Database](modules/database.md)) selects a
+fiber-safe connection pool (`pool_class: :timed_queue` + the
+`fiber_concurrency` extension) specifically because of this: a
+thread-keyed pool hands two concurrent fibers the same connection, and
+their queries interleave on one socket. Any code path reachable from more
+than one Falcon route concurrently (e.g. two `/synthesize` calls fired in
+parallel, as the ConvoWorkbench Safe RAG Hypothesis Validator does by
+design) depends on this pool selection being correct.
+
 ---
 
 ## Layer Responsibilities
@@ -173,6 +195,7 @@ The sfl-compiler follows a **layered pipeline** with strict separation between s
 |-----------|---------------|
 | `Embedder` | Text → 768-dim vector (Ollama embeddinggemma) |
 | `HybridRetriever` | RRF fusion of semantic + keyword + scalar filters |
+| `ContextSynthesizer` | Retrieval → cited, stance-annotated LLM answer synthesis |
 
 ### Orchestration Layer
 
@@ -368,6 +391,19 @@ cli.rb:218  CLI.parse(:conversation)
        └─► reduce_turns_job.rb:22  perform
             └─► conversation_analyzer.rb:61  build_result
 ```
+
+### Falcon API: Synthesize (Concurrent)
+
+```
+api/server.rb:139        synthesize
+  └─► context_synthesizer.rb:35   ContextSynthesizer.synthesize
+       ├─► hybrid_retriever.rb:38  retrieve
+       ├─► clause_repository.rb:141 find (per retrieved row)
+       └─► context_synthesizer.rb:66  synthesize_from_citable
+            └─► SFLSynthesizer#call → DSPy::ChainOfThought
+```
+
+Reachable concurrently — see [Execution Model 5](#5-falcon-api-server-concurrent-fiber-based).
 
 See `docs/data-flow.md` for complete trace path documentation.
 

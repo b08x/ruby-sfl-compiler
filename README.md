@@ -177,6 +177,8 @@ Per-module docs with transformation contracts, dependency mapping, and interacti
 | [CompileTurnJob](docs/modules/compile_turn_job.md) | `lib/sfl/compiler/jobs/compile_turn_job.rb` | Gush parallel turn compilation |
 | [SprintWorkflow](docs/modules/sprint_workflow.md) | `lib/sfl/compiler/workflows/sprint_workflow.rb` | Multi-stage analysis workflow |
 | [CrossDocumentGraph](docs/modules/cross_document_graph.md) | `lib/sfl/compiler/cross_document_graph.rb` | Multi-source reasoning graph |
+| [ContextSynthesizer](docs/modules/context_synthesizer.md) | `lib/sfl/compiler/retrieval/context_synthesizer.rb` | Retrieval → cited, stance-annotated LLM answer synthesis |
+| [Database](docs/modules/database.md) | `lib/sfl/compiler/storage/database.rb` | Sequel connection, fiber-safe pool config for the Falcon API |
 
 ## Installation
 
@@ -257,7 +259,7 @@ EMBEDDING_MODEL=embeddinggemma:latest
 # Optional Pass 2 tuning
 # SFL_BATCH_SIZE=12      # clauses per LLM call
 # SFL_CONCURRENCY=4      # concurrent LLM calls
-# SFL_LLM_TIMEOUT=120    # seconds before a chunk times out (default 120)
+# SFL_CHUNK_TIMEOUT=120  # seconds before a chunk times out (default 120)
 
 # Optional — only needed for the parallel Gush workflow (see below)
 # REDIS_URL=redis://localhost:6379
