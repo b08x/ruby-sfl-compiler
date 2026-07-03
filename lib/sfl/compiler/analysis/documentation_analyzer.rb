@@ -151,6 +151,7 @@ module SFL
               unit_label: "Section",
               actor_label: "Section",
               actors_list_label: "Headings",
+              id_label: "document_id",
               topics_enabled: !topic_labels.nil?,
               interrupted:,
               total:,

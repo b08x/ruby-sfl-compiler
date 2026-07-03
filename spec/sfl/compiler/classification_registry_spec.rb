@@ -72,6 +72,10 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:theme_type, "textual_unmarked")).to eq(["multiple", :exact])
       end
 
+      it "normalizes compound theme types joined by the conjunction 'and' to multiple" do
+        expect(described_class.normalize(:theme_type, "topical and interpersonal")).to eq(["multiple", :exact])
+      end
+
       it "respects existing aliases like topical_unmarked" do
         expect(described_class.normalize(:theme_type, "topical_unmarked")).to eq(["topical", :aliased])
       end
@@ -124,10 +128,55 @@ RSpec.describe SFL::Compiler::ClassificationRegistry do
         expect(described_class.normalize(:mood, "subjunctive")).to eq(["declarative", :aliased])
       end
 
+      it "maps 'subjective' (LLM near-miss for 'subjunctive') to declarative" do
+        expect(described_class.normalize(:mood, "subjective")).to eq(["declarative", :aliased])
+      end
+
       it "maps no-value sentinels to declarative" do
         expect(described_class.normalize(:mood, "null")).to eq(["declarative", :aliased])
         expect(described_class.normalize(:mood, "n/a")).to eq(["declarative", :aliased])
         expect(described_class.normalize(:mood, "")).to eq(["declarative", :aliased])
+      end
+
+      it "maps 'neutral' to declarative (LLM's 'no marked mood' = SFL's unmarked declarative)" do
+        expect(described_class.normalize(:mood, "neutral")).to eq(["declarative", :aliased])
+      end
+
+      it "maps 'interjectional' and 'interjection' to minor (SFL treats interjections as minor clauses)" do
+        expect(described_class.normalize(:mood, "interjectional")).to eq(["minor", :aliased])
+        expect(described_class.normalize(:mood, "interjection")).to eq(["minor", :aliased])
+      end
+    end
+
+    context "with Jaro-Winkler fuzzy fallback" do
+      it "resolves typos of canonical moods with :fuzzy status" do
+        expect(described_class.normalize(:mood, "declaritive")).to eq(["declarative", :fuzzy])
+        expect(described_class.normalize(:mood, "imperitive")).to eq(["imperative", :fuzzy])
+        expect(described_class.normalize(:mood, "interogative")).to eq(["interrogative", :fuzzy])
+      end
+
+      it "resolves a near-miss of an alias key through the alias table" do
+        # "subjunctiv" isn't an alias itself; its best fuzzy hit is the
+        # alias key "subjunctive", which maps to declarative.
+        expect(described_class.normalize(:mood, "subjunctiv")).to eq(["declarative", :fuzzy])
+      end
+
+      it "resolves theme_type typos with :fuzzy status" do
+        expect(described_class.normalize(:theme_type, "circumstancial")).to eq(["circumstantial", :fuzzy])
+        expect(described_class.normalize(:theme_type, "predicatd")).to eq(["predicated", :fuzzy])
+      end
+
+      it "does not fuzzy-match unrelated grammar terms below the threshold" do
+        # Worst measured near-collision: "performative"→"imperative"
+        # scores 0.809, "infinitive"→"indicative" 0.802 — both must
+        # fall through to the warned default, not silently rewrite.
+        expect(described_class.normalize(:mood, "performative")).to eq(["declarative", :unknown])
+        expect(described_class.normalize(:mood, "infinitive")).to eq(["declarative", :unknown])
+        expect(described_class.normalize(:mood, "banana")).to eq(["declarative", :unknown])
+      end
+
+      it "skips fuzzy matching for strings shorter than FUZZY_MIN_LENGTH" do
+        expect(described_class.normalize(:mood, "dec")).to eq(["declarative", :unknown])
       end
     end
   end

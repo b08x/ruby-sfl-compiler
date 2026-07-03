@@ -143,6 +143,28 @@ RSpec.describe SFL::Compiler::Analysis::NarrativeGenerator do
         expect(from_json).to eq(from_result)
       end
 
+      it "stays equivalent for a documentation-style result whose JSON keys are domain-renamed" do
+        # DocumentationAnalyzer sets unit_label/actor_label/actors_list_label/
+        # id_label, which JSONFormatter uses to rename conversation_id/
+        # turn_count/speakers/speaker_profiles to document_id/section_count/
+        # headings/section_profiles in the JSON. Digest.from_json must
+        # translate these back so the digest text is unaffected by the
+        # rename — same equivalence contract as the plain conversation case.
+        doc_result = result.new(metadata: result.metadata.merge(
+          unit_label: "Section", actor_label: "Section",
+          actors_list_label: "Headings", id_label: "document_id"
+        ))
+
+        json = SFL::Compiler::Formatters::JSONFormatter.new(doc_result).render
+        parsed = JSON.parse(json)
+        expect(parsed["metadata"]).to have_key("document_id")
+        expect(parsed).to have_key("section_profiles")
+
+        from_json = described_class.from_json(parsed).to_text
+        from_result = described_class.from_result(doc_result).to_text
+        expect(from_json).to eq(from_result)
+      end
+
       it "raises NarrativeError when turns are absent" do
         expect {
           described_class.from_json({ "metadata" => {} })

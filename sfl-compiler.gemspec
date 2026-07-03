@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.executables = %w[sfl-analyze sfl-api]
   spec.extensions = ["ext/sfl_compiler/extconf.rb"]
 
+  spec.add_dependency "amatch", "~> 0.7"
   spec.add_dependency "async", "~> 2.21"
   spec.add_dependency "bubbles", "~> 0.1"
   spec.add_dependency "bubbletea", "~> 0.1"

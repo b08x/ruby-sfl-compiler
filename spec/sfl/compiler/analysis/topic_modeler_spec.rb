@@ -57,11 +57,17 @@ RSpec.describe SFL::Compiler::Analysis::TopicModeler do
         expect(dist).to be_a(Hash)
       end
 
-      # Verify internal turns have topic data
-      modeler.instance_variable_get(:@turns).each do |turn|
+      # Verify internal turns have topic data. dominant_topic is gated:
+      # Integer when the distribution clears DEFAULT_DOMINANT_THRESHOLD,
+      # nil when it's too flat to honestly claim one — but this corpus
+      # is deliberately bimodal (security vs telemetry vocabularies), so
+      # at least some turns must clear the gate.
+      fitted = modeler.instance_variable_get(:@turns)
+      fitted.each do |turn|
         expect(turn.topic_distribution).to be_a(Hash)
-        expect(turn.dominant_topic).to be_a(Integer)
+        expect(turn.dominant_topic).to be_a(Integer).or be_nil
       end
+      expect(fitted.filter_map(&:dominant_topic)).not_to be_empty
     end
   end
 
@@ -140,6 +146,73 @@ RSpec.describe SFL::Compiler::Analysis::TopicModeler do
 
       # Verify tokens were generated (topics have words)
       expect(modeler.topic_labels.values.flatten).not_to be_empty
+    end
+  end
+
+  describe "dominant-topic confidence gate" do
+    let(:modeler) { described_class.new(k: 2, min_cf: 1, iterations: 10) }
+
+    it "returns nil for a flat distribution instead of a fiat max_by winner" do
+      flat = Array.new(10, 0.1)
+      expect(modeler.send(:dominant_topic_id, flat)).to be_nil
+    end
+
+    it "returns the top index for a clearly peaked distribution" do
+      peaked = [0.05, 0.7] + Array.new(8, 0.03125)
+      expect(modeler.send(:dominant_topic_id, peaked)).to eq(1)
+    end
+
+    it "normalizes by topic count — the same absolute top probability can pass at k=10 but fail at k=3" do
+      # p1 = 0.46: at k=10, excess = (0.46-0.1)/0.9 = 0.4 >= 0.35 → dominant.
+      # At k=3, excess = (0.46-0.333)/0.667 = 0.19 < 0.35 → barely above
+      # chance, honestly nil. An absolute threshold cannot do both.
+      at_k10 = [0.46] + Array.new(9, 0.06)
+      at_k3  = [0.46, 0.28, 0.26]
+
+      expect(modeler.send(:dominant_topic_id, at_k10)).to eq(0)
+      expect(modeler.send(:dominant_topic_id, at_k3)).to be_nil
+    end
+
+    it "returns nil for NaN, empty, and single-topic distributions" do
+      expect(modeler.send(:dominant_topic_id, [Float::NAN, Float::NAN])).to be_nil
+      expect(modeler.send(:dominant_topic_id, [])).to be_nil
+      expect(modeler.send(:dominant_topic_id, [1.0])).to be_nil
+      expect(modeler.send(:dominant_topic_id, nil)).to be_nil
+    end
+
+    it "restores unconditional max_by behavior with dominant_threshold: 0" do
+      permissive = described_class.new(k: 2, dominant_threshold: 0)
+      flat = Array.new(10, 0.1)
+      expect(permissive.send(:dominant_topic_id, flat)).to be_a(Integer)
+    end
+
+    it "assigns nil dominant_topic to untokenizable turns instead of topic 0" do
+      with_empty = turns + [create_turn(9, "alice", "...")]
+      modeler.fit(with_empty)
+
+      empty_turn = modeler.instance_variable_get(:@turns).last
+      expect(empty_turn.topic_distribution).to eq({})
+      expect(empty_turn.dominant_topic).to be_nil
+    end
+  end
+
+  describe "#detect_topic_shifts with gated dominants" do
+    it "does not flag shifts into or out of turns with no dominant topic" do
+      modeler = described_class.new(k: 2, min_cf: 1, iterations: 10)
+      modeler.fit(turns)
+
+      # Rewrite the fitted turns: a confident topic-0 turn, a below-gate
+      # (nil) turn, then a confident topic-1 turn. Distributions are
+      # maximally different, so only the gate can be what suppresses them.
+      fitted = modeler.instance_variable_get(:@turns).first(3)
+      doctored = [
+        fitted[0].new(topic_distribution: { 0 => 0.9, 1 => 0.1 }, dominant_topic: 0),
+        fitted[1].new(topic_distribution: { 0 => 0.5, 1 => 0.5 }, dominant_topic: nil),
+        fitted[2].new(topic_distribution: { 0 => 0.1, 1 => 0.9 }, dominant_topic: 1),
+      ]
+      modeler.instance_variable_set(:@turns, doctored)
+
+      expect(modeler.detect_topic_shifts(threshold: 0.0)).to be_empty
     end
   end
 end

@@ -116,45 +116,35 @@ module SFL
       private
 
       def sections_from_source
-        results = []
-
         # Parse YAML frontmatter before stripping it — Inkmark mis-parses
         # the `---` block as a setext H2, collapsing the whole document.
         fm = parse_frontmatter(@source)
         body_source = @source.sub(/\A---\n.*?\n---\n?/m, "")
 
-        # --- Preamble (content before the first heading) ---
-        preamble_text = extract_preamble(body_source)
-        if preamble_text && !preamble_text.strip.empty?
-          results << Section.new(
-            document_id: "#{@file_id}#preamble",
-            file_id: @file_id,
-            heading: nil,
-            heading_level: nil,
-            heading_slug: nil,
-            text: clean_text(preamble_text),
-            byte_range: nil,
-            frontmatter: fm
-          )
-        end
-
-        # --- Heading-scoped sections via Inkmark ---
-        chunks = Inkmark.chunks_by_heading(body_source)
-        chunks.each do |chunk|
-          clean = clean_text(chunk[:content])
-          results << Section.new(
-            document_id: "#{@file_id}##{chunk[:id]}",
+        # Inkmark.chunks_by_heading already emits a heading: nil chunk for
+        # any content before the first ATX heading — including the entire
+        # body when a document has no headings at all. A previous version
+        # of this method also hand-extracted that same span via a separate
+        # #extract_preamble regex and emitted it as a second section,
+        # duplicating every document's preamble verbatim: confirmed live
+        # (a headless conversation transcript produced two identical
+        # ~13k-char sections, doubling Pass 1/2 cost and corrupting
+        # per-document aggregates — topic modeling, quality scores — with
+        # an exact-duplicate document for every file with any pre-heading
+        # prose, not just fully headless ones).
+        Inkmark.chunks_by_heading(body_source).map do |chunk|
+          preamble = chunk[:heading].nil?
+          Section.new(
+            document_id: "#{@file_id}##{preamble ? "preamble" : chunk[:id]}",
             file_id: @file_id,
             heading: chunk[:heading],
-            heading_level: chunk[:level],
+            heading_level: preamble ? nil : chunk[:level],
             heading_slug: chunk[:id],
-            text: clean,
+            text: clean_text(chunk[:content]),
             byte_range: chunk[:byte_range],
             frontmatter: fm
           )
         end
-
-        results
       end
 
       def parse_frontmatter(source)
@@ -165,13 +155,6 @@ module SFL
         YAML.safe_load(match[1], permitted_classes: [Time, Date, Symbol])
       rescue StandardError
         nil
-      end
-
-      # Extract any prose that appears before the first ATX heading.
-      def extract_preamble(source)
-        body = source.sub(/\A---\n.*?\n---\n/m, "")
-        # [#]{1,6} avoids #{} interpolation — matches 1-6 literal # characters
-        body.split(/^[#]{1,6}\s+/m, 2).first
       end
 
       # Render markdown to clean prose using Inkmark's AST pipeline and

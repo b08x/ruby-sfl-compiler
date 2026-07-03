@@ -18,7 +18,6 @@ module SFL
         private def build_hash
           {
             metadata: format_metadata,
-            speaker_profiles: format_speaker_profiles,
             turns: format_turns,
             tenor_timeline: result.tenor_timeline,
             field_evolution: result.field_evolution,
@@ -27,12 +26,73 @@ module SFL
             topic_labels: result.topic_labels,
             topic_evolution: result.topic_evolution,
             key_moments: format_key_moments,
-          }
+          }.merge(profiles_key => format_speaker_profiles)
         end
 
+        # This formatter serves both `conversation` and `documentation`
+        # analyses — DocumentationAnalyzer maps sections onto
+        # ConversationTurn-shaped data (speaker: heading) so the shared
+        # SpeakerProfiler/TenorTracker/CorrelationAnalyzer machinery works
+        # unchanged (see CLAUDE.md). Internally result.metadata always
+        # keeps the canonical conversation_id/turn_count/speakers keys —
+        # Markdown/CSV already read those directly — but writing them
+        # verbatim into a *documentation* report's JSON is wrong: a
+        # section heading is not a "speaker". The JSON output below is
+        # renamed to match the domain, driven by the same unit_label/
+        # actor_label/actors_list_label/id_label metadata
+        # DocumentationAnalyzer already sets for the Markdown/CSV labels;
+        # conversation analyses set none of these, so their JSON is
+        # unchanged (id_key/count_key/profiles_key/actors_key all resolve
+        # to the original names).
         private def format_metadata
-          # analyzed_at is already a string (ISO8601) from the script
-          result.metadata.merge(annotation_coverage:)
+          meta = result.metadata.merge(annotation_coverage:)
+          # In-place key substitution (not delete+reinsert) preserves the
+          # original key order — Digest#to_text's METADATA section is a
+          # literal `metadata.map { "#{k}: #{v}" }.join`, so reordering
+          # keys would break the from_result/from_json text-equivalence
+          # contract even when no rename actually applies.
+          key_map = { conversation_id: id_key, turn_count: count_key, speakers: actors_key }
+          meta.each_with_object({}) { |(k, v), renamed| renamed[key_map.fetch(k, k)] = v }
+        end
+
+        # Shared with NarrativeGenerator::Digest.from_json, which must
+        # translate these same renamed JSON keys back to the canonical
+        # conversation_id/turn_count/speakers/speaker_profiles vocabulary
+        # (the equivalence contract with .from_result, which always reads
+        # result.metadata directly — see PREVIEW_LENGTH's own comment
+        # above for the same from_result/from_json parity concern).
+        # Accepts metadata with either symbol or string keys since
+        # from_json calls this with a JSON.parse'd (string-keyed) hash.
+        def self.id_key_for(metadata)
+          (metadata[:id_label] || metadata["id_label"] || "conversation_id").to_sym
+        end
+
+        def self.count_key_for(metadata)
+          :"#{(metadata[:unit_label] || metadata['unit_label'] || 'turn').downcase}_count"
+        end
+
+        def self.profiles_key_for(metadata)
+          :"#{(metadata[:actor_label] || metadata['actor_label'] || 'speaker').downcase}_profiles"
+        end
+
+        def self.actors_key_for(metadata)
+          (metadata[:actors_list_label] || metadata["actors_list_label"] || "speakers").downcase.to_sym
+        end
+
+        private def id_key
+          self.class.id_key_for(result.metadata)
+        end
+
+        private def count_key
+          self.class.count_key_for(result.metadata)
+        end
+
+        private def profiles_key
+          self.class.profiles_key_for(result.metadata)
+        end
+
+        private def actors_key
+          self.class.actors_key_for(result.metadata)
         end
 
         # Per-source clause counts so consumers can tell real LLM annotations

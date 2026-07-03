@@ -73,6 +73,7 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
       expect(result.metadata[:unit_label]).to eq("Section")
       expect(result.metadata[:actor_label]).to eq("Section")
       expect(result.metadata[:actors_list_label]).to eq("Headings")
+      expect(result.metadata[:id_label]).to eq("document_id")
     end
   end
 
@@ -335,19 +336,32 @@ RSpec.describe SFL::Compiler::Analysis::DocumentationAnalyzer do
 
     it "threads a pre-pass topic id/label into pipeline.compile per section" do
       Dir.mktmpdir do |dir|
+        # Sections need enough repeated, distinctive vocabulary to clear
+        # TopicModeler's default min_cf AND its dominant-topic confidence
+        # gate. The previous one-sentence-per-section fixture produced a
+        # degenerate model (no word cleared min_cf, infer returned NaN)
+        # whose empty distribution the old `|| 0` fallback turned into a
+        # fabricated topic 0 — i.e. this test used to pass only because
+        # of the fiat-assignment bug the gate now fixes.
         path = File.join(dir, "guide.md")
         File.write(path, <<~MD)
           # Sandbox
 
           The sandbox uses WebAssembly isolation for untrusted code execution.
+          Sandbox isolation relies on WebAssembly memory limits for code execution.
+          The WebAssembly sandbox isolates untrusted code execution completely.
 
           # Telemetry
 
           Telemetry pipelines ingest OTLP traces for observability monitoring.
+          Observability monitoring stores telemetry traces in the OTLP pipelines.
+          The telemetry observability traces flow through OTLP monitoring pipelines.
 
           # Frontend
 
-          The frontend renders virtualized telemetry trace visualizations.
+          The frontend renders virtualized dashboard views with React components.
+          React components display virtualized dashboard rendering in the frontend.
+          Frontend dashboard rendering uses virtualized React components.
         MD
 
         described_class.new(pipeline:, clause_repo:)

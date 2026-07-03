@@ -114,14 +114,34 @@ module SFL
                 raise NarrativeError, "Turn row missing required key: #{key}" unless row.key?(key)
               end
             end
+            raw_metadata = parsed.fetch("metadata", {})
             new(
-              metadata: parsed.fetch("metadata", {}),
-              speaker_profiles: parsed.fetch("speaker_profiles", {}),
+              metadata: canonicalize_metadata(raw_metadata),
+              speaker_profiles: parsed.fetch(Formatters::JSONFormatter.profiles_key_for(raw_metadata).to_s, {}),
               correlations: parsed.fetch("correlations", {}),
               insights: parsed.fetch("insights", []),
               turns: turns.map { |row| row.slice(*REQUIRED_TURN_KEYS, "tenor_shift", "semantic_coherence_score") },
               key_moments: parsed["key_moments"] || []
             )
+          end
+
+          # JSONFormatter renames conversation_id/turn_count/speakers to
+          # domain-correct keys for documentation reports (document_id/
+          # section_count/headings) — translate back to the canonical
+          # vocabulary this Digest always works in, so from_json produces
+          # metadata identical to from_result (which reads result.metadata
+          # directly, where these keys are never renamed).
+          def self.canonicalize_metadata(meta)
+            # In-place key substitution (not delete+reinsert) preserves
+            # key order, matching JSONFormatter#format_metadata's own
+            # approach — required for the from_result/from_json text
+            # equivalence contract (see #to_text).
+            key_map = {
+              Formatters::JSONFormatter.id_key_for(meta).to_s => "conversation_id",
+              Formatters::JSONFormatter.count_key_for(meta).to_s => "turn_count",
+              Formatters::JSONFormatter.actors_key_for(meta).to_s => "speakers",
+            }
+            meta.each_with_object({}) { |(k, v), renamed| renamed[key_map.fetch(k, k)] = v }
           end
 
           # Identical formula to JSONFormatter#annotation_coverage (the
@@ -376,9 +396,9 @@ module SFL
           if generation_model == verification_model
             raise ArgumentError,
               "generation_model and verification_model must differ " \
-              "(got '#{generation_model}' for both) — using the same model " \
-              "for generation and verification defeats the RLHF-style " \
-              "cross-checking purpose of multi-model narration"
+                "(got '#{generation_model}' for both) — using the same model " \
+                "for generation and verification defeats the RLHF-style " \
+                "cross-checking purpose of multi-model narration"
           end
 
           @achilles_lm = generation_model
@@ -397,9 +417,7 @@ module SFL
             coverage  = challenge.citation_coverage.to_f
             last      = { draft:, challenge:, coverage: }
 
-            if coverage >= CITATION_THRESHOLD
-              return finalize(digest_text, draft.narrative_draft, challenge.challenges)
-            end
+            return finalize(digest_text, draft.narrative_draft, challenge.challenges) if coverage >= CITATION_THRESHOLD
 
             warn "[WARN] NarrativeGenerator: citation_coverage #{coverage.round(2)} below " \
               "#{CITATION_THRESHOLD} (attempt #{attempt + 1}/#{MAX_ATTEMPTS}), regenerating…"
@@ -412,31 +430,29 @@ module SFL
           sections.merge(data_quality: sections[:data_quality] + coverage_note)
         end
 
-        private
-
-        def run_achilles(digest_text)
+        private def run_achilles(digest_text)
           predictor(NarrativeProposeSignature, @achilles_lm)
             .call(analysis_digest: digest_text)
         end
 
-        def run_tortoise(digest_text, narrative_draft)
+        private def run_tortoise(digest_text, narrative_draft)
           predictor(NarrativeChallengeSignature, @tortoise_lm)
-            .call(analysis_digest: digest_text, narrative_draft: narrative_draft)
+            .call(analysis_digest: digest_text, narrative_draft:)
         end
 
-        def finalize(digest_text, narrative_draft, challenges)
+        private def finalize(digest_text, narrative_draft, challenges)
           result = predictor(NarrativeVerifySignature, @genie_lm)
-            .call(analysis_digest: digest_text, narrative_draft: narrative_draft, challenges: challenges)
+            .call(analysis_digest: digest_text, narrative_draft:, challenges:)
           NarrativeGenerator::SECTION_KEYS.to_h { |key| [key, result.public_send(key)] }
         end
 
-        def predictor(signature_class, lm_provider)
+        private def predictor(signature_class, lm_provider)
           p = DSPy::ChainOfThought.new(signature_class)
           p.configure { |c| c.lm = build_lm(lm_provider) }
           p
         end
 
-        def build_lm(provider)
+        private def build_lm(provider)
           DSPy::LM.new(provider, api_key: Bootstrap.api_key_for(provider, ENV))
         end
       end

@@ -50,12 +50,23 @@ module SFL
           tuples = load_all_sections(path.to_s, analyze_images:, vision_model:)
           total  = tuples.size
 
+          skipped = []
           artifacts = tuples.each_with_index.each_with_object([]) do |((section, source_file, mtime), idx), acc|
             break acc if @stop_requested&.call
 
             artifact_id = idx + 1
             @on_progress&.call(artifact_id:, total:, title: section_title(section))
-            acc << compile_artifact(section, source_file, mtime, artifact_id, store)
+            begin
+              acc << compile_artifact(section, source_file, mtime, artifact_id, store)
+            rescue => e
+              # Same degradation ladder as Pass 2: one malformed vault file
+              # (bad frontmatter, unparseable content) must not abort a
+              # whole-corpus run — a Date-typed title at artifact 10 once
+              # killed a 1295-artifact batch and all its prior LLM spend.
+              # Interrupts (Ctrl+C) are not StandardError and still abort.
+              skipped << { artifact_id:, source_file:, error: e.message }
+              warn "[WARN] KB artifact #{artifact_id} (#{source_file}) skipped: #{e.message}"
+            end
           end
 
           manifest = artifacts.map do |a|
@@ -85,6 +96,8 @@ module SFL
               file_count:       tuples.map { |(_, f, _)| f }.uniq.size,
               images_analyzed:  analyze_images,
               store:,
+              skipped_count:    skipped.size,
+              skipped:          skipped,
             },
             artifacts:,
             migration_manifest:        manifest,
@@ -133,7 +146,16 @@ module SFL
         end
 
         def section_title(section)
-          section.frontmatter&.dig("title") || section.heading || section.file_id
+          # Frontmatter values are typed by YAML, not by us: an unquoted
+          # `title: 2026-06-08` parses as a Date (MarkdownLoader's
+          # safe_load permits Date for the `last updated:` field), and a
+          # Daily note titled that way crashed KnowledgeArtifact's
+          # String-typed :title 10 artifacts into a 1295-artifact run.
+          # Same coercion compile_artifact already applies to tags.
+          fm_title = section.frontmatter&.dig("title")&.to_s
+          return fm_title unless fm_title.nil? || fm_title.strip.empty?
+
+          section.heading || section.file_id
         end
 
         def compile_artifact(section, source_file, mtime, artifact_id, store)

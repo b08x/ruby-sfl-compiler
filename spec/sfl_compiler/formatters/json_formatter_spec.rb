@@ -280,4 +280,49 @@ RSpec.describe SFL::Compiler::Formatters::JSONFormatter do
       expect(parsed["turns"].first["clauses"].first["reasoning_trace"]).to be_nil
     end
   end
+
+  # DocumentationAnalyzer maps sections onto ConversationTurn-shaped data
+  # (speaker: heading) and sets unit_label/actor_label/actors_list_label/
+  # id_label so downstream output speaks in section/document vocabulary,
+  # not conversational vocabulary — a section heading is not a "speaker".
+  describe "domain-renamed keys for a documentation-style result" do
+    let(:documentation_result) do
+      result.new(
+        metadata: result.metadata.merge(
+          unit_label: "Section",
+          actor_label: "Section",
+          actors_list_label: "Headings",
+          id_label: "document_id"
+        )
+      )
+    end
+
+    it "renames the top-level profiles key to match actor_label" do
+      json = JSON.parse(described_class.new(documentation_result).render)
+
+      expect(json).not_to have_key("speaker_profiles")
+      expect(json["section_profiles"]["Alice"]["avg_tenor"]).to eq(0.38)
+    end
+
+    it "renames metadata's id/count/actors-list keys, dropping the conversation-flavored ones" do
+      json = JSON.parse(described_class.new(documentation_result).render)
+      meta = json["metadata"]
+
+      expect(meta).not_to have_key("conversation_id")
+      expect(meta).not_to have_key("turn_count")
+      expect(meta).not_to have_key("speakers")
+      expect(meta["document_id"]).to eq("test-convo")
+      expect(meta["section_count"]).to eq(5)
+      expect(meta["headings"]).to eq(%w[Alice Bob])
+    end
+
+    it "leaves a plain conversation result's JSON keys unchanged" do
+      json = JSON.parse(described_class.new(result).render)
+
+      expect(json).to have_key("speaker_profiles")
+      expect(json["metadata"]["conversation_id"]).to eq("test-convo")
+      expect(json["metadata"]["turn_count"]).to eq(5)
+      expect(json["metadata"]["speakers"]).to eq(%w[Alice Bob])
+    end
+  end
 end

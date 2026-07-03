@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     sfl-compiler (0.1.0)
+      amatch (~> 0.7)
       async (~> 2.21)
       bubbles (~> 0.1)
       bubbletea (~> 0.1)
@@ -604,7 +605,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  amatch (~> 0.7.0)
   dspy-o11y (~> 1.0)
   dspy-o11y-langfuse (~> 1.1)
   git-lint

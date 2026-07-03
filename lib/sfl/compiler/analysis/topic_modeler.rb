@@ -40,7 +40,28 @@ module SFL
           min_length: 3,
         }.freeze
 
-        # @param k [Integer, nil] number of topics for LDA; nil → HDP
+        # Minimum confidence for claiming a dominant topic, expressed as
+        # normalized excess over the uniform baseline:
+        #
+        #   excess = (p1 - 1/k) / (1 - 1/k)   # 0.0 = chance, 1.0 = certain
+        #
+        # Normalizing by 1/k makes one cutoff work at any topic count —
+        # an absolute floor like "p1 >= 0.35" is barely above chance at
+        # k=3 (uniform 0.33) yet 3.5x chance at k=10, and meaningless
+        # under HDP where k floats. The same gate therefore answers
+        # "what is this turn/section/document about?" identically across
+        # conversation, documentation, and KB analyses.
+        #
+        # 0.35 was calibrated on live corpora at both extremes: a noisy
+        # 293-turn roleplay chat (k=10) where distributions are mostly
+        # flat sits at median 0.24 / p75 0.33 excess, while a small
+        # heterogeneous document corpus (k=3) with genuinely separable
+        # sections sits at p25 0.42 / median 0.74 — the cutoff lands in
+        # the gap, so flat conversational noise reads "no dominant
+        # topic" (nil) while real topical sections keep their labels.
+        # Pass dominant_threshold: 0 to restore unconditional max_by.
+        DEFAULT_DOMINANT_THRESHOLD = 0.35
+
         # @param min_cf [Integer] minimum corpus frequency for a word to be
         #   included in the vocabulary (filters very rare words)
         # @param rm_top [Integer] number of top-frequency words to remove
@@ -52,13 +73,20 @@ module SFL
         #   most for HDP (k: nil), where the live topic count itself is
         #   still converging during early iterations; nil leaves Tomoto's
         #   own default (0) in place.
-        def initialize(k: nil, min_cf: 3, rm_top: 2, iterations: 100, seed: 42, burn_in: nil)
+        # @param dominant_threshold [Float] normalized excess-over-uniform
+        #   a distribution's top topic must reach before it is claimed as
+        #   dominant (see DEFAULT_DOMINANT_THRESHOLD); below it the
+        #   turn/text is honestly reported as having no dominant topic.
+        def initialize(k: nil, min_cf: 3, rm_top: 2, iterations: 100, seed: 42, burn_in: nil,
+          dominant_threshold: DEFAULT_DOMINANT_THRESHOLD
+)
           @k = k
           @min_cf = min_cf
           @rm_top = rm_top
           @iterations = iterations
           @burn_in = burn_in
           @seed = seed
+          @dominant_threshold = dominant_threshold
           @model = nil
           @topic_labels = {}
           @fitted = false
@@ -72,7 +100,9 @@ module SFL
         #
         # @param texts [Array<String>]
         # @return [Array<Integer, nil>] dominant topic id per text, parallel
-        #   to +texts+ (nil for texts that tokenize to nothing)
+        #   to +texts+ (nil for texts that tokenize to nothing, or whose
+        #   topic distribution is too flat to claim a dominant topic —
+        #   see DEFAULT_DOMINANT_THRESHOLD)
         def fit_texts(texts)
           @model = build_model
           docs = texts.map { |t| tokenize(t) }
@@ -89,13 +119,28 @@ module SFL
 
           doc = @model.make_doc(tokens)
           topic_dist, = @model.infer(doc)
+          dominant_topic_id(topic_dist)
+        end
+
+        # The single "what is this about?" gate shared by every path that
+        # claims a dominant topic (fit_texts pre-pass, per-turn assignment,
+        # and — via the stored dominants — detect_topic_shifts). Returns
+        # nil rather than a confident-looking label when the distribution
+        # is too flat to honestly name one topic; formerly an unguarded
+        # max_by, which on a 293-turn conversation flagged 65% of turns as
+        # "topic shifts" between topics no turn meaningfully had.
+        private def dominant_topic_id(topic_dist)
+          return nil if topic_dist.nil? || topic_dist.size < 2
           # A degenerate fit (e.g. no word in the corpus clears min_cf, the
           # "No valid vocabs in the model!" case) infers NaN for every
           # topic — max_by's Float#<=> comparison raises on NaN rather
           # than just losing the comparison, so guard explicitly.
           return nil if topic_dist.any?(&:nan?)
 
-          topic_dist.each_with_index.max_by { |prob, _idx| prob }&.last
+          top_prob, idx = topic_dist.each_with_index.max_by { |prob, _idx| prob }
+          uniform = 1.0 / topic_dist.size
+          excess = (top_prob - uniform) / (1.0 - uniform)
+          excess >= @dominant_threshold ? idx : nil
         end
 
         # Train the topic model on an array of ConversationTurn structs.
@@ -154,6 +199,10 @@ module SFL
             prev_dominant = prev.dominant_topic
             curr_dominant = curr.dominant_topic
 
+            # A turn below the dominance gate has no topic to shift from
+            # or to — claiming a "shift" into or out of uncertainty is
+            # exactly the noise the gate exists to remove.
+            next if prev_dominant.nil? || curr_dominant.nil?
             next if prev_dominant == curr_dominant
 
             distance = cosine_distance(prev_dist, curr_dist)
@@ -288,7 +337,10 @@ module SFL
             tokens = tokenize(turn.message_text)
 
             if tokens.empty?
-              turn.new(topic_distribution: {}, dominant_topic: 0)
+              # Formerly dominant_topic: 0 — an untokenizable turn was
+              # assigned topic 0 by fiat, indistinguishable from a turn
+              # genuinely about topic 0. nil is the honest value.
+              turn.new(topic_distribution: {}, dominant_topic: nil)
             else
               doc = @model.make_doc(tokens)
               topic_dist, = @model.infer(doc)
@@ -298,11 +350,12 @@ module SFL
                 distribution[idx] = prob.round(4) if prob > 0.01
               end
 
-              dominant = distribution.max_by { |_, v| v }&.first || 0
-
+              # Gate on the full raw distribution, not the >0.01-filtered
+              # hash — the filtered size understates k, which would skew
+              # the uniform baseline the gate normalizes against.
               turn.new(
                 topic_distribution: distribution,
-                dominant_topic: dominant
+                dominant_topic: dominant_topic_id(topic_dist)
               )
             end
           end

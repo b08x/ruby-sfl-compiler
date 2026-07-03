@@ -133,6 +133,45 @@ RSpec.describe SFL::Compiler::Analysis::KnowledgeBaseAnalyzer do
       end
     end
 
+    it "coerces a Date-typed frontmatter title to String (regression: unquoted `title: 2026-06-08`)" do
+      # YAML types an unquoted date as Date (safe_load permits it for
+      # `last updated:`); KnowledgeArtifact's :title is String-typed, so
+      # this crashed a live 1295-artifact run at artifact 10.
+      daily_md = <<~MD
+        ---
+        title: 2026-06-08
+        ---
+
+        # Notes
+
+        #{"Something noteworthy happened on this day worth recording here. " * 5}
+      MD
+
+      Dir.mktmpdir do |dir|
+        write_file(dir, "2026-06-08.md", daily_md)
+        titles = analyzer.analyze(dir).artifacts.map(&:title)
+        expect(titles).to include("2026-06-08")
+      end
+    end
+
+    it "falls back to heading when the frontmatter title is blank" do
+      blank_title_md = <<~MD
+        ---
+        title: ""
+        ---
+
+        # Real Heading
+
+        #{"Content that is long enough to clear the loader minimum length. " * 5}
+      MD
+
+      Dir.mktmpdir do |dir|
+        write_file(dir, "note.md", blank_title_md)
+        titles = analyzer.analyze(dir).artifacts.map(&:title)
+        expect(titles).to include("Real Heading")
+      end
+    end
+
     it "backfills migration_action from the manifest" do
       Dir.mktmpdir do |dir|
         write_file(dir, "note.md", research_md)
@@ -142,6 +181,33 @@ RSpec.describe SFL::Compiler::Analysis::KnowledgeBaseAnalyzer do
           expect(a.migration_action).to eq(matching.action)
           expect(a.migration_reason).to eq(matching.reason)
         end
+      end
+    end
+  end
+
+  # ──────────────────────────────────────────────────────────────────
+  # Per-artifact degradation (one bad file must not abort the batch)
+  # ──────────────────────────────────────────────────────────────────
+  describe "per-artifact failure handling" do
+    it "skips a failing artifact with a warning and keeps analyzing the rest" do
+      Dir.mktmpdir do |dir|
+        write_file(dir, "bad.md", tutorial_md)
+        write_file(dir, "good.md", research_md)
+
+        allow(pipeline).to receive(:compile) do |_text, document_id:, **|
+          raise SFL::Compiler::PassOneError, "boom" if document_id.start_with?("bad#")
+
+          Array.new(5) { make_clause(doc_id: document_id, annotation_source: "llm", modality_weight: 0.7) }
+        end
+
+        result = nil
+        expect { result = analyzer.analyze(dir) }
+          .to output(/KB artifact .*bad\.md.*skipped: boom/).to_stderr
+
+        expect(result.artifacts).not_to be_empty
+        expect(result.artifacts.map(&:source_file)).to all(end_with("good.md"))
+        expect(result.metadata[:skipped_count]).to eq(1)
+        expect(result.metadata[:skipped].first[:source_file]).to end_with("bad.md")
       end
     end
   end

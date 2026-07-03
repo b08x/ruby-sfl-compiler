@@ -184,6 +184,39 @@ RSpec.describe SFL::Compiler::MarkdownLoader do
       sections = described_class.new(path).sections
       expect(sections.map(&:heading)).to eq(["First Heading"])
     end
+
+    it "does not duplicate the preamble as a second section (regression)" do
+      # Inkmark.chunks_by_heading already returns a heading: nil chunk for
+      # pre-heading content; a previous version of this loader also
+      # hand-extracted the same span, producing two identical sections
+      # for any document with preamble text.
+      path = write_md("doc.md", <<~MD)
+        This is preamble content that appears before any heading in the document.
+
+        It can be multiple paragraphs and is treated as its own section.
+
+        # First Heading
+
+        Content under the first heading that has enough text to be retained.
+      MD
+
+      sections = described_class.new(path).sections
+
+      expect(sections.map(&:heading)).to eq([nil, "First Heading"])
+      expect(sections.count { |s| s.heading.nil? }).to eq(1)
+    end
+
+    it "does not duplicate a headless document as two identical sections (regression)" do
+      path = write_md("doc.md", <<~MD)
+        A document with no headings at all, just prose that runs long enough
+        to clear the minimum length filter on its own without any heading.
+      MD
+
+      sections = described_class.new(path).sections
+
+      expect(sections.size).to eq(1)
+      expect(sections.first.document_id).to end_with("#preamble")
+    end
   end
 
   # ============================================================

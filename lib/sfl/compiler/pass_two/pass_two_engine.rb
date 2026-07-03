@@ -384,13 +384,7 @@ module SFL
 
       private def interpersonal_from(clause, result, correlation_id)
         mood, status = ClassificationRegistry.normalize(:mood, result[:mood])
-
-        if status == :unknown
-          log_and_warn("pass_two_schema_gap", correlation_id, clause,
-            "Invalid mood '#{result[:mood]}' normalized to '#{mood}'. " \
-            "Consider adding it to ClassificationRegistry::MOOD.",
-            unknown_value: result[:mood].to_s)
-        end
+        log_classification_gap(:mood, status, result[:mood], mood, correlation_id, clause)
 
         modality_weight = clamp01(result[:modality_weight] || 0.5)
         tenor = clamp01(result[:tenor] || 0.5)
@@ -450,13 +444,7 @@ module SFL
 
       private def textual_from(clause, result, correlation_id)
         theme_type, status = ClassificationRegistry.normalize(:theme_type, result[:theme_type])
-
-        if status == :unknown
-          log_and_warn("pass_two_schema_gap", correlation_id, clause,
-            "Invalid theme_type '#{result[:theme_type]}' normalized to '#{theme_type}'. " \
-            "Consider adding it to ClassificationRegistry::THEME_TYPE.",
-            unknown_value: result[:theme_type].to_s)
-        end
+        log_classification_gap(:theme_type, status, result[:theme_type], theme_type, correlation_id, clause)
 
         Types::TextualPayload.new(
           clause_id: clause.id,
@@ -620,6 +608,29 @@ module SFL
         # Likely a 1-5 or similar scale; normalize down
         normalized = value / 5.0
         normalized.clamp(0.0, 1.0)
+      end
+
+      # Shared WARN wiring for both ClassificationRegistry dimensions
+      # (mood in interpersonal_from, theme_type in textual_from).
+      # :unknown means the value fell through to the default — a real
+      # schema gap. :fuzzy means Jaro-Winkler resolved a near-miss to a
+      # real category — the value is good, but it still gets surfaced
+      # (never silent) so the alias table can gain a permanent entry
+      # instead of paying the fuzzy scan on every future run.
+      private def log_classification_gap(dimension, status, raw, resolved, correlation_id, clause)
+        registry_const = "ClassificationRegistry::#{dimension.to_s.upcase}"
+        case status
+        when :unknown
+          log_and_warn("pass_two_schema_gap", correlation_id, clause,
+            "Invalid #{dimension} '#{raw}' normalized to '#{resolved}'. " \
+            "Consider adding it to #{registry_const}.",
+            unknown_value: raw.to_s)
+        when :fuzzy
+          log_and_warn("pass_two_fuzzy_match", correlation_id, clause,
+            "#{dimension.to_s.capitalize} '#{raw}' fuzzy-matched to '#{resolved}'. " \
+            "Consider adding an explicit alias to #{registry_const}.",
+            unknown_value: raw.to_s)
+        end
       end
 
       private def log_and_warn(message, correlation_id, clause, human_message, **extra)
