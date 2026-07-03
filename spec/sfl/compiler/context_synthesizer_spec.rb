@@ -65,6 +65,19 @@ RSpec.describe SFL::Compiler::ContextSynthesizer do
     expect(result.retrieved_count).to eq(2)
   end
 
+  it "flattens mood/tenor/modality/process_type onto each clause for the frontend" do
+    allow(retriever).to receive(:retrieve).and_return(rows)
+    synthesizer = ->(_q, _e) { { answer: "ok", cited_clause_numbers: [1], confidence: 0.5 } }
+
+    result = described_class.new(retriever: retriever, clause_repo: clause_repo,
+      synthesizer: synthesizer).synthesize("what is tenor?")
+
+    expect(result.clauses.first).to include(
+      clause_id: "c-1", mood: "declarative", tenor: 0.7, modality_weight: 0.8, process_type: "relational"
+    )
+    expect(result.clauses.first).not_to have_key(:annotations)
+  end
+
   it "tolerates clause ids the repository can no longer find" do
     allow(retriever).to receive(:retrieve).and_return(rows)
     allow(clause_repo).to receive(:find).and_return(nil)

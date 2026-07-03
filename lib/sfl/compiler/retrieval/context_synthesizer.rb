@@ -37,7 +37,7 @@ module SFL
         return Types::SynthesisResult.new(query: query, answer: nil, retrieved_count: 0, confidence: nil) if rows.empty?
 
         enriched = rows.map { |row| row.merge(annotations: @clause_repo.find(row[:clause_id])) }
-        clauses = enriched.map { |e| e.reject { |k, _| k == :annotations } }
+        clauses = enriched.map { |e| public_clause_view(e) }
         citable, preamble = partition_citable(enriched, include_fallback)
 
         if citable.empty?
@@ -96,6 +96,25 @@ module SFL
       def llm_sourced?(enriched_row)
         source = enriched_row.dig(:annotations, :interpersonal, :annotation_source)
         source.nil? || Types::TRUSTED_ANNOTATION_SOURCES.include?(source)
+      end
+
+      # Flattens the scalar SFL fields callers actually want to display
+      # (mood/tenor/modality/process_type/annotation_source) onto the
+      # retrieved row, dropping the nested :annotations hash (which also
+      # carries non-JSON-safe DB row bits like :embedding). Consumed by
+      # the Safe RAG Hypothesis Validator view to show evidence stance
+      # alongside each cited clause.
+      def public_clause_view(enriched_row)
+        interpersonal = enriched_row.dig(:annotations, :interpersonal) || {}
+        ideational = enriched_row.dig(:annotations, :ideational) || {}
+
+        enriched_row.reject { |k, _| k == :annotations }.merge(
+          mood: interpersonal[:mood],
+          tenor: interpersonal[:tenor],
+          modality_weight: interpersonal[:modality_weight],
+          process_type: ideational[:process_type],
+          annotation_source: interpersonal[:annotation_source]
+        )
       end
 
       def data_quality_preamble(excluded_count, total_count)
