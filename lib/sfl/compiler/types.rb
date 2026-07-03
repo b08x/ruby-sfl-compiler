@@ -102,8 +102,21 @@ module SFL
 
       # Provenance of interpersonal values: "llm" = real Pass 2 annotation,
       # "fallback" = Pass 2 failed and defaults were substituted,
-      # "stub" = Pass 2 was skipped entirely (e.g. PASS=1 runs)
-      AnnotationSource = String.default("llm").enum("llm", "fallback", "stub", "chunk_artifact")
+      # "stub" = Pass 2 was skipped entirely (e.g. PASS=1 runs),
+      # "human" = a reviewer supplied/corrected the values via the HITL
+      # review flow (see AnnotationReview below) — distinct from "llm"
+      # because the values didn't come from the compiler, but equally
+      # trusted for downstream quality scoring and citation.
+      AnnotationSource = String.default("llm").enum("llm", "fallback", "stub", "chunk_artifact", "human")
+
+      # Sources whose values are trusted for grounding answers, quality
+      # scoring, and "needs attention" predicates — as opposed to
+      # fallback/stub/chunk_artifact, which are compiler-substituted
+      # defaults. Centralized here so every consumer of annotation_source
+      # (formatters, QualityScorer, EvidencePane, ContextSynthesizer)
+      # agrees on what counts as reviewed/reliable without duplicating the
+      # `!= "llm"` check that predates "human" as a source.
+      TRUSTED_ANNOTATION_SOURCES = %w[llm human].freeze
 
       # Transitivity process types (Ideational)
       ProcessType = String.enum("material", "mental", "relational", "verbal", "behavioral", "existential")
@@ -218,6 +231,33 @@ module SFL
         attribute :reasoning, Types::String.optional # DSPy ChainOfThought reasoning
         attribute :annotation_source, Types::AnnotationSource
         attribute :reasoning_trace, ReasoningTrace.optional.default(nil)
+      end
+
+      # Outcome of a human review decision on a flagged clause (see the
+      # Human-in-the-Loop Annotation Review track). "accepted" leaves the
+      # existing interpersonal values as-is but records that a human
+      # signed off on them; "rejected" records disagreement without
+      # supplying a replacement; "re_annotated" means the human supplied
+      # (or triggered a cache-bypassed Pass 2 recompile producing) new
+      # values, which is what actually flips annotation_source to "human"
+      # on the clause's own interpersonal_payloads row.
+      ReviewDecision = String.enum("accepted", "rejected", "re_annotated")
+
+      # An audit-trail row for a human review decision on a clause —
+      # deliberately a separate append-only table (annotation_reviews)
+      # rather than columns on interpersonal_payloads, so the original
+      # machine annotation is never overwritten silently: this row
+      # preserves what annotation_source the clause carried *before* the
+      # decision, alongside who decided what and why. Multiple reviews
+      # per clause are possible (e.g. reject, re-annotate, accept).
+      class AnnotationReview < Dry::Struct
+        attribute(:id, Types::String.default { SecureRandom.uuid })
+        attribute :clause_id, Types::String
+        attribute :decision, ReviewDecision
+        attribute :original_annotation_source, AnnotationSource
+        attribute :reviewer, Types::String.optional.default(nil)
+        attribute :notes, Types::String.optional.default(nil)
+        attribute(:reviewed_at, Types::Time.default { Time.now })
       end
 
       # Textual metafunction payload (from Pass 2)

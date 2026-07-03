@@ -5,7 +5,7 @@ module SFL
     module Analysis
       # Produces a 0–1 quality score for a KB artifact from four signals:
       #
-      #   annotation_source (0.40 weight) — llm=1.0, fallback=0.4, stub/chunk_artifact=0.1
+      #   annotation_source (0.40 weight) — llm/human=1.0, fallback=0.4, stub/chunk_artifact=0.1
       #   avg_modality       (0.30 weight) — certainty of claims in the text
       #   substance          (0.20 weight) — clause count as a proxy for content depth
       #   freshness          (0.10 weight) — age relative to STALENESS_CUTOFF_MONTHS
@@ -19,6 +19,7 @@ module SFL
 
         SOURCE_WEIGHTS = {
           "llm"            => 1.0,
+          "human"          => 1.0,
           "fallback"       => 0.4,
           "stub"           => 0.1,
           "chunk_artifact" => 0.15,

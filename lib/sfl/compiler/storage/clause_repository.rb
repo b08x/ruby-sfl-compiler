@@ -184,6 +184,47 @@ module SFL
           .all
       end
 
+      # Persist a human review decision as an audit-trail row. Does not
+      # mutate interpersonal_payloads itself — flipping annotation_source
+      # to "human" happens where new values actually get written (the
+      # re-annotation path, a separate card), not here. This method's job
+      # is only to make the decision durable and attributable.
+      #
+      # @param clause_id [String]
+      # @param decision [String] one of Types::ReviewDecision
+      # @param original_annotation_source [String] the clause's
+      #   annotation_source at the moment of decision, snapshotted so the
+      #   audit trail survives later re-annotation overwriting it
+      # @param reviewer [String, nil]
+      # @param notes [String, nil]
+      # @return [Types::AnnotationReview]
+      def record_review(clause_id:, decision:, original_annotation_source:, reviewer: nil, notes: nil)
+        review = Types::AnnotationReview.new(
+          clause_id:, decision:, original_annotation_source:, reviewer:, notes:
+        )
+        @db[:annotation_reviews].insert(review_row(review))
+        review
+      end
+
+      private def review_row(review)
+        {
+          id: review.id,
+          clause_id: review.clause_id,
+          decision: review.decision,
+          original_annotation_source: review.original_annotation_source,
+          reviewer: review.reviewer,
+          notes: review.notes,
+          reviewed_at: review.reviewed_at,
+          created_at: Time.now
+        }
+      end
+
+      # @param clause_id [String]
+      # @return [Array<Hash>] review rows for a clause, oldest first
+      def reviews_for(clause_id)
+        @db[:annotation_reviews].where(clause_id:).order(:reviewed_at).all
+      end
+
       # Scalar filter => how to apply it against the joined scope. Each
       # value is a 1-arity proc: given the raw filter value, returns
       # something #where can consume (a Hash-style equality condition or

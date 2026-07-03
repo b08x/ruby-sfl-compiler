@@ -64,6 +64,15 @@ RSpec.describe SFL::Compiler::Formatters::KBAnnotatedDocFormatter do
     expect(output).to include("1 of 1 clauses carry fallback/stub annotations")
   end
 
+  it "does not flag human-reviewed clauses with a warning marker" do
+    human_clause = make_clause(annotation_source: "human")
+    artifact = make_artifact(clauses: [human_clause])
+
+    output = described_class.new(artifact).render
+
+    expect(output).not_to include("⚠️")
+  end
+
   it "handles an artifact with no clauses" do
     artifact = make_artifact(clauses: [])
 

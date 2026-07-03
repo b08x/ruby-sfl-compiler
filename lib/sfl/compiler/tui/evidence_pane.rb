@@ -87,7 +87,7 @@ module SFL
         # Clauses that would land in a future review queue: everything the
         # LLM did not annotate (fallback defaults, pass-1-only stubs).
         private def flagged_section
-          flagged = clauses.reject { |c| interpersonal(c)[:annotation_source].to_s == "llm" }
+          flagged = clauses.reject { |c| Types::TRUSTED_ANNOTATION_SOURCES.include?(interpersonal(c)[:annotation_source].to_s) }
           return [] if flagged.empty?
 
           lines = flagged.first(MAX_FLAGGED).map do |c|

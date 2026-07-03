@@ -86,6 +86,21 @@ RSpec.describe SFL::Compiler::TUI::EvidencePane do
       expect(strip_ansi(pane.render)).not_to include("Needs attention")
     end
 
+    it "does not flag human-reviewed clauses as needing attention" do
+      pane = described_class.new(
+        result_with([
+          clause(text: "Reviewed by a human.", source: "human"),
+          clause(text: "Still flagged.", source: "fallback"),
+        ]),
+        width: 100
+      )
+      output = strip_ansi(pane.render)
+
+      expect(output).to include("1 non-llm clauses")
+      expect(output).not_to include("Reviewed by a human.")
+      expect(output).to include("[fallback] Still flagged.")
+    end
+
     it "caps the flagged list and reports the overflow count" do
       flagged = Array.new(9) { |i| clause(text: "Bad clause #{i}", source: "fallback") }
       output = strip_ansi(described_class.new(result_with(flagged), width: 100).render)

@@ -425,7 +425,7 @@ module SFL
         private def report_progress(turn, total, elapsed)
           return unless @on_progress
 
-          defaulted = turn.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+          defaulted = turn.clauses.count { |c| !Types::TRUSTED_ANNOTATION_SOURCES.include?(c.interpersonal.annotation_source) }
           @on_progress.call(
             turn_id: turn.turn_id, total:, speaker: turn.speaker,
             elapsed: elapsed.round(2), clause_count: turn.clauses.size,

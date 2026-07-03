@@ -90,10 +90,12 @@ module SFL
       end
 
       # Defensively treats a missing/nil annotation_source (rows stored
-      # before this column existed) as "llm" rather than excluding them.
+      # before this column existed) as trusted rather than excluding them.
+      # "human" counts as trusted alongside "llm" — a reviewer-supplied
+      # correction is not a compiler-substituted default.
       def llm_sourced?(enriched_row)
         source = enriched_row.dig(:annotations, :interpersonal, :annotation_source)
-        source.nil? || source == "llm"
+        source.nil? || Types::TRUSTED_ANNOTATION_SOURCES.include?(source)
       end
 
       def data_quality_preamble(excluded_count, total_count)

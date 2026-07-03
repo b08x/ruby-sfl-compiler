@@ -72,7 +72,7 @@ RSpec.describe SFL::Compiler::Formatters::JSONFormatter do
         clause_id: "syn-1", process_type: "material",
         participants: [], circumstances: [], raw_transitivity: {}
       )
-      clauses = %w[llm llm fallback stub].map do |source|
+      clauses = %w[llm llm fallback stub human].map do |source|
         SFL::Compiler::Types::AnnotatedClause.new(
           id: "ann-1", text: "It works.", syntactic:,
           ideational:,
@@ -96,11 +96,12 @@ RSpec.describe SFL::Compiler::Formatters::JSONFormatter do
       json = JSON.parse(described_class.new(with_turns).render)
       coverage = json["metadata"]["annotation_coverage"]
 
-      expect(coverage["total_clauses"]).to eq(4)
+      expect(coverage["total_clauses"]).to eq(5)
       expect(coverage["llm"]).to eq(2)
+      expect(coverage["human"]).to eq(1)
       expect(coverage["fallback"]).to eq(1)
       expect(coverage["stub"]).to eq(1)
-      expect(coverage["defaulted_pct"]).to eq(50.0)
+      expect(coverage["defaulted_pct"]).to eq(40.0)
     end
 
     it "includes speaker profiles" do

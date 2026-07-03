@@ -30,7 +30,7 @@ module SFL
         end
 
         private def data_quality_line
-          non_llm = result.clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+          non_llm = result.clauses.count { |c| !Types::TRUSTED_ANNOTATION_SOURCES.include?(c.interpersonal.annotation_source) }
           return "" if non_llm.zero?
 
           "\n> ⚠️ #{non_llm} of #{result.clauses.size} clauses carry fallback/stub annotations " \
@@ -47,7 +47,7 @@ module SFL
           tag = "`[#{clause.ideational.process_type} · #{clause.interpersonal.mood} · " \
             "tenor=#{clause.interpersonal.tenor.round(2)} · " \
             "modality=#{clause.interpersonal.modality_weight.round(2)}]`"
-          tag = "⚠️ #{tag}" if clause.interpersonal.annotation_source != "llm"
+          tag = "⚠️ #{tag}" unless Types::TRUSTED_ANNOTATION_SOURCES.include?(clause.interpersonal.annotation_source)
 
           "#{clause.text} #{tag}"
         end

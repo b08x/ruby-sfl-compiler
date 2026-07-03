@@ -145,6 +145,30 @@ RSpec.describe SFL::Compiler::ContextSynthesizer do
       expect(result.cited_clause_ids).to eq(["c-1"])
     end
 
+    it "treats human-reviewed clauses as citable, like llm" do
+      allow(retriever).to receive(:retrieve).and_return(rows)
+      allow(clause_repo).to receive(:find) do |id|
+        source = id == "c-2" ? "fallback" : "human"
+        {
+          clause: { external_id: id, text: "..." },
+          ideational: { process_type: "relational" },
+          interpersonal: { mood: "declarative", tenor: 0.7, modality_weight: 0.8, annotation_source: source },
+          embedding: nil
+        }
+      end
+      seen_evidence = nil
+      synthesizer = lambda do |_query, evidence|
+        seen_evidence = evidence
+        { answer: "ok", cited_clause_numbers: [1], confidence: 0.9 }
+      end
+
+      result = described_class.new(retriever: retriever, clause_repo: clause_repo,
+        synthesizer: synthesizer).synthesize("q")
+
+      expect(seen_evidence).to include("Llm-sourced clause.")
+      expect(result.cited_clause_ids).to eq(["c-1"])
+    end
+
     it "short-circuits without calling the synthesizer when every retrieved clause is fallback-sourced" do
       allow(retriever).to receive(:retrieve).and_return(rows)
       allow(clause_repo).to receive(:find).and_return(

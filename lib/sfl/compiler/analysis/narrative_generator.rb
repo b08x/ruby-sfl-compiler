@@ -75,7 +75,7 @@ module SFL
                 "dominant_mood" => t.dominant_mood,
                 "tenor_shift" => t.tenor_shift,
                 "clause_count" => t.clauses.size,
-                "defaulted_count" => t.clauses.count { |c| c.interpersonal.annotation_source != "llm" },
+                "defaulted_count" => defaulted_count(t.clauses),
                 "semantic_coherence_score" => t.semantic_coherence_score,
               }
             end
@@ -144,18 +144,28 @@ module SFL
             meta.each_with_object({}) { |(k, v), renamed| renamed[key_map.fetch(k, k)] = v }
           end
 
+          def self.defaulted_count(clauses)
+            clauses.count { |c| !Types::TRUSTED_ANNOTATION_SOURCES.include?(c.interpersonal.annotation_source) }
+          end
+
+          def self.defaulted_pct(clauses)
+            return 0.0 if clauses.empty?
+
+            (defaulted_count(clauses) * 100.0 / clauses.size).round(1)
+          end
+
           # Identical formula to JSONFormatter#annotation_coverage (the
           # equivalence contract requires matching values, incl. rounding).
           def self.coverage(result)
             clauses = result.turns.flat_map(&:clauses)
             sources = clauses.map { |c| c.interpersonal.annotation_source }.tally
-            defaulted = clauses.size - sources.fetch("llm", 0)
             {
               total_clauses: clauses.size,
               llm: sources.fetch("llm", 0),
+              human: sources.fetch("human", 0),
               fallback: sources.fetch("fallback", 0),
               stub: sources.fetch("stub", 0),
-              defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1),
+              defaulted_pct: defaulted_pct(clauses),
             }
           end
 

@@ -597,7 +597,7 @@ module SFL
         paths = Formatters::ReportWriter.write(result, output_dir)
 
         clauses = result.turns.flat_map(&:clauses)
-        defaulted = clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+        defaulted = clauses.count { |c| !Types::TRUSTED_ANNOTATION_SOURCES.include?(c.interpersonal.annotation_source) }
         if defaulted.positive?
           pct = (defaulted * 100.0 / clauses.size).round(1)
           warn "[WARN] #{defaulted}/#{clauses.size} clauses (#{pct}%) carry fallback/stub values — see the Data Quality section."

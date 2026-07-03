@@ -44,6 +44,7 @@ module SFL
         create_embeddings_table
         create_question_edges_table
         create_axiomatic_summaries_table
+        create_annotation_reviews_table
         backfill_columns
         create_indices
         @logger.send_message(
@@ -159,6 +160,24 @@ module SFL
 
           index :workflow_id, name: :idx_axiomatic_summaries_workflow
           index :created_at, name: :idx_axiomatic_summaries_created_at
+        end
+      end
+
+      # Append-only audit trail for human review decisions (Types::AnnotationReview).
+      # No FK to clauses.external_id — same convention as ideational/interpersonal
+      # payloads, which key on the plain clause_id string rather than a real FK.
+      private def create_annotation_reviews_table
+        @db.create_table?(:annotation_reviews) do
+          String :id, primary_key: true  # UUID
+          String :clause_id, null: false
+          String :decision, null: false
+          String :original_annotation_source, null: false
+          String :reviewer
+          String :notes, text: true
+          DateTime :reviewed_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+          DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+
+          index :clause_id, name: :idx_annotation_reviews_clause_id
         end
       end
 

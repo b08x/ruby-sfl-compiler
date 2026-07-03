@@ -107,6 +107,48 @@ RSpec.describe SFL::Compiler::ClauseRepository do
     end
   end
 
+  describe "#record_review" do
+    let(:reviews_ds) { double("annotation_reviews dataset") }
+    let(:db) { double("db", :[] => reviews_ds) }
+
+    it "inserts a review row and returns the built Types::AnnotationReview" do
+      expect(reviews_ds).to receive(:insert).with(
+        hash_including(
+          clause_id: "clause-1", decision: "accepted",
+          original_annotation_source: "fallback", reviewer: "bob"
+        )
+      )
+
+      review = described_class.new(db).record_review(
+        clause_id: "clause-1", decision: "accepted",
+        original_annotation_source: "fallback", reviewer: "bob"
+      )
+
+      expect(review).to be_a(SFL::Compiler::Types::AnnotationReview)
+      expect(review.clause_id).to eq("clause-1")
+    end
+
+    it "defaults reviewer and notes to nil" do
+      expect(reviews_ds).to receive(:insert).with(hash_including(reviewer: nil, notes: nil))
+
+      described_class.new(db).record_review(
+        clause_id: "clause-1", decision: "rejected", original_annotation_source: "stub"
+      )
+    end
+  end
+
+  describe "#reviews_for" do
+    it "queries annotation_reviews by clause_id ordered by reviewed_at" do
+      ds = double("dataset")
+      expect(ds).to receive(:where).with(clause_id: "clause-1").and_return(ds)
+      expect(ds).to receive(:order).with(:reviewed_at).and_return(ds)
+      expect(ds).to receive(:all).and_return([{ id: "r1" }])
+      db = double("db", :[] => ds)
+
+      expect(described_class.new(db).reviews_for("clause-1")).to eq([{ id: "r1" }])
+    end
+  end
+
   # find_all's actual SQL correctness (the double-join column-ambiguity
   # risk called out in its docstring) was verified live against a real
   # Postgres DB before this method was written, not just asserted here —

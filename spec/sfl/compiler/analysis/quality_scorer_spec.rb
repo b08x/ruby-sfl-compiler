@@ -33,6 +33,12 @@ RSpec.describe SFL::Compiler::Analysis::QualityScorer do
         clauses_fallback = Array.new(5) { make_clause(annotation_source: "fallback", modality_weight: 0.5) }
         expect(scorer.score(clauses: clauses_stub)).to be < scorer.score(clauses: clauses_fallback)
       end
+
+      it "scores human-reviewed clauses the same as llm" do
+        clauses_llm   = Array.new(10) { make_clause(annotation_source: "llm",   modality_weight: 0.7) }
+        clauses_human = Array.new(10) { make_clause(annotation_source: "human", modality_weight: 0.7) }
+        expect(scorer.score(clauses: clauses_human)).to eq(scorer.score(clauses: clauses_llm))
+      end
     end
 
     context "modality weight contribution" do

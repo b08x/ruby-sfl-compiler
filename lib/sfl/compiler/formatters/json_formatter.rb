@@ -95,19 +95,26 @@ module SFL
           self.class.actors_key_for(result.metadata)
         end
 
+        private def defaulted_pct(clauses)
+          return 0.0 if clauses.empty?
+
+          trusted = clauses.map { |c| c.interpersonal.annotation_source }
+            .tally.values_at(*Types::TRUSTED_ANNOTATION_SOURCES).compact.sum
+          ((clauses.size - trusted) * 100.0 / clauses.size).round(1)
+        end
+
         # Per-source clause counts so consumers can tell real LLM annotations
         # from fallback/stub defaults (which all sit at 0.5 and bias averages).
         private def annotation_coverage
           clauses = result.turns.flat_map(&:clauses)
           sources = clauses.map { |c| c.interpersonal.annotation_source }.tally
-          defaulted = clauses.size - sources.fetch("llm", 0)
-
           {
             total_clauses: clauses.size,
             llm: sources.fetch("llm", 0),
+            human: sources.fetch("human", 0),
             fallback: sources.fetch("fallback", 0),
             stub: sources.fetch("stub", 0),
-            defaulted_pct: clauses.empty? ? 0.0 : (defaulted * 100.0 / clauses.size).round(1),
+            defaulted_pct: defaulted_pct(clauses),
           }
         end
 

@@ -58,7 +58,7 @@ module SFL
           clauses = result.artifacts.flat_map(&:clauses)
           return "" if clauses.empty?
 
-          non_llm = clauses.count { |c| c.interpersonal.annotation_source != "llm" }
+          non_llm = clauses.count { |c| !Types::TRUSTED_ANNOTATION_SOURCES.include?(c.interpersonal.annotation_source) }
           return "" if non_llm.zero?
 
           pct = (non_llm * 100.0 / clauses.size).round(1)

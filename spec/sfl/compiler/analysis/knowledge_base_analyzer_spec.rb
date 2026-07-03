@@ -117,6 +117,23 @@ RSpec.describe SFL::Compiler::Analysis::KnowledgeBaseAnalyzer do
       end
     end
 
+    it "buckets human-reviewed clauses separately from llm and fallback in annotation_coverage" do
+      allow(pipeline).to receive(:compile) do |_text, document_id:, **|
+        [
+          make_clause(doc_id: document_id, annotation_source: "llm", modality_weight: 0.7),
+          make_clause(doc_id: document_id, annotation_source: "human", modality_weight: 0.7),
+          make_clause(doc_id: document_id, annotation_source: "fallback", modality_weight: 0.7),
+        ]
+      end
+
+      Dir.mktmpdir do |dir|
+        write_file(dir, "note.md", research_md)
+        coverage = analyzer.analyze(dir).artifacts.first.annotation_coverage
+
+        expect(coverage).to eq(llm: 1, human: 1, fallback: 1, total: 3)
+      end
+    end
+
     it "picks up title from YAML frontmatter" do
       Dir.mktmpdir do |dir|
         write_file(dir, "note.md", research_md)

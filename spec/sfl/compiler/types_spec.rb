@@ -127,9 +127,58 @@ RSpec.describe SFL::Compiler::Types do
         expect(payload(annotation_source: "stub").annotation_source).to eq("stub")
       end
 
+      it "accepts human as a source" do
+        expect(payload(annotation_source: "human").annotation_source).to eq("human")
+      end
+
       it "rejects unknown annotation sources" do
         expect { payload(annotation_source: "guess") }.to raise_error(Dry::Struct::Error)
       end
+    end
+
+    describe "TRUSTED_ANNOTATION_SOURCES" do
+      it "considers llm and human trusted, and nothing else" do
+        expect(SFL::Compiler::Types::TRUSTED_ANNOTATION_SOURCES).to eq(%w[llm human])
+      end
+    end
+  end
+
+  describe SFL::Compiler::Types::AnnotationReview do
+    def review(**overrides)
+      SFL::Compiler::Types::AnnotationReview.new(
+        {
+          clause_id: "c-1",
+          decision: "accepted",
+          original_annotation_source: "fallback",
+        }.merge(overrides)
+      )
+    end
+
+    it "generates a UUID id by default" do
+      expect(review.id).to match(/\A[0-9a-f-]{36}\z/)
+    end
+
+    it "defaults reviewer and notes to nil" do
+      expect(review.reviewer).to be_nil
+      expect(review.notes).to be_nil
+    end
+
+    it "defaults reviewed_at to now" do
+      expect(review.reviewed_at).to be_within(2).of(Time.now)
+    end
+
+    it "accepts accepted, rejected, and re_annotated decisions" do
+      expect(review(decision: "accepted").decision).to eq("accepted")
+      expect(review(decision: "rejected").decision).to eq("rejected")
+      expect(review(decision: "re_annotated").decision).to eq("re_annotated")
+    end
+
+    it "rejects an unknown decision" do
+      expect { review(decision: "maybe") }.to raise_error(Dry::Struct::Error)
+    end
+
+    it "rejects an unknown original_annotation_source" do
+      expect { review(original_annotation_source: "guess") }.to raise_error(Dry::Struct::Error)
     end
   end
 

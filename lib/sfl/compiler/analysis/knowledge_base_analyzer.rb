@@ -203,6 +203,7 @@ module SFL
           quality_score = @scorer.score(clauses:, last_updated:)
 
           llm_count = clauses.count { |c| c.interpersonal.annotation_source == "llm" }
+          human_count = clauses.count { |c| c.interpersonal.annotation_source == "human" }
 
           Types::KnowledgeArtifact.new(
             artifact_id:,
@@ -223,7 +224,8 @@ module SFL
             process_types: clauses.map { |c| c.ideational.process_type }.tally,
             annotation_coverage: {
               llm:      llm_count,
-              fallback: clauses.size - llm_count,
+              human:    human_count,
+              fallback: clauses.size - llm_count - human_count,
               total:    clauses.size
             }
           )
