@@ -23,6 +23,27 @@ flowchart LR
     end
     compiler_convergence_detector_convergencedetecto_2544966d("ConvergenceDetector<br/><small>sfl/compiler/convergence_detector.rb</small>")
     compiler_image_loader_imageloader_4a189d7b("ImageLoader<br/><small>sfl/compiler/image_loader.rb</small>")
+    subgraph serve_api_compiler_retrieval_context_synthesizer_rb["compiler/retrieval/context_synthesizer.rb"]
+        retrieval_context_synthesizer_contextsynthesizer("ContextSynthesizer<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_initialize("initialize()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_synthesize("synthesize()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_partition_citable("partition_citable()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable("synthesize_from_citable()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_degraded_result("degraded_result()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_map_citations("map_citations()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_llm_sourced("llm_sourced?()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_public_clause_view("public_clause_view()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_data_quality_preamble("data_quality_preamble()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_prepend_data_quality("prepend_data_quality()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_contextsynthesizer_format_evidence("format_evidence()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_sflsynthesizer("SFLSynthesizer<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+        retrieval_context_synthesizer_sflsynthesizer_call("call()<br/><small>compiler/retrieval/context_synthesizer.rb</small>")
+    end
+    subgraph serve_api_compiler_storage_database_rb["compiler/storage/database.rb"]
+        storage_database_connect("connect()<br/><small>compiler/storage/database.rb</small>")
+        storage_database_migrator("Migrator<br/><small>compiler/storage/database.rb</small>")
+        storage_database_migrator_run_all("run_all()<br/><small>compiler/storage/database.rb</small>")
+    end
     api_server_server_b73b68f0 -->|method| api_server_server_call_d439926e
     api_server_server_b73b68f0 -->|method| api_server_server_compile_pipeline_d05425bc
     api_server_server_b73b68f0 -->|method| api_server_server_create_workflow_0121334e
@@ -47,7 +68,35 @@ flowchart LR
     api_server_server_dispatch_95012b2d -->|calls| api_server_server_synthesize_18ed72be
     api_server_server_compile_pipeline_d05425bc -->|calls| api_server_server_json_e9e7077b
     api_server_server_compile_pipeline_d05425bc -->|calls| api_server_server_parse_body_ff64a080
-    %% Omitted for readability: 68 nodes, 9 edges
+    api_server_server_synthesize_18ed72be -.->|dispatches to| retrieval_context_synthesizer_contextsynthesizer_synthesize
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_initialize
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_synthesize
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_partition_citable
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_degraded_result
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_map_citations
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_llm_sourced
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_public_clause_view
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_data_quality_preamble
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_prepend_data_quality
+    retrieval_context_synthesizer_contextsynthesizer -->|method| retrieval_context_synthesizer_contextsynthesizer_format_evidence
+    retrieval_context_synthesizer_sflsynthesizer -->|method| retrieval_context_synthesizer_sflsynthesizer_call
+    retrieval_context_synthesizer_contextsynthesizer_initialize -->|calls| retrieval_context_synthesizer_sflsynthesizer_call
+    retrieval_context_synthesizer_contextsynthesizer_synthesize -->|calls| retrieval_context_synthesizer_contextsynthesizer_partition_citable
+    retrieval_context_synthesizer_contextsynthesizer_synthesize -->|calls| retrieval_context_synthesizer_contextsynthesizer_public_clause_view
+    retrieval_context_synthesizer_contextsynthesizer_synthesize -->|calls| retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable
+    retrieval_context_synthesizer_contextsynthesizer_partition_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_data_quality_preamble
+    retrieval_context_synthesizer_contextsynthesizer_partition_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_llm_sourced
+    retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_degraded_result
+    retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_format_evidence
+    retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_map_citations
+    retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable -->|calls| retrieval_context_synthesizer_contextsynthesizer_prepend_data_quality
+    retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable -->|calls| retrieval_context_synthesizer_sflsynthesizer_call
+    storage_database_migrator -->|method| storage_database_migrator_run_all
+    %% Database.connect is called by Bootstrap.call in api_boot.rb, one level
+    %% above Server.new(ctx) in config.ru — not a direct call from Server, so
+    %% no edge drawn between them here (verified against source, not assumed).
+    %% Omitted for readability: 68 nodes, 9 edges (pre-existing); +4 nodes/6 edges omitted from ContextSynthesizer/Database (2026-07-03 update, see graph.json)
     class api_server_server_b73b68f0 klass;
     class api_server_server_dispatch_95012b2d function;
     class api_server_server_call_d439926e function;
@@ -66,6 +115,23 @@ flowchart LR
     class chat_app_app_update_4faadb04 function;
     class compiler_convergence_detector_convergencedetecto_2544966d klass;
     class compiler_image_loader_imageloader_4a189d7b klass;
+    class retrieval_context_synthesizer_contextsynthesizer klass;
+    class retrieval_context_synthesizer_contextsynthesizer_initialize function;
+    class retrieval_context_synthesizer_contextsynthesizer_synthesize function;
+    class retrieval_context_synthesizer_contextsynthesizer_partition_citable function;
+    class retrieval_context_synthesizer_contextsynthesizer_synthesize_from_citable function;
+    class retrieval_context_synthesizer_contextsynthesizer_degraded_result function;
+    class retrieval_context_synthesizer_contextsynthesizer_map_citations function;
+    class retrieval_context_synthesizer_contextsynthesizer_llm_sourced function;
+    class retrieval_context_synthesizer_contextsynthesizer_public_clause_view function;
+    class retrieval_context_synthesizer_contextsynthesizer_data_quality_preamble function;
+    class retrieval_context_synthesizer_contextsynthesizer_prepend_data_quality function;
+    class retrieval_context_synthesizer_contextsynthesizer_format_evidence function;
+    class retrieval_context_synthesizer_sflsynthesizer klass;
+    class retrieval_context_synthesizer_sflsynthesizer_call function;
+    class storage_database_connect function;
+    class storage_database_migrator klass;
+    class storage_database_migrator_run_all function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;

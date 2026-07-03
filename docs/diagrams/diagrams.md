@@ -19,7 +19,7 @@ flowchart LR
     class OUTPUTS_DOCS_ED82387C module;
     INGEST_CACHE_UPDATE_FF457338("Ingestion & Updates<br/><small>Pipeline, PassTwoEngine, PipelineCache</small>")
     class INGEST_CACHE_UPDATE_FF457338 module;
-    SERVE_API_35EC8E86("Serving API<br/><small>Falcon API Server</small>")
+    SERVE_API_35EC8E86("Serving API<br/><small>Falcon API Server, ContextSynthesizer, Database</small>")
     class SERVE_API_35EC8E86 module;
     CLASSIFICATION_REGISTRY_D39798EE("Classification Registry<br/><small>SFL Types, DimensionConfig</small>")
     class CLASSIFICATION_REGISTRY_D39798EE module;
@@ -66,7 +66,7 @@ Detailed call graphs for major subsystems.
 | **callflow_2** | Graph Build | ConversationAnalyzer, QuestionGraph |
 | **callflow_3** | Outputs & Docs | Formatters, NarrativeGenerator |
 | **callflow_4** | Ingestion & Updates | Pipeline, PassTwoEngine, PipelineCache |
-| **callflow_5** | Serving API | Falcon API Server |
+| **callflow_5** | Serving API | Falcon API Server, ContextSynthesizer, Database (fiber-safe pool) |
 | **callflow_6** | Classification Registry | SFL Types, DimensionConfig |
 | **callflow_7** | Topic Modeling | TopicModeler |
 | **callflow_8** | Chat & Session | Chat::App, Chat::Session |
@@ -102,3 +102,12 @@ Detailed call graphs for major subsystems.
 - **Edges**: 1,246 (after removing low-confidence inferred edges)
 - **Communities**: 64
 - **Edge types**: All EXTRACTED (no INFERRED noise)
+
+Stats above are from the last full semantic extraction. `callflow_5.mmd`
+(Serving API) additionally carries a manually-added `ContextSynthesizer` +
+`Database` subgraph (2026-07-03), sourced directly from a real
+`graphify --update` run's `graph.json` — not fabricated — but not folded
+back into the aggregate counts above, since that would require a full
+re-extraction (semantic subagents across the whole corpus) rather than
+the incremental, code-only AST update actually run. Run a full
+`/graphify` pass to refresh these numbers precisely.
