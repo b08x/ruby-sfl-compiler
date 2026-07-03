@@ -8,9 +8,25 @@ module SFL
   module Compiler
     # Database connection manager.
     module Database
+      # :pool_class => :timed_queue plus the fiber_concurrency extension are
+      # both required for correctness under the Falcon API server. Falcon
+      # runs concurrent requests as Async fibers within a single thread.
+      # Sequel's default pool checks out connections keyed on
+      # Sequel.current, which defaults to Thread.current — so without
+      # fiber_concurrency, #hold treats two sibling fibers on the same
+      # thread as "the same caller" (its re-entrant-hold fast path) and
+      # hands them the SAME pg connection, even with a fiber-capable pool
+      # class selected. Two concurrent requests would then interleave
+      # queries on one socket, surfacing as garbled NoMethodErrors deep in
+      # the pg/Sequel adapter (`undefined method 'nfields' for nil`,
+      # `undefined method '<' for nil`). Loading fiber_concurrency makes
+      # Sequel.current key on Fiber.current instead, so each fiber gets its
+      # own connection from the (still thread-safe) TimedQueueConnectionPool.
+      Sequel.extension :fiber_concurrency
+
       def self.connect(url = nil)
         url ||= SFL::Compiler.config.database_url
-        db = Sequel.connect(url)
+        db = Sequel.connect(url, pool_class: :timed_queue)
 
         # Enable pg_json extension (supports jsonb)
         db.extension :pg_json
