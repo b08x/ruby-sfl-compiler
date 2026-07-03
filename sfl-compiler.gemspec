@@ -29,10 +29,10 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
   spec.bindir = "exe"
-  spec.executables = %w[sfl-analyze sfl-tui sfl-api]
+  spec.executables = %w[sfl-analyze sfl-api]
+  spec.extensions = ["ext/sfl_compiler/extconf.rb"]
 
   spec.add_dependency "async", "~> 2.21"
-  spec.add_dependency "falcon", "~> 0.48"
   spec.add_dependency "bubbles", "~> 0.1"
   spec.add_dependency "bubbletea", "~> 0.1"
   spec.add_dependency "circuit_breaker", "~> 1.1"
@@ -42,18 +42,19 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dry-struct", "~> 1.6"
   spec.add_dependency "dry-types", "~> 1.7"
   spec.add_dependency "dspy", "~> 1.0"
-  spec.add_dependency "dspy-openai", "~> 1.0"
   spec.add_dependency "dspy-o11y", "~> 1.0"
   spec.add_dependency "dspy-o11y-langfuse", "~> 1.1"
+  spec.add_dependency "dspy-openai", "~> 1.0"
+  spec.add_dependency "falcon", "~> 0.48"
   spec.add_dependency "glamour", "~> 0.2"
   spec.add_dependency "gum"
   spec.add_dependency "inkmark", "~> 0.1"
   spec.add_dependency "journald-logger", "~> 3.1"
   spec.add_dependency "kreuzberg", "~> 4.9"
   spec.add_dependency "lipgloss", "~> 0.2"
-  spec.add_dependency "opentelemetry-sdk", "~> 1.12"
   spec.add_dependency "opentelemetry-exporter-otlp", "~> 0.34.0"
   spec.add_dependency "opentelemetry-instrumentation-ruby_llm", "~> 0.6.0"
+  spec.add_dependency "opentelemetry-sdk", "~> 1.12"
   spec.add_dependency "pastel", "~> 0.8"
   spec.add_dependency "pg", "~> 1.5"
   spec.add_dependency "pgvector", "~> 0.3"

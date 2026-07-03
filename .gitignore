@@ -46,3 +46,6 @@ output/
 scrub_incidents.rb
 session-ses_*
 db/dumps/*
+
+.bundle/plugin/
+.claude/skills/

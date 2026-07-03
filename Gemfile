@@ -29,17 +29,19 @@ end
 
 gem "ruby-lsp", "~> 0.26.9"
 
-gem "gush", "~> 5.0"
+gem "gush"
 gem "sidekiq", "~> 8.0"
 
-gem "kreuzberg", "~> 4.9"
+gem "kreuzberg"
 
-gem "informers", "~> 1.3"
+gem "informers"
 
-gem "onnxruntime", "~> 0.11.3"
+gem "onnxruntime"
 
 gem "opentelemetry-sdk", "~> 1.12"
 gem "opentelemetry-exporter-otlp", "~> 0.34.0"
 gem "opentelemetry-instrumentation-ruby_llm", "~> 0.6.0"
 gem "dspy-o11y", "~> 1.0"
 gem "dspy-o11y-langfuse", "~> 1.1"
+
+gem "amatch", "~> 0.7.0"
