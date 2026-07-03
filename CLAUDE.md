@@ -105,7 +105,7 @@ progress via injectable `on_progress` callback) so a TUI can reuse them.
 
 ### Entry Points
 - `lib/sfl/compiler/bootstrap.rb`: `Bootstrap.call(require_db:, require_llm:, env:, load_dotenv:)` — the ONLY ENV reader. Provider prefix → API key map (openrouter/google/openai/anthropic); raises `BootstrapError` on unsupported prefix, missing key, or DB connection failure. First thing it does is `configure_vendored_python`, pointing `ruby-spacy`/PyCall at `vendor/python` (see gotcha #14) if `ext/sfl_compiler/extconf.rb` vendored one — before `Dotenv.load` settles and before anything downstream can `require "ruby-spacy"`.
-- `lib/sfl/compiler/cli.rb` + `exe/sfl-analyze`: subcommands `conversation`, `documentation [--store]`, `context` with stance-filter flags, and `narrate <analysis.json>`. `CLI.parse` is a pure function (tested); `run_*` methods wire Bootstrap → analyzers (live-verified, not unit-tested). `conversation`/`documentation` accept `--narrative` to run `NarrativeGenerator` best-effort after the CSV/JSON/MD trio (failure → `[WARN]`, exit 0 unaffected); `narrate` reads a written report JSON (requires its `turns` array — re-run to regenerate older JSONs) and writes `narrative_report.md` via one LLM call, exiting 1 on any error.
+- `lib/sfl/compiler/cli.rb` + `exe/sfl-analyze`: subcommands `conversation`, `documentation [--store]`, `knowledge-base` (with `--images`, `--vision-model`, `--annotated`), `context` with stance-filter flags, `narrate <analysis.json>`, and `tui`. `CLI.parse` is a pure function (tested); `run_*` methods wire Bootstrap → analyzers (live-verified, not unit-tested). `conversation`/`documentation` accept `--narrative` to run `NarrativeGenerator` best-effort after the CSV/JSON/MD trio (failure → `[WARN]`, exit 0 unaffected); `narrate` reads a written report JSON (requires its `turns` array — re-run to regenerate older JSONs) and writes `narrative_report.md` via one LLM call, exiting 1 on any error.
 
 ### Analysis
 - `lib/sfl/compiler/analysis/conversation_analyzer.rb`: JSONL → per-turn compile → `Types::AnalysisResult`. Injected pipeline, `pass_one_only:` option (stubs marked `"stub"`), `on_progress` callback.
@@ -145,6 +145,12 @@ lib/sfl/compiler/pass_one/
   ideational_extractor.rb            # Rule-based transitivity classification
 lib/sfl/compiler/pass_two/
   pass_two_engine.rb                 # DSPy.rb ChainOfThought, batched annotate_batch → InterpersonalPayload
+  provider_fallback.rb               # Fallback LM provider chain for Pass 2
+lib/sfl/compiler/classification_registry.rb  # Canonical mood/theme_type values + aliases + Jaro-Winkler fuzzy fallback
+lib/sfl/compiler/cognitive_gas.rb    # Semantic budget circuit breaker (injectable into PassTwoEngine — see gotcha #2)
+lib/sfl/compiler/convergence_detector.rb  # pgvector cosine checkpoint: detects stuck reasoning loops
+lib/sfl/compiler/question_graph.rb   # Gödel-encoded question DAG (academic demo — BIGINT overflow is the thesis)
+lib/sfl/compiler/langfuse_reachability.rb  # Pre-flight Langfuse TCP probe, loaded standalone BEFORE the gem (not Zeitwerk)
 lib/sfl/compiler/storage/
   database.rb                        # Sequel.connect, extensions, Migrator (4 tables + indices)
   clause_repository.rb               # Store/find/delete_by_document with scalar interpersonal filters
@@ -156,8 +162,14 @@ lib/sfl/compiler/analysis.rb         # MANIFEST: require_relative for every anal
 lib/sfl/compiler/analysis/
   conversation_analyzer.rb           # JSONL conversation → AnalysisResult
   documentation_analyzer.rb          # Markdown sections-as-turns → AnalysisResult, --store ingest
-  tenor_tracker.rb, speaker_profiler.rb, correlation_analyzer.rb
+  tenor_tracker.rb, speaker_profiler.rb, correlation_analyzer.rb, aggregations.rb, cohesion_analyzer.rb
   narrative_generator.rb             # NarrativeGenerator + Digest + NarrativeSignature → Types::NarrativeReport
+  narrative_self_analyzer.rb         # Strange-loop: re-analyzes the generated narrative itself
+  citation_grounding_checker.rb      # Verifies narrative claims trace to cited clauses
+  topic_modeler.rb                   # Tomoto LDA/HDP; k-independent dominant-topic gate (threshold 0.35)
+  knowledge_base_analyzer.rb         # Corpus-as-KB: sections → KnowledgeArtifact (per-artifact skip resilience)
+  content_type_classifier.rb, quality_scorer.rb, migration_assessor.rb  # KB classify/score/assess stages
+  chunk_artifact_detector.rb         # PDF chunk-boundary artifact detection
 lib/sfl/compiler/formatters.rb       # MANIFEST: require_relative for every formatters/ file
 lib/sfl/compiler/formatters/
   base/csv/json/markdown formatters + report_writer.rb
@@ -168,8 +180,16 @@ lib/sfl/compiler/llm_tools/
 lib/sfl/compiler/jobs/
   compile_turn_job.rb                # Gush::Job: one turn's Pass 1+2 compile, runs in a Sidekiq worker process
   reduce_turns_job.rb                # Gush::Job: fan-in — rebuilds turns from payloads, runs ConversationAnalyzer#build_result
+  compile_section_job.rb, reduce_sections_job.rb  # DocumentationAnalyzer equivalents of the pair above
+  topic_model_job.rb                 # Optional topic-modeling pre-pass feeding CompileTurnJob
+  sprint_role_job.rb, crab_constraint_job.rb, intermediate_genie_job.rb  # GEB sprint roles (LM roles, rule invariants, Genie compression)
 lib/sfl/compiler/workflows/
   conversation_analysis_workflow.rb  # Gush::Workflow: fans out CompileTurnJob per turn, fans into ReduceTurnsJob
+  documentation_analysis_workflow.rb # Same fan-out/fan-in for markdown sections
+  sprint_workflow.rb                 # Chains Achilles → Tortoise → Crab → Genie sprint roles
+lib/sfl/compiler/api/server.rb       # Falcon/async HTTP API (config.ru at repo root): /pipeline/compile, /retrieve, /synthesize, /workflows
+lib/sfl/compiler/tui/
+  batch_app.rb, menu.rb, workflow_poller.rb  # Bubbletea TUI; --live polls Gush/Redis (PyCall-free — see gotcha #12)
 lib/sfl/compiler/sidekiq_boot.rb     # `-r` target for `bundle exec sidekiq -q gush`; wires Bootstrap(require_jobs: true)
 lib/sfl-compiler.rb                  # Top-level require
 exe/sfl-analyze                      # CLI binstub (gemspec executable)
@@ -214,7 +234,7 @@ Environment variables (from `.env`): `DATABASE_URL`, `DSPY_PROVIDER`, `OPENROUTE
 
 1. **spaCy via PyCall**: `ruby-spacy` shells out to Python. If the Python env doesn't have spacy + model, Pass 1 raises `PassOneError` with no fallback.
 
-2. **Circuit breaker is a no-op**: `PassTwoEngine#default_circuit_breaker` is `lambda { |&block| block.call }`. The `rescue CircuitBreaker::CircuitBrokenException` clause in `annotate_interpersonal` will never trigger until a real breaker is injected.
+2. **Circuit breaker: real one exists but is opt-in**: `PassTwoEngine#default_circuit_breaker` is still the no-op `lambda { |&block| block.call }`, but `CognitiveGas` (`lib/sfl/compiler/cognitive_gas.rb`, spec-covered) is a drop-in replacement — a semantic budget tracker (SFL-derived per-clause cost, `COGNITIVE_GAS_BUDGET` env, default 1000 units) that raises `CircuitBroken` on exhaustion. `annotate_batch` duck-types the breaker: if it responds to `charge_batch`/`exhausted?`/`reset!`, exhaustion triggers graceful fallback for the chunk (`cognitive_gas_exhausted` WARN). No production call site injects it yet — pass `circuit_breaker: CognitiveGas.new` to `PassTwoEngine.new` to activate.
 
 3. **TenorTracker mutates in-place**: `calculate_shifts` replaces structs in the `@turns` array rather than returning a new array. Callers passing their only reference will see it mutated.
 

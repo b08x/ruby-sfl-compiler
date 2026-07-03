@@ -3,8 +3,8 @@ id: "track-gush-conversation-workflow-feature-completeness--087qyay"
 title: "Gush conversation workflow — feature-completeness gaps"
 slug: "gush-conversation-workflow-feature-completeness-gaps"
 createdAt: "2026-06-25T00:57:40.503Z"
-updatedAt: "2026-06-26T04:10:52.365Z"
+updatedAt: "2026-07-03T04:45:02.506Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
-Closes the gap between `ConversationAnalysisWorkflow` and the synchronous `ConversationAnalyzer#analyze` it parallelizes. **`ReduceTurnsJob` full-output forwarding is DONE** (commit 2a74d63, yajl-ruby JSON backend added at 729e7dc). Remaining open: `DocumentationAnalyzer` Gush equivalent (also a Track 8 TUI prerequisite) and topic-modeling pre-pass (DONE). Track narrows to one remaining card.
+**COMPLETE — no remaining gaps.** `ReduceTurnsJob` full-output forwarding done (2a74d63, yajl-ruby at 729e7dc); topic-modeling pre-pass done; the DocumentationAnalyzer Gush equivalent shipped too (`CompileSectionJob`/`ReduceSectionsJob` exist in `lib/sfl/compiler/jobs/`, card filed under the TUI overhaul track). `ConversationAnalysisWorkflow` is feature-equivalent to the synchronous `ConversationAnalyzer#analyze`. No further work in this track (verified against codebase 2026-07-03).
