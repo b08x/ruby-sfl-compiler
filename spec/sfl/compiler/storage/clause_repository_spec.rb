@@ -353,21 +353,37 @@ RSpec.describe SFL::Compiler::ClauseRepository do
   end
 
   describe "#review_queue" do
-    it "excludes trusted annotation sources (llm, human) rather than filtering to one value" do
+    # accepted_clause_ids queries :annotation_reviews independently of the
+    # main :clauses scope, so — unlike #find_all's tests, which only ever
+    # touch one table — this needs distinct doubles per table (same
+    # pattern as #store's datasets hash) rather than one FakeScope
+    # returned for every db[] call.
+    let(:reviews_ds) { double("annotation_reviews dataset") }
+    let(:accepted_ids_scope) { double("accepted ids scope") }
+
+    before do
+      allow(reviews_ds).to receive(:where).with(decision: "accepted").and_return(accepted_ids_scope)
+      allow(accepted_ids_scope).to receive(:select).with(:clause_id).and_return(accepted_ids_scope)
+    end
+
+    it "excludes trusted annotation sources, then excludes already-accepted clause ids" do
       scope = FakeScope.new
-      db = double("db", :[] => scope)
+      db = double("db")
+      allow(db).to receive(:[]) { |table| table == :annotation_reviews ? reviews_ds : scope }
 
       described_class.new(db).review_queue
 
-      expect(scope.exclude_calls).to eq(
-        [{ Sequel[:interpersonal_payloads][:annotation_source] => SFL::Compiler::Types::TRUSTED_ANNOTATION_SOURCES }]
-      )
+      expect(scope.exclude_calls).to eq([
+        { Sequel[:interpersonal_payloads][:annotation_source] => SFL::Compiler::Types::TRUSTED_ANNOTATION_SOURCES },
+        { Sequel[:clauses][:external_id] => accepted_ids_scope },
+      ])
     end
 
     it "returns clauses and total from the scope's #all and #count, honoring limit/offset" do
       rows = [{ id: "c1" }]
       scope = FakeScope.new(rows:, total: 7)
-      db = double("db", :[] => scope)
+      db = double("db")
+      allow(db).to receive(:[]) { |table| table == :annotation_reviews ? reviews_ds : scope }
 
       result = described_class.new(db).review_queue(limit: 5, offset: 10)
 

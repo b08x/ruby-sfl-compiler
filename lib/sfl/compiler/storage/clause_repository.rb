@@ -330,7 +330,16 @@ module SFL
       # The HITL review queue: clauses whose annotation_source isn't
       # trusted (mirrors TUI::EvidencePane#flagged_section's predicate —
       # anything the pipeline couldn't confidently annotate on its own),
-      # with the evidence needed to decide accept/re-annotate/reject.
+      # excluding clauses a human has already accepted as-is — otherwise
+      # "Accept" (which deliberately leaves annotation_source untouched;
+      # see #record_review) would never actually clear an item from the
+      # queue, and a human would have to re-decide the same clause every
+      # time the queue reloads. Live-verified this was a real bug, not a
+      # hypothetical: accepting a stub clause through the React review
+      # queue left it reappearing on refresh until this exclusion was
+      # added. "rejected" does NOT exclude — an unresolved disagreement
+      # should keep showing up.
+      #
       # "fuzzy" classification-gap provenance (Jaro-Winkler near-misses,
       # PassTwoEngine#log_classification_gap) is NOT included here — it's
       # only ever logged (stderr/journald), never attached to the stored
@@ -341,6 +350,7 @@ module SFL
       # @return [Hash] { clauses: Array<Hash>, total: Integer }
       def review_queue(limit: 50, offset: 0)
         scope = needs_attention_scope
+          .exclude(Sequel[:clauses][:external_id] => accepted_clause_ids)
 
         total = scope.count
         rows = scope
@@ -357,6 +367,10 @@ module SFL
           .join(:ideational_payloads, clause_id: Sequel[:clauses][:external_id])
           .join(:interpersonal_payloads, clause_id: Sequel[:clauses][:external_id])
           .exclude(Sequel[:interpersonal_payloads][:annotation_source] => Types::TRUSTED_ANNOTATION_SOURCES)
+      end
+
+      private def accepted_clause_ids
+        @db[:annotation_reviews].where(decision: "accepted").select(:clause_id)
       end
 
       private def filtered_scope(filters)
