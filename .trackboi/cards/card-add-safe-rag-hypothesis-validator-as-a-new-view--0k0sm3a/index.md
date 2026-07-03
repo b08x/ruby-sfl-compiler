@@ -5,13 +5,13 @@ title: "Add Safe RAG Hypothesis Validator as a new view in the adapted shell"
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-react-frontend-google-ai-studio-024lr42"
-column: "backlog"
+column: "done"
 rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:41:56.352Z"
-updatedAt: "2026-07-03T05:41:56.352Z"
+updatedAt: "2026-07-03T13:48:56.409Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
