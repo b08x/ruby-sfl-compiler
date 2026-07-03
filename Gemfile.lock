@@ -19,10 +19,13 @@ PATH
       falcon (~> 0.48)
       glamour (~> 0.2)
       gum
-      inkmark (~> 0.1)
+      gush
+      informers
+      inkmark
       journald-logger (~> 3.1)
       kreuzberg (~> 4.9)
       lipgloss (~> 0.2)
+      onnxruntime
       opentelemetry-exporter-otlp (~> 0.34.0)
       opentelemetry-instrumentation-ruby_llm (~> 0.6.0)
       opentelemetry-sdk (~> 1.12)
@@ -35,6 +38,7 @@ PATH
       ruby-spacy (~> 0.4)
       ruby_llm (~> 1.3)
       sequel (~> 5.88)
+      sidekiq
       tomoto (~> 0.3)
       tty-progressbar (~> 0.18)
       tty-prompt (~> 0.23)
@@ -605,17 +609,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  amatch (~> 0.7.0)
-  dspy-o11y (~> 1.0)
-  dspy-o11y-langfuse (~> 1.1)
   git-lint
-  gush
-  informers
-  kreuzberg
-  onnxruntime
-  opentelemetry-exporter-otlp (~> 0.34.0)
-  opentelemetry-instrumentation-ruby_llm (~> 0.6.0)
-  opentelemetry-sdk (~> 1.12)
   pry
   pry-byebug
   rack-test
@@ -631,9 +625,8 @@ DEPENDENCIES
   rubocop-sequel
   rubocop-shopify
   rubocop-thread_safety
-  ruby-lsp (~> 0.26.9)
+  ruby-lsp
   sfl-compiler!
-  sidekiq (~> 8.0)
   simplecov
 
 CHECKSUMS
