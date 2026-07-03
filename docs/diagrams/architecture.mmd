@@ -1,9 +1,12 @@
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
-%% Node counts reflect the last full semantic extraction. ContextSynthesizer
-%% and Database (added 2026-07-03) fall under Serving API but aren't folded
-%% into its "86 nodes" count above — that requires a full re-extraction, not
-%% the incremental AST-only update actually run. See docs/diagrams/diagrams.md
-%% Graph Statistics note and callflow_5.mmd for the real, current detail.
+%% Node counts below are from an earlier, coarser 15-community extraction
+%% and are now stale — a fresh full extraction (2026-07-03, 1,085 nodes /
+%% 2,025 edges / 99 communities, see docs/diagrams/diagrams.md Graph
+%% Statistics) superseded them, but at finer per-file community
+%% granularity than this diagram's 15 hand-curated top-level groupings.
+%% Regenerating this specific coarse view needs its own aggregation pass
+%% over the current graph.json, not attempted here — see
+%% graphify-out/GRAPH_REPORT.md for the current, accurate community list.
 flowchart LR
     EXTRACT_PIPELINE_5F350230("Extraction Pipeline92 nodes")
     class EXTRACT_PIPELINE_5F350230 module;

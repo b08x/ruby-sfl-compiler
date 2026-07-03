@@ -98,16 +98,22 @@ Detailed call graphs for major subsystems.
 
 ## Graph Statistics
 
-- **Nodes**: 915
-- **Edges**: 1,246 (after removing low-confidence inferred edges)
-- **Communities**: 64
-- **Edge types**: All EXTRACTED (no INFERRED noise)
+- **Nodes**: 1,085
+- **Edges**: 2,025
+- **Communities**: 99 (61 shown in the full report, 38 thin ones omitted)
+- **Edge types**: 77% EXTRACTED · 23% INFERRED (avg confidence 0.8) · 0% AMBIGUOUS
+- **Extraction**: full corpus (111 files, 54,250 words), AST + 5 parallel semantic
+  subagents, 2026-07-03 — see `graphify-out/GRAPH_REPORT.md` for the complete
+  community list, hyperedges, and suggested questions
+- **Token reduction**: ~19.8x fewer tokens per query vs. naive full-corpus context
+  (`graphify benchmark`)
 
-Stats above are from the last full semantic extraction. `callflow_5.mmd`
-(Serving API) additionally carries a manually-added `ContextSynthesizer` +
-`Database` subgraph (2026-07-03), sourced directly from a real
-`graphify --update` run's `graph.json` — not fabricated — but not folded
-back into the aggregate counts above, since that would require a full
-re-extraction (semantic subagents across the whole corpus) rather than
-the incremental, code-only AST update actually run. Run a full
-`/graphify` pass to refresh these numbers precisely.
+This full extraction superseded the incremental, code-only AST update from
+earlier the same day — that update's own `ContextSynthesizer`/`Database`
+additions to `callflow_5.mmd` are now part of this run's numbers above (both
+still appear as their own subgraphs there, alongside the rest of the "Falcon
+API Server" community). The top-level `architecture.mmd`/embedded diagram
+above still reflects the coarser 15-community view from a still-earlier run —
+regenerating that fully (rather than patching individual `callflow_N.mmd`
+files by hand) would need its own pass through `graphify export` tooling
+against the current `graph.json`, not attempted here.
