@@ -8,6 +8,7 @@ require_relative "tui/wizards/narrate_wizard"
 require_relative "tui/menu"
 require_relative "tui/workflow_poller"
 require_relative "tui/batch_app"
+require_relative "tui/evidence_pane"
 
 module SFL
   module Compiler

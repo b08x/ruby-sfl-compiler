@@ -17,6 +17,7 @@ module SFL
 
         FailedMessage = Class.new(Bubbletea::Message) do
           attr_reader :error
+
           def initialize(error) = super().tap { @error = error }
         end
 
@@ -42,6 +43,7 @@ module SFL
           @total          = 0
           @started_at     = nil
           @pastel         = Pastel.new
+          @show_evidence  = false
         end
 
         attr_reader :result
@@ -63,11 +65,19 @@ module SFL
         end
 
         def view
-          Lipgloss.join_vertical(Lipgloss::LEFT, card, footer)
+          panes = [card]
+          panes << EvidencePane.new(@result, width: @width, pastel: @pastel).render if show_evidence?
+          Lipgloss.join_vertical(Lipgloss::LEFT, *panes, footer)
         end
 
+        private def show_evidence? = @show_evidence && @done && !@error && @result
+
         private def handle_key(msg)
-          msg.to_s =~ /ctrl\+c|^q$/ ? [self, Bubbletea.quit] : [self, nil]
+          case msg.to_s
+          when /ctrl\+c|^q$/ then [self, Bubbletea.quit]
+          when "e"           then @show_evidence = !@show_evidence; [self, nil]
+          else                    [self, nil]
+          end
         end
 
         private def handle_poll
@@ -127,13 +137,15 @@ module SFL
         end
 
         private def footer
-          Chat::Styles::FOOTER.render("  q / ctrl+c to exit")
+          hint = +"  q / ctrl+c to exit"
+          hint << "  ·  e evidence" if @done && !@error && @result
+          Chat::Styles::FOOTER.render(hint)
         end
 
         # Title: "SFL Batch  ·  filename" left, "● status" right-aligned.
         private def title_line(inner_width)
           left  = "#{@pastel.bold('SFL Batch')}  #{@pastel.dim('·')}  " \
-                  "#{@pastel.cyan(File.basename(@current_file.to_s))}"
+            "#{@pastel.cyan(File.basename(@current_file.to_s))}"
           right = status_dot
           gap   = [inner_width - visible_length(left) - visible_length(right), 1].max
           "#{left}#{' ' * gap}#{right}"
@@ -148,16 +160,14 @@ module SFL
         end
 
         private def progress_bar_line
-          if @total.zero?
-            return @pastel.bright_black("░" * BAR_WIDTH) + "   " + @pastel.dim("0%")
-          end
+          return "#{@pastel.bright_black('░' * BAR_WIDTH)}   #{@pastel.dim('0%')}" if @total.zero?
 
           ratio  = @last_completed.to_f / @total
           filled = (ratio * BAR_WIDTH).floor
           pct    = (ratio * 100).round
 
           bar   = @pastel.green("█" * filled) +
-                  @pastel.bright_black("░" * (BAR_WIDTH - filled))
+            @pastel.bright_black("░" * (BAR_WIDTH - filled))
           count = @pastel.dim("#{@last_completed}/#{@total}")
 
           "#{bar}  #{@pastel.bold("#{pct}%")}  #{count}"
@@ -175,7 +185,8 @@ module SFL
             parts << "ETA ~#{format_duration(eta)}"
           end
           return "" if parts.empty?
-          @pastel.dim("  " + parts.join("  ·  "))
+
+          @pastel.dim("  #{parts.join('  ·  ')}")
         end
 
         private def current_section_line
@@ -183,7 +194,7 @@ module SFL
             ""
           elsif @current_turn
             chunk_info = @chunk_progress[@current_turn]
-            suffix = if chunk_info && chunk_info[:chunks_total].to_i > 0
+            suffix = if chunk_info && chunk_info[:chunks_total].to_i.positive?
               done  = chunk_info[:chunks_done].to_i
               total = chunk_info[:chunks_total].to_i
               ratio = done.to_f / total
@@ -200,9 +211,7 @@ module SFL
 
         private def completion_line
           return "" unless @done
-          if @error
-            return Chat::Styles::ERROR.render(@error.message)
-          end
+          return Chat::Styles::ERROR.render(@error.message) if @error
 
           count    = @result[:section_count] || @result[:turn_count] || 0
           insights = @result[:insights]&.size || 0
@@ -229,15 +238,18 @@ module SFL
 
         private def eta_seconds
           return nil if @last_completed.zero? || @total.zero? || !@started_at
+
           elapsed = Time.now - @started_at
           return nil if elapsed < 2
+
           rate = @last_completed.to_f / elapsed
           ((@total - @last_completed) / rate).round
         end
 
         private def format_duration(secs)
           return "<1s" if secs <= 0
-          secs < 60 ? "#{secs}s" : "#{secs / 60}m #{secs % 60}s"
+
+          (secs < 60) ? "#{secs}s" : "#{secs / 60}m #{secs % 60}s"
         end
       end
     end
