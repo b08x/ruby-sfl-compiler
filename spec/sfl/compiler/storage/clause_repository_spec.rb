@@ -64,6 +64,29 @@ RSpec.describe SFL::Compiler::ClauseRepository do
 
       described_class.new(db).store(annotated)
     end
+
+    it "stores nil (SQL NULL) for reasoning_trace when the clause has none" do
+      allow(clauses_ds).to receive(:insert)
+      expect(interpersonal_ds).to receive(:insert).with(hash_including(reasoning_trace: nil))
+
+      described_class.new(db).store(annotated)
+    end
+
+    it "stores reasoning_trace as jsonb when the clause has one" do
+      trace = SFL::Compiler::Types::ReasoningTrace.new(
+        premises: [], inference_rule: "finite_precedes_subject", conclusion: {},
+        confidence: 0.9, derivation_hash: "abc", generated_at: Time.now
+      )
+      with_trace = annotated.new(interpersonal: interpersonal.new(reasoning_trace: trace))
+      allow(clauses_ds).to receive(:insert)
+
+      expect(interpersonal_ds).to receive(:insert) do |attrs|
+        expect(attrs[:reasoning_trace]).to be_a(Sequel::Postgres::JSONBHash)
+        expect(attrs[:reasoning_trace][:inference_rule]).to eq("finite_precedes_subject")
+      end
+
+      described_class.new(db).store(with_trace)
+    end
   end
 
   describe "#delete_by_document" do
@@ -181,11 +204,34 @@ RSpec.describe SFL::Compiler::ClauseRepository do
       allow(ds).to receive(:where).with(clause_id: "clause-1").and_return(scoped)
       allow(scoped).to receive(:update).with(
         mood: "interrogative", modality_weight: 0.9, tenor: 0.8,
-        speaker_attitude: "curious", reasoning: "re-annotated", annotation_source: "llm"
+        speaker_attitude: "curious", reasoning: "re-annotated", annotation_source: "llm",
+        reasoning_trace: nil
       ).and_return(1)
       db = double("db", :[] => ds)
 
       expect(described_class.new(db).update_interpersonal("clause-1", interpersonal)).to eq(1)
+    end
+
+    it "persists reasoning_trace as jsonb when the new interpersonal payload has one" do
+      trace = SFL::Compiler::Types::ReasoningTrace.new(
+        premises: [], inference_rule: "modal_adjunct", conclusion: {},
+        confidence: 0.8, derivation_hash: "xyz", generated_at: Time.now
+      )
+      interpersonal = SFL::Compiler::Types::InterpersonalPayload.new(
+        clause_id: "clause-1", mood: "declarative", modality_weight: 0.5, tenor: 0.5,
+        speaker_attitude: nil, reasoning: nil, annotation_source: "llm", reasoning_trace: trace
+      )
+      scoped = double("scoped interpersonal_payloads")
+      ds = double("interpersonal_payloads dataset")
+      allow(ds).to receive(:where).with(clause_id: "clause-1").and_return(scoped)
+      db = double("db", :[] => ds)
+
+      expect(scoped).to receive(:update) do |attrs|
+        expect(attrs[:reasoning_trace]).to be_a(Sequel::Postgres::JSONBHash)
+        expect(attrs[:reasoning_trace][:inference_rule]).to eq("modal_adjunct")
+      end
+
+      described_class.new(db).update_interpersonal("clause-1", interpersonal)
     end
   end
 
@@ -252,11 +298,14 @@ RSpec.describe SFL::Compiler::ClauseRepository do
         @where_calls = []
       end
 
+      attr_reader :exclude_calls
+
       def join(*) = self
       def order(*) = self
       def limit(*) = self
       def select(*) = self
       def where(condition) = tap { @where_calls << condition }
+      def exclude(condition) = tap { (@exclude_calls ||= []) << condition }
       def count = @total
       def all = @rows
       def each(&) = @rows.each(&)
@@ -300,6 +349,29 @@ RSpec.describe SFL::Compiler::ClauseRepository do
       described_class.new(db).find_all
 
       expect(scope.where_calls).to be_empty
+    end
+  end
+
+  describe "#review_queue" do
+    it "excludes trusted annotation sources (llm, human) rather than filtering to one value" do
+      scope = FakeScope.new
+      db = double("db", :[] => scope)
+
+      described_class.new(db).review_queue
+
+      expect(scope.exclude_calls).to eq(
+        [{ Sequel[:interpersonal_payloads][:annotation_source] => SFL::Compiler::Types::TRUSTED_ANNOTATION_SOURCES }]
+      )
+    end
+
+    it "returns clauses and total from the scope's #all and #count, honoring limit/offset" do
+      rows = [{ id: "c1" }]
+      scope = FakeScope.new(rows:, total: 7)
+      db = double("db", :[] => scope)
+
+      result = described_class.new(db).review_queue(limit: 5, offset: 10)
+
+      expect(result).to eq(clauses: rows, total: 7)
     end
   end
 end

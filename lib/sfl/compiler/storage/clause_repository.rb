@@ -25,6 +25,15 @@ module SFL
         Sequel[:interpersonal_payloads][:annotation_source],
       ].freeze
 
+      # Same shape as CLAUSE_LISTING_COLUMNS plus the two columns the
+      # review queue needs to render evidence that #find_all's callers
+      # (the Corpus Browser) don't: the DSPy reasoning text and the
+      # structured reasoning_trace (premises/inference_rule/confidence).
+      REVIEW_QUEUE_COLUMNS = (CLAUSE_LISTING_COLUMNS + [
+        Sequel[:interpersonal_payloads][:reasoning],
+        Sequel[:interpersonal_payloads][:reasoning_trace],
+      ]).freeze
+
       def initialize(db)
         @db = db
         @logger = Journald::Logger.new("sfl-compiler-repo")
@@ -80,6 +89,7 @@ module SFL
             speaker_attitude: annotated.interpersonal.speaker_attitude,
             reasoning: annotated.interpersonal.reasoning,
             annotation_source: annotated.interpersonal.annotation_source,
+            reasoning_trace: reasoning_trace_jsonb(annotated.interpersonal.reasoning_trace),
             created_at: Time.now
           )
         end
@@ -227,7 +237,8 @@ module SFL
           tenor: interpersonal.tenor,
           speaker_attitude: interpersonal.speaker_attitude,
           reasoning: interpersonal.reasoning,
-          annotation_source: interpersonal.annotation_source
+          annotation_source: interpersonal.annotation_source,
+          reasoning_trace: reasoning_trace_jsonb(interpersonal.reasoning_trace)
         )
       end
 
@@ -316,6 +327,38 @@ module SFL
         { clauses: rows, total: }
       end
 
+      # The HITL review queue: clauses whose annotation_source isn't
+      # trusted (mirrors TUI::EvidencePane#flagged_section's predicate —
+      # anything the pipeline couldn't confidently annotate on its own),
+      # with the evidence needed to decide accept/re-annotate/reject.
+      # "fuzzy" classification-gap provenance (Jaro-Winkler near-misses,
+      # PassTwoEngine#log_classification_gap) is NOT included here — it's
+      # only ever logged (stderr/journald), never attached to the stored
+      # payload, so there is nothing in the DB to surface yet.
+      #
+      # @param limit [Integer]
+      # @param offset [Integer]
+      # @return [Hash] { clauses: Array<Hash>, total: Integer }
+      def review_queue(limit: 50, offset: 0)
+        scope = needs_attention_scope
+
+        total = scope.count
+        rows = scope
+          .order(Sequel[:clauses][:created_at])
+          .limit(limit, offset)
+          .select(*REVIEW_QUEUE_COLUMNS)
+          .all
+
+        { clauses: rows, total: }
+      end
+
+      private def needs_attention_scope
+        @db[:clauses]
+          .join(:ideational_payloads, clause_id: Sequel[:clauses][:external_id])
+          .join(:interpersonal_payloads, clause_id: Sequel[:clauses][:external_id])
+          .exclude(Sequel[:interpersonal_payloads][:annotation_source] => Types::TRUSTED_ANNOTATION_SOURCES)
+      end
+
       private def filtered_scope(filters)
         scope = @db[:clauses]
           .join(:ideational_payloads, clause_id: Sequel[:clauses][:external_id])
@@ -364,6 +407,14 @@ module SFL
           raw_transitivity: (row[:raw_transitivity] || {}).to_h,
           process_type: row[:process_type]
         )
+      end
+
+      # nil stays nil (SQL NULL), not a stored JSON "null" — most clauses
+      # (fallback/stub/human) carry no derivation to show.
+      private def reasoning_trace_jsonb(reasoning_trace)
+        return nil unless reasoning_trace
+
+        Sequel.pg_jsonb(Types.dump(reasoning_trace))
       end
     end
   end

@@ -18,9 +18,12 @@ module SFL
       #   POST /workflows               → {workflow_id:, status: "running"}
       #   GET  /workflows/:id/status    → {status:, jobs:[], output?:}
       #   GET  /clauses                 → {clauses:[], total:, limit:, offset:}
+      #   GET  /clauses/review-queue    → {clauses:[], total:, limit:, offset:} (flagged, with evidence)
+      #   POST /clauses/:id/review      → AnnotationReview (sync) or {workflow_id:, status:} (async re_annotated)
       class Server
         CONTENT_JSON       = { "content-type" => "application/json" }.freeze
         WORKFLOW_STATUS_RE = /\A\/workflows\/(.+)\/status\z/.freeze
+        CLAUSE_REVIEW_RE   = %r{\A/clauses/([^/]+)/review\z}.freeze
 
         # Dev-only allowlist: Vite's default port plus the 0.0.0.0-host
         # variant `npm run dev` binds to per this repo's own scripts.
@@ -73,6 +76,11 @@ module SFL
           in ["GET", WORKFLOW_STATUS_RE]
             wf_id = req.path_info.match(WORKFLOW_STATUS_RE)[1]
             workflow_status(wf_id)
+          in ["GET", "/clauses/review-queue"]
+            review_queue(req)
+          in ["POST", CLAUSE_REVIEW_RE]
+            clause_id = req.path_info.match(CLAUSE_REVIEW_RE)[1]
+            review_clause(clause_id, req)
           in ["GET", "/clauses"]
             list_clauses(req)
           else
@@ -200,6 +208,65 @@ module SFL
           result = ClauseRepository.new(@ctx.db).find_all(filters:, limit:, offset:)
 
           json(200, result.merge(limit:, offset:))
+        end
+
+        # GET /clauses/review-queue
+        #
+        # Query params: limit (default 50), offset (default 0). Same
+        # pagination shape as GET /clauses, but the fixed "needs
+        # attention" scope (ClauseRepository#review_queue) instead of
+        # arbitrary filters, plus reasoning/reasoning_trace evidence
+        # columns GET /clauses doesn't return.
+        def review_queue(req)
+          p = req.params
+          limit  = [p.fetch("limit", 50).to_i, 1].max
+          offset = [p.fetch("offset", 0).to_i, 0].max
+
+          result = ClauseRepository.new(@ctx.db).review_queue(limit:, offset:)
+
+          json(200, result.merge(limit:, offset:))
+        end
+
+        REVIEW_DECISIONS = %w[accepted rejected re_annotated].freeze
+
+        # POST /clauses/:id/review
+        #
+        # Body: {decision: "accepted"|"rejected"|"re_annotated", reviewer?:, notes?:}
+        #   accepted/rejected → synchronous: records the audit row, 200 with the AnnotationReview.
+        #   re_annotated      → async, same job+poll shape as POST /pipeline/compile's
+        #                       non-sync path: dispatches ReannotateClauseWorkflow, 202
+        #                       {workflow_id:, status: "queued"}. The workflow itself
+        #                       records the audit row once the recompile finishes.
+        def review_clause(clause_id, req)
+          body     = parse_body(req)
+          decision = body["decision"]
+          unless REVIEW_DECISIONS.include?(decision)
+            raise ArgumentError, "decision must be one of #{REVIEW_DECISIONS.join(', ')}"
+          end
+
+          reviewer = body["reviewer"]
+          notes    = body["notes"]
+          return dispatch_reannotation(clause_id, reviewer, notes) if decision == "re_annotated"
+
+          record_decision(clause_id, decision, reviewer, notes)
+        end
+
+        def dispatch_reannotation(clause_id, reviewer, notes)
+          flow = ReannotateClauseWorkflow.create(clause_id:, reviewer:, notes:)
+          flow.start!
+          json(202, { workflow_id: flow.id, status: "queued" })
+        end
+
+        def record_decision(clause_id, decision, reviewer, notes)
+          clause_repo = ClauseRepository.new(@ctx.db)
+          found = clause_repo.find(clause_id)
+          return json(404, { error: "clause not found", id: clause_id }) unless found
+
+          original_source = found.dig(:interpersonal, :annotation_source) || "llm"
+          review = clause_repo.record_review(
+            clause_id:, decision:, original_annotation_source: original_source, reviewer:, notes:
+          )
+          json(200, Types.dump(review))
         end
 
         STRING_CLAUSE_FILTERS  = %w[document_id source_type annotation_source mood process_type].freeze

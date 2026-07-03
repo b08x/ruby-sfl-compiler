@@ -418,4 +418,110 @@ RSpec.describe SFL::Compiler::API::Server do
       expect(repo).to have_received(:find_all).with(filters: {}, limit: 1, offset: 0)
     end
   end
+
+  # ── GET /clauses/review-queue ───────────────────────────────────────────────
+
+  describe "GET /clauses/review-queue" do
+    it "delegates to ClauseRepository#review_queue and returns pagination metadata" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:review_queue).and_return(clauses: [{ id: "c1" }], total: 1)
+
+      get "/clauses/review-queue"
+
+      expect(last_response.status).to eq(200)
+      body = JSON.parse(last_response.body)
+      expect(body["clauses"]).to eq([{ "id" => "c1" }])
+      expect(body["total"]).to eq(1)
+      expect(body["limit"]).to eq(50)
+      expect(body["offset"]).to eq(0)
+      expect(repo).to have_received(:review_queue).with(limit: 50, offset: 0)
+    end
+
+    it "parses custom limit/offset from the query string" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:review_queue).and_return(clauses: [], total: 0)
+
+      get "/clauses/review-queue?limit=10&offset=20"
+
+      expect(repo).to have_received(:review_queue).with(limit: 10, offset: 20)
+    end
+  end
+
+  # ── POST /clauses/:id/review ─────────────────────────────────────────────────
+
+  describe "POST /clauses/:id/review" do
+    context "with an invalid decision" do
+      it "returns 400" do
+        post "/clauses/clause-1/review",
+          JSON.dump(decision: "maybe"),
+          "CONTENT_TYPE" => "application/json"
+
+        expect(last_response.status).to eq(400)
+        expect(JSON.parse(last_response.body)["error"]).to match(/decision must be one of/i)
+      end
+    end
+
+    context "with decision: accepted" do
+      it "records the review synchronously and returns 200 with the AnnotationReview" do
+        repo = instance_double(SFL::Compiler::ClauseRepository)
+        allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+        allow(repo).to receive(:find).with("clause-1").and_return(interpersonal: { annotation_source: "fallback" })
+        review = SFL::Compiler::Types::AnnotationReview.new(
+          clause_id: "clause-1", decision: "accepted", original_annotation_source: "fallback", reviewer: "bob"
+        )
+        allow(repo).to receive(:record_review).and_return(review)
+
+        post "/clauses/clause-1/review",
+          JSON.dump(decision: "accepted", reviewer: "bob"),
+          "CONTENT_TYPE" => "application/json"
+
+        expect(last_response.status).to eq(200)
+        body = JSON.parse(last_response.body)
+        expect(body["decision"]).to eq("accepted")
+        expect(body["reviewer"]).to eq("bob")
+        expect(repo).to have_received(:record_review).with(
+          clause_id: "clause-1", decision: "accepted", original_annotation_source: "fallback",
+          reviewer: "bob", notes: nil
+        )
+      end
+    end
+
+    context "when the clause doesn't exist" do
+      it "returns 404 without calling record_review" do
+        repo = instance_double(SFL::Compiler::ClauseRepository)
+        allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+        allow(repo).to receive(:find).with("missing").and_return(nil)
+        allow(repo).to receive(:record_review)
+
+        post "/clauses/missing/review",
+          JSON.dump(decision: "rejected"),
+          "CONTENT_TYPE" => "application/json"
+
+        expect(last_response.status).to eq(404)
+        expect(repo).not_to have_received(:record_review)
+      end
+    end
+
+    context "with decision: re_annotated" do
+      it "dispatches ReannotateClauseWorkflow and returns 202 with workflow_id" do
+        flow = instance_double(SFL::Compiler::ReannotateClauseWorkflow, id: "wf-reannotate")
+        allow(SFL::Compiler::ReannotateClauseWorkflow).to receive(:create).and_return(flow)
+        allow(flow).to receive(:start!)
+
+        post "/clauses/clause-1/review",
+          JSON.dump(decision: "re_annotated", reviewer: "bob", notes: "seemed off"),
+          "CONTENT_TYPE" => "application/json"
+
+        expect(last_response.status).to eq(202)
+        body = JSON.parse(last_response.body)
+        expect(body["workflow_id"]).to eq("wf-reannotate")
+        expect(body["status"]).to eq("queued")
+        expect(SFL::Compiler::ReannotateClauseWorkflow).to have_received(:create)
+          .with(clause_id: "clause-1", reviewer: "bob", notes: "seemed off")
+        expect(flow).to have_received(:start!)
+      end
+    end
+  end
 end

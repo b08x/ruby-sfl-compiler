@@ -79,7 +79,14 @@ module SFL
             topic_id: Integer, topic_label: String,
             source_type: [String, { default: "unspecified", null: false }]
           },
-          interpersonal_payloads: { annotation_source: [String, { default: "llm", null: false }] }
+          interpersonal_payloads: {
+            annotation_source: [String, { default: "llm", null: false }],
+            # Structured evidence (premises/inference_rule/confidence) for
+            # the HITL review queue — nullable, since fallback/stub/human
+            # values carry no derivation to show. See
+            # ClauseRepository#reconstruct_reasoning_trace.
+            reasoning_trace: :jsonb
+          }
         )
       end
 
