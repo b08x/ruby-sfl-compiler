@@ -107,6 +107,88 @@ RSpec.describe SFL::Compiler::ClauseRepository do
     end
   end
 
+  describe "#find_pass_one_output" do
+    let(:clauses_ds) { double("clauses dataset") }
+    let(:ideational_ds) { double("ideational dataset") }
+    let(:db) do
+      datasets = { clauses: clauses_ds, ideational_payloads: ideational_ds }
+      double("db", :[] => nil).tap { |d| allow(d).to receive(:[]) { |t| datasets.fetch(t) } }
+    end
+
+    # jsonb columns round-trip with STRING keys (verified live against a
+    # real Postgres DB, not just asserted here) — unlike the symbol-keyed
+    # hashes #store's own callers build from Dry::Struct#to_h.
+    let(:stored_clause_row) do
+      {
+        external_id: "clause-1", text: "It works.", document_id: "doc-1", sentence_index: 0,
+        tokens: [
+          { "text" => "It", "lemma" => "it", "pos" => "PRON", "tag" => "PRP", "dep" => "nsubj",
+            "head_index" => 1, "morphology" => {}, "index" => 0 },
+          { "text" => "works", "lemma" => "work", "pos" => "VERB", "tag" => "VBZ", "dep" => "ROOT",
+            "head_index" => -1, "morphology" => {}, "index" => 1 },
+        ],
+      }
+    end
+    let(:stored_ideational_row) do
+      {
+        process_type: "material",
+        participants: [{ "role" => "Actor", "text" => "It" }],
+        circumstances: [],
+        raw_transitivity: {},
+      }
+    end
+
+    it "returns nil when the clause doesn't exist" do
+      allow(clauses_ds).to receive(:where).with(external_id: "missing").and_return(clauses_ds)
+      allow(clauses_ds).to receive(:first).and_return(nil)
+
+      expect(described_class.new(db).find_pass_one_output("missing")).to be_nil
+    end
+
+    it "returns nil when the clause exists but has no ideational payload" do
+      allow(clauses_ds).to receive(:where).with(external_id: "clause-1").and_return(clauses_ds)
+      allow(clauses_ds).to receive(:first).and_return(stored_clause_row)
+      allow(ideational_ds).to receive(:where).with(clause_id: "clause-1").and_return(ideational_ds)
+      allow(ideational_ds).to receive(:first).and_return(nil)
+
+      expect(described_class.new(db).find_pass_one_output("clause-1")).to be_nil
+    end
+
+    it "reconstructs typed SyntacticClause/IdeationalPayload structs, deriving root_index from dep == ROOT" do
+      allow(clauses_ds).to receive(:where).with(external_id: "clause-1").and_return(clauses_ds)
+      allow(clauses_ds).to receive(:first).and_return(stored_clause_row)
+      allow(ideational_ds).to receive(:where).with(clause_id: "clause-1").and_return(ideational_ds)
+      allow(ideational_ds).to receive(:first).and_return(stored_ideational_row)
+
+      result = described_class.new(db).find_pass_one_output("clause-1")
+
+      expect(result[:syntactic]).to be_a(SFL::Compiler::Types::SyntacticClause)
+      expect(result[:syntactic].root_index).to eq(1)
+      expect(result[:syntactic].tokens.map(&:text)).to eq(%w[It works])
+      expect(result[:ideational]).to be_a(SFL::Compiler::Types::IdeationalPayload)
+      expect(result[:ideational].participants.first.text).to eq("It")
+    end
+  end
+
+  describe "#update_interpersonal" do
+    it "updates the existing interpersonal_payloads row by clause_id and returns the row count" do
+      interpersonal = SFL::Compiler::Types::InterpersonalPayload.new(
+        clause_id: "clause-1", mood: "interrogative", modality_weight: 0.9, tenor: 0.8,
+        speaker_attitude: "curious", reasoning: "re-annotated", annotation_source: "llm"
+      )
+      scoped = double("scoped interpersonal_payloads")
+      ds = double("interpersonal_payloads dataset")
+      allow(ds).to receive(:where).with(clause_id: "clause-1").and_return(scoped)
+      allow(scoped).to receive(:update).with(
+        mood: "interrogative", modality_weight: 0.9, tenor: 0.8,
+        speaker_attitude: "curious", reasoning: "re-annotated", annotation_source: "llm"
+      ).and_return(1)
+      db = double("db", :[] => ds)
+
+      expect(described_class.new(db).update_interpersonal("clause-1", interpersonal)).to eq(1)
+    end
+  end
+
   describe "#record_review" do
     let(:reviews_ds) { double("annotation_reviews dataset") }
     let(:db) { double("db", :[] => reviews_ds) }

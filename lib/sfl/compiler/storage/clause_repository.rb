@@ -184,6 +184,53 @@ module SFL
           .all
       end
 
+      # Reconstruct a stored clause's Pass 1 output (Types::SyntacticClause
+      # + Types::IdeationalPayload) so PassTwoEngine#annotate can be re-run
+      # against it without a fresh spaCy pass — the re-annotation path's
+      # only way to get typed structs back out of the DB's jsonb columns.
+      #
+      # Jsonb payloads round-trip through Postgres with STRING keys
+      # (verified live against a real DB before writing this — unlike the
+      # Ruby-side structs' own symbol-keyed #to_h that went in), so token/
+      # participant hashes are read with string indexing here, not the
+      # symbol indexing #store's own callers use.
+      #
+      # clauses stores a root_token snapshot, not the tokens array
+      # position — root_index is recomputed the same way PassOneEngine
+      # originally derived it (first token whose dep is "ROOT").
+      #
+      # @param clause_id [String]
+      # @return [Hash{syntactic:, ideational:}, nil] nil if the clause or
+      #   its ideational payload no longer exists
+      def find_pass_one_output(clause_id)
+        clause = @db[:clauses].where(external_id: clause_id).first
+        return nil unless clause
+
+        ideational = @db[:ideational_payloads].where(clause_id:).first
+        return nil unless ideational
+
+        { syntactic: reconstruct_syntactic(clause), ideational: reconstruct_ideational(ideational, clause_id) }
+      end
+
+      # Overwrite one clause's interpersonal_payloads row after a
+      # human-triggered re-annotation. Unlike #store (insert-only,
+      # clause_id has a unique index), this updates the existing row in
+      # place — a clause is re-annotated, never duplicated.
+      #
+      # @param clause_id [String]
+      # @param interpersonal [Types::InterpersonalPayload]
+      # @return [Integer] rows updated (0 if the clause has no row yet)
+      def update_interpersonal(clause_id, interpersonal)
+        @db[:interpersonal_payloads].where(clause_id:).update(
+          mood: interpersonal.mood,
+          modality_weight: interpersonal.modality_weight,
+          tenor: interpersonal.tenor,
+          speaker_attitude: interpersonal.speaker_attitude,
+          reasoning: interpersonal.reasoning,
+          annotation_source: interpersonal.annotation_source
+        )
+      end
+
       # Persist a human review decision as an audit-trail row. Does not
       # mutate interpersonal_payloads itself — flipping annotation_source
       # to "human" happens where new values actually get written (the
@@ -282,6 +329,41 @@ module SFL
         end
 
         scope
+      end
+
+      private def reconstruct_syntactic(clause)
+        tokens = Array(clause[:tokens]).map { |t| reconstruct_token(t) }
+        Types::SyntacticClause.new(
+          id: clause[:external_id],
+          text: clause[:text],
+          tokens:,
+          root_index: tokens.index { |t| t.dep == "ROOT" } || 0,
+          sentence_index: clause[:sentence_index],
+          document_id: clause[:document_id]
+        )
+      end
+
+      private def reconstruct_token(token_hash)
+        Types::SyntacticToken.new(
+          text: token_hash["text"], lemma: token_hash["lemma"], pos: token_hash["pos"], tag: token_hash["tag"],
+          dep: token_hash["dep"], head_index: token_hash["head_index"],
+          morphology: (token_hash["morphology"] || {}).to_h, index: token_hash["index"]
+        )
+      end
+
+      # Postgres jsonb columns come back as Sequel::Postgres::JSONBArray/
+      # JSONBHash — Array/Hash-like, but not `instance_of?(Array)`/`Hash`,
+      # which Dry::Types' strict Array()/Hash type checks require (verified
+      # live: constructing IdeationalPayload from an unconverted JSONBArray
+      # raises Dry::Struct::Error). Array()/#to_h coerce to the plain types.
+      private def reconstruct_ideational(row, clause_id)
+        Types::IdeationalPayload.new(
+          clause_id:,
+          participants: Array(row[:participants]).map { |p| Types::Participant.new(role: p["role"], text: p["text"]) },
+          circumstances: Array(row[:circumstances]),
+          raw_transitivity: (row[:raw_transitivity] || {}).to_h,
+          process_type: row[:process_type]
+        )
       end
     end
   end
