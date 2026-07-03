@@ -5,13 +5,13 @@ title: "Review queue surface: flagged clauses with evidence, accept / re-annotat
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-human-in-the-loop-annotation-review-0fn8s9p"
-column: "backlog"
-rank: "yv"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:29:33.969Z"
-updatedAt: "2026-07-03T05:29:33.969Z"
+updatedAt: "2026-07-03T11:16:32.845Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
