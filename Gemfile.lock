@@ -605,6 +605,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  amatch (~> 0.7.0)
   dspy-o11y (~> 1.0)
   dspy-o11y-langfuse (~> 1.1)
   git-lint
