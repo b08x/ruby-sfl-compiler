@@ -30,3 +30,6 @@ bin/rspec
 *.json
 *.csv
 .ruby-lsp/
+vendor/
+output/
+.bundle/
