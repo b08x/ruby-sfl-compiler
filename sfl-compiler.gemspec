@@ -5,14 +5,14 @@ require_relative "lib/sfl/compiler/version"
 Gem::Specification.new do |spec|
   spec.name = "sfl-compiler"
   spec.version = SFL::Compiler::VERSION
-  spec.authors = ["Syncopated Context"]
-  spec.email = ["dev@syncopated.io"]
+  spec.authors = ["Robert Pannick"]
+  spec.email = ["rwpannick@gmail.com"]
 
   spec.summary = "Two-Pass SFL Compiler for high-fidelity RAG"
   spec.description = "Separates syntactic extraction from semantic annotation using " \
     "ruby-spacy and dspy.rb, producing multi-layered indexable " \
     "payloads with scalar filtering on interpersonal features."
-  spec.homepage = "https://github.com/syncopated/sfl-compiler"
+  spec.homepage = "https://github.com/b08x/sfl-compiler"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.4.0"
 
@@ -49,10 +49,13 @@ Gem::Specification.new do |spec|
   spec.add_dependency "falcon", "~> 0.48"
   spec.add_dependency "glamour", "~> 0.2"
   spec.add_dependency "gum"
-  spec.add_dependency "inkmark", "~> 0.1"
+  spec.add_dependency "gush"
+  spec.add_dependency "informers"
+  spec.add_dependency "inkmark"
   spec.add_dependency "journald-logger", "~> 3.1"
   spec.add_dependency "kreuzberg", "~> 4.9"
   spec.add_dependency "lipgloss", "~> 0.2"
+  spec.add_dependency "onnxruntime"
   spec.add_dependency "opentelemetry-exporter-otlp", "~> 0.34.0"
   spec.add_dependency "opentelemetry-instrumentation-ruby_llm", "~> 0.6.0"
   spec.add_dependency "opentelemetry-sdk", "~> 1.12"
@@ -65,6 +68,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm", "~> 1.3"
   spec.add_dependency "ruby-spacy", "~> 0.4"
   spec.add_dependency "sequel", "~> 5.88"
+  spec.add_dependency "sidekiq"
   spec.add_dependency "tomoto", "~> 0.3"
   spec.add_dependency "tty-progressbar", "~> 0.18"
   spec.add_dependency "tty-prompt", "~> 0.23"
