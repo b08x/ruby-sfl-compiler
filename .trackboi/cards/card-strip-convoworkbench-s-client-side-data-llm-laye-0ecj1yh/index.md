@@ -5,13 +5,13 @@ title: "Strip ConvoWorkbench's client-side data/LLM layer, wire GraphContext to 
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-react-frontend-google-ai-studio-024lr42"
-column: "backlog"
-rank: "yy"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:41:39.985Z"
-updatedAt: "2026-07-03T05:41:39.985Z"
+updatedAt: "2026-07-03T06:04:52.356Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

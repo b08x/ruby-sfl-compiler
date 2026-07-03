@@ -27,6 +27,34 @@ RSpec.describe SFL::Compiler::API::Server do
     end
   end
 
+  # ── CORS ─────────────────────────────────────────────────────────────────────
+
+  describe "CORS" do
+    it "echoes the allowed dev origin on a normal request" do
+      get "/health", {}, "HTTP_ORIGIN" => "http://localhost:3000"
+      expect(last_response.headers["access-control-allow-origin"]).to eq("http://localhost:3000")
+    end
+
+    it "omits CORS headers for a non-allowlisted origin" do
+      get "/health", {}, "HTTP_ORIGIN" => "https://evil.example"
+      expect(last_response.headers).not_to have_key("access-control-allow-origin")
+    end
+
+    it "answers an OPTIONS preflight with 204 and the allowed methods/headers" do
+      options "/retrieve", {}, "HTTP_ORIGIN" => "http://127.0.0.1:3000"
+      expect(last_response.status).to eq(204)
+      expect(last_response.headers["access-control-allow-origin"]).to eq("http://127.0.0.1:3000")
+      expect(last_response.headers["access-control-allow-methods"]).to include("POST")
+      expect(last_response.headers["access-control-allow-headers"]).to eq("content-type")
+    end
+
+    it "still 404s on unknown routes with CORS headers attached for an allowed origin" do
+      get "/nonexistent", {}, "HTTP_ORIGIN" => "http://localhost:3000"
+      expect(last_response.status).to eq(404)
+      expect(last_response.headers["access-control-allow-origin"]).to eq("http://localhost:3000")
+    end
+  end
+
   # ── 404 catch-all ───────────────────────────────────────────────────────────
 
   describe "unknown route" do

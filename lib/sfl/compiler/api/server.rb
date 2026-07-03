@@ -21,6 +21,16 @@ module SFL
         CONTENT_JSON       = { "content-type" => "application/json" }.freeze
         WORKFLOW_STATUS_RE = /\A\/workflows\/(.+)\/status\z/.freeze
 
+        # Dev-only allowlist: Vite's default port plus the 0.0.0.0-host
+        # variant `npm run dev` binds to per this repo's own scripts.
+        # No gem dependency (rack-cors isn't in the Gemfile) for three
+        # headers — revisit if a production origin needs adding.
+        CORS_ORIGINS = %w[http://localhost:3000 http://127.0.0.1:3000].freeze
+        CORS_HEADERS = {
+          "access-control-allow-methods" => "GET, POST, OPTIONS",
+          "access-control-allow-headers" => "content-type",
+        }.freeze
+
         # @param ctx [Bootstrap::Context] wired DB + DSPy config (no spaCy)
         def initialize(ctx)
           @ctx = ctx
@@ -28,6 +38,17 @@ module SFL
 
         def call(env)
           req = Rack::Request.new(env)
+          origin = req.get_header("HTTP_ORIGIN")
+
+          return preflight(origin) if req.request_method == "OPTIONS"
+
+          status, headers, body = respond(req)
+          [status, with_cors(headers, origin), body]
+        end
+
+        private
+
+        def respond(req)
           dispatch(req)
         rescue ArgumentError => e
           json(400, { error: e.message })
@@ -35,8 +56,6 @@ module SFL
           warn "[ERROR] API #{e.class}: #{e.message}"
           json(500, { error: "Internal Server Error", message: e.message })
         end
-
-        private
 
         def dispatch(req)
           case [req.request_method, req.path_info]
@@ -161,6 +180,16 @@ module SFL
           json(200, payload)
         rescue Gush::WorkflowNotFound
           json(404, { error: "workflow not found", id: wf_id })
+        end
+
+        def preflight(origin)
+          [204, with_cors({}, origin), []]
+        end
+
+        def with_cors(headers, origin)
+          return headers unless CORS_ORIGINS.include?(origin)
+
+          headers.merge(CORS_HEADERS).merge("access-control-allow-origin" => origin)
         end
 
         def job_status(job)
