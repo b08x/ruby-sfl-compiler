@@ -378,6 +378,10 @@ bundle exec sfl-analyze knowledge-base ~/Notebook/ --images \
 
 # Persist clauses + embeddings for later `context` queries
 bundle exec sfl-analyze knowledge-base ~/Notebook/ --store --output-dir ./output/kb
+
+# Also write annotated/*.md — the original text per source document, each
+# clause tagged inline with its process type, mood, tenor, and modality
+bundle exec sfl-analyze knowledge-base ~/Notebook/ --annotated --output-dir ./output/kb
 ```
 
 **Flags:**
@@ -387,19 +391,22 @@ bundle exec sfl-analyze knowledge-base ~/Notebook/ --store --output-dir ./output
 | `--store` | off | Persist clauses + embeddings via `ClauseRepository` |
 | `--images` / `--no-images` | off | Run vision LLM on image files |
 | `--vision-model MODEL` | `VISION_MODEL` env | Override vision model for this run |
+| `--annotated` | off | Also write `annotated/*.md` (see below) |
 | `--output-dir DIR` | `./sfl_output` | Write report files here |
 
 **Output** (written to `--output-dir`):
 
 | File | Purpose |
 |------|---------|
-| `knowledge_base_report.csv` | One row per artifact: id, title, content_type, quality, action |
-| `knowledge_base_report.json` | Full `KnowledgeBaseReport` including SFL annotation coverage |
-| `knowledge_base_report.md` | Human-readable: executive summary, migration manifest, staleness flags |
+| `kb_migration.csv` | One row per artifact: id, title, content_type, quality, action |
+| `kb_migration.json` | Full `KnowledgeBaseReport` including SFL annotation coverage |
+| `kb_migration.md` | Human-readable: executive summary, migration manifest, staleness flags |
+| `annotated/*.md` (with `--annotated`) | One file per source document — the original text, clause by clause, each tagged inline with `[process_type · mood · tenor=N · modality=N]`; documents that produced more than one artifact (multiple headings, or a text pass plus an image pass) get one `##` section per artifact instead of one file each |
 
 The markdown report includes a **Data Quality** section when any clause carries
 fallback or stub annotations, and a **Staleness** section for artifacts not
-updated in the past 18 months.
+updated in the past 18 months. The same fallback/stub clauses are flagged
+inline with ⚠️ in `annotated/*.md`.
 
 > **Model selection**: Use an instruction-following model for `DSPY_PROVIDER`
 > (e.g. `openrouter/mistralai/mistral-7b-instruct`), not a reasoning model.

@@ -60,6 +60,9 @@ module SFL
           --store                      Persist clauses + embeddings for `context`
           --images / --no-images       Analyze image files via vision LLM (default off)
           --vision-model MODEL         Vision LLM model id (falls back to VISION_MODEL env var)
+          --annotated                  Also write annotated/*.md — the original text
+                                        per source document, each clause tagged inline
+                                        with its process type, mood, tenor, modality
 
         narrate:
           --output-dir DIR             Where to write narrative_report.md [JSON's directory]
@@ -146,6 +149,7 @@ module SFL
           images:       false,
           vision_model: nil,
           resume:       false,
+          annotated:    false,
         }
         OptionParser.new do |opt|
           opt.on("--output-dir DIR") { |v| options[:output_dir] = v }
@@ -154,6 +158,7 @@ module SFL
           opt.on("--no-images") { options[:images] = false }
           opt.on("--vision-model MODEL") { |v| options[:vision_model] = v }
           opt.on("--resume") { options[:resume] = true }
+          opt.on("--annotated") { options[:annotated] = true }
           add_tracing_option(opt, options)
         end.parse!(argv)
         options
@@ -389,6 +394,12 @@ module SFL
 
         puts "\nGenerated:"
         paths.each { |format, path| puts "  #{format.to_s.upcase}: #{path}" }
+
+        if options[:annotated]
+          annotated_paths = Formatters::KBAnnotatedDocWriter.write(result, options[:output_dir])
+          puts "  ANNOTATED: #{annotated_paths.size} file(s) in #{File.join(options[:output_dir], "annotated")}/"
+        end
+
         puts "\nArtifacts: #{result.metadata[:artifact_count]} " \
           "| Stale: #{result.staleness_flags.size} " \
           "| Files: #{result.metadata[:file_count]}"

@@ -103,7 +103,7 @@ RSpec.describe SFL::Compiler::CLI do
       expect(parsed[:command]).to eq(:knowledge_base)
       expect(parsed[:input]).to eq("~/Notebook")
       expect(parsed[:options]).to include(
-        store: false, images: false, vision_model: nil, resume: false, disable_tracing: false
+        store: false, images: false, vision_model: nil, resume: false, disable_tracing: false, annotated: false
       )
     end
 
@@ -119,6 +119,11 @@ RSpec.describe SFL::Compiler::CLI do
     it "parses knowledge-base --no-images to override default" do
       parsed = described_class.parse(%w[knowledge-base ~/Notebook --images --no-images])
       expect(parsed[:options][:images]).to be(false)
+    end
+
+    it "parses knowledge-base --annotated" do
+      parsed = described_class.parse(%w[knowledge-base ~/Notebook --annotated])
+      expect(parsed[:options][:annotated]).to be(true)
     end
 
     it "raises UsageError for an unknown subcommand" do

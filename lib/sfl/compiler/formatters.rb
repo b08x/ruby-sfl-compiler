@@ -10,6 +10,8 @@ require_relative "formatters/kb_json_formatter"
 require_relative "formatters/kb_csv_formatter"
 require_relative "formatters/kb_markdown_formatter"
 require_relative "formatters/kb_report_writer"
+require_relative "formatters/kb_annotated_doc_formatter"
+require_relative "formatters/kb_annotated_doc_writer"
 
 module SFL
   module Compiler
