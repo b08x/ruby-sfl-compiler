@@ -59,7 +59,7 @@ RSpec.describe SFL::Compiler::CompileTurnJob do
     job.perform
 
     expect(pipeline).to have_received(:compile)
-      .with("It works.", document_id: "turn-1", store: false, embed: false, resume: false)
+      .with("It works.", document_id: "turn-1", store: false, embed: false, resume: false, source_type: "chat_native")
 
     turn = SFL::Compiler::Types.load_conversation_turn(
       JSON.parse(JSON.generate(job.output_payload), symbolize_names: true)
@@ -112,7 +112,7 @@ RSpec.describe SFL::Compiler::CompileTurnJob do
       job.perform
 
       expect(pipeline).to have_received(:compile).with(
-        "It works.", document_id: "turn-1", store: false, embed: false, resume: false,
+        "It works.", document_id: "turn-1", store: false, embed: false, resume: false, source_type: "chat_native",
         topic: { id: 0, label: "deploy" }, semantic_coherence_score: 0.72
       )
     end
@@ -125,7 +125,7 @@ RSpec.describe SFL::Compiler::CompileTurnJob do
       job.perform
 
       expect(pipeline).to have_received(:compile)
-        .with("It works.", document_id: "turn-1", store: false, embed: false, resume: false)
+        .with("It works.", document_id: "turn-1", store: false, embed: false, resume: false, source_type: "chat_native")
     end
   end
 end

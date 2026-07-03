@@ -44,8 +44,8 @@ module SFL
         create_embeddings_table
         create_question_edges_table
         create_axiomatic_summaries_table
-        create_indices
         backfill_columns
+        create_indices
         @logger.send_message(
           message: "migrations_completed",
           priority: Journald::LOG_INFO
@@ -74,7 +74,10 @@ module SFL
 
       private def backfill_columns
         ColumnBackfill.new(@db).call(
-          clauses: { topic_id: Integer, topic_label: String },
+          clauses: {
+            topic_id: Integer, topic_label: String,
+            source_type: [String, { default: "unspecified", null: false }]
+          },
           interpersonal_payloads: { annotation_source: [String, { default: "llm", null: false }] }
         )
       end
@@ -170,6 +173,14 @@ module SFL
         @db.execute(<<~SQL)
           CREATE INDEX IF NOT EXISTS idx_clauses_gin_tokens
           ON clauses USING gin (tokens)
+        SQL
+
+        # source_type is backfilled (see #backfill_columns), so this index
+        # is created separately rather than inline on create_table? —
+        # IF NOT EXISTS makes it safe to run before or after the backfill.
+        @db.execute(<<~SQL)
+          CREATE INDEX IF NOT EXISTS idx_clauses_source_type
+          ON clauses (source_type)
         SQL
       rescue Sequel::DatabaseError => e
         @logger.send_message(

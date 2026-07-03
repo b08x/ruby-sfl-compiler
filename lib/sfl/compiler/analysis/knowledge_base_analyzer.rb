@@ -51,13 +51,14 @@ module SFL
           total  = tuples.size
 
           skipped = []
-          artifacts = tuples.each_with_index.each_with_object([]) do |((section, source_file, mtime), idx), acc|
+          artifacts = tuples.each_with_index.each_with_object([]) do |((section, source_file, mtime, source_type), idx), acc|
             break acc if @stop_requested&.call
 
             artifact_id = idx + 1
             @on_progress&.call(artifact_id:, total:, title: section_title(section))
+            file_meta = { source_file:, mtime:, source_type: }
             begin
-              acc << compile_artifact(section, source_file, mtime, artifact_id, store)
+              acc << compile_artifact(section, artifact_id, store, file_meta)
             rescue => e
               # Same degradation ladder as Pass 2: one malformed vault file
               # (bad frontmatter, unparseable content) must not abort a
@@ -113,14 +114,25 @@ module SFL
           files = collect_files(path, analyze_images:)
 
           files.flat_map do |file|
+            ext = File.extname(file).downcase
             mtime  = File.mtime(file)
-            loader = loader_for(File.extname(file).downcase, vision_model:)
+            loader = loader_for(ext, vision_model:)
             next [] unless loader
 
-            loader.call(file).map { |section| [section, file, mtime] }
+            source_type = source_type_for(ext)
+            loader.call(file).map { |section| [section, file, mtime, source_type] }
           rescue => e
             warn "[WARN] KnowledgeBaseAnalyzer: skipping #{file}: #{e.message}"
             []
+          end
+        end
+
+        def source_type_for(ext)
+          case ext
+          when ".md"          then "vault_markdown"
+          when ".pdf"         then "vault_pdf"
+          when *IMAGE_EXTENSIONS then "vault_image"
+          else "vault_document"
           end
         end
 
@@ -158,7 +170,8 @@ module SFL
           section.heading || section.file_id
         end
 
-        def compile_artifact(section, source_file, mtime, artifact_id, store)
+        def compile_artifact(section, artifact_id, store, file_meta)
+          source_file, mtime, source_type = file_meta.values_at(:source_file, :mtime, :source_type)
           frontmatter  = section.frontmatter
           last_updated = parse_last_updated(frontmatter&.dig("last updated") ||
                                             frontmatter&.dig("last_updated")) || mtime
@@ -170,7 +183,8 @@ module SFL
             document_id: section.document_id,
             store:,
             embed: store,
-            resume: @resume
+            resume: @resume,
+            source_type:
           )
 
           content_type  = @classifier.classify(section:, clauses:, frontmatter:)

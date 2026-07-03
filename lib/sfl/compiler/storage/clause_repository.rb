@@ -19,11 +19,16 @@ module SFL
       # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
       #   fit over the clause's document/section — nil when topic modeling
       #   wasn't requested.
+      # @param source_type [String, nil] provenance tag (e.g. "chat_native",
+      #   "chat_claude", "vault_markdown", "vault_pdf", "api") distinguishing
+      #   which ingest path produced this clause — nil stores the column's
+      #   own "unspecified" default rather than a Ruby-side literal, so a
+      #   schema-level rename only has to happen in one place.
       # @return [String] The stored clause external_id
-      def store(annotated, topic: nil)
+      def store(annotated, topic: nil, source_type: nil)
         @db.transaction do
           # Store base clause
-          @db[:clauses].insert(
+          insert = {
             external_id: annotated.id,
             text: annotated.text,
             document_id: annotated.document_id,
@@ -35,7 +40,9 @@ module SFL
             topic_id: topic&.fetch(:id, nil),
             topic_label: topic&.fetch(:label, nil),
             created_at: Time.now
-          )
+          }
+          insert[:source_type] = source_type if source_type
+          @db[:clauses].insert(insert)
 
           # Store Ideational payload (from Pass 1)
           @db[:ideational_payloads].insert(

@@ -49,7 +49,7 @@ RSpec.describe SFL::Compiler::Analysis::ConversationAnalyzer do
       expect(result).to be_a(SFL::Compiler::Types::AnalysisResult)
       expect(result.turns.size).to eq(5)
       expect(pipeline).to have_received(:compile)
-        .with(anything, document_id: "turn-1", store: false, embed: false, resume: false)
+        .with(anything, document_id: "turn-1", store: false, embed: false, resume: false, source_type: "chat_native")
     end
 
     it "fills metadata from the file and turns" do

@@ -94,7 +94,7 @@ module SFL
 
           if sync
             clauses = Pipeline.new(db: @ctx.db, spacy_model: @ctx.config.spacy_model)
-                               .compile(text, document_id:, store:, embed:, resume: false)
+                               .compile(text, document_id:, store:, embed:, resume: false, source_type: "api")
             json(200, clauses.map { |c| Types.dump(c) })
           else
             # Write a single-turn JSONL and run it through ConversationAnalysisWorkflow
@@ -109,7 +109,7 @@ module SFL
 
         # POST /retrieve
         #
-        # Body: {query:, filters?: {min_modality:, max_modality:, min_tenor:, max_tenor:, mood:, process_type:}, limit?:}
+        # Body: {query:, filters?: {min_modality:, max_modality:, min_tenor:, max_tenor:, mood:, process_type:, source_type:}, limit?:}
         def retrieve(req)
           body  = parse_body(req)
           query = body["query"]
@@ -219,6 +219,7 @@ module SFL
           out = {}
           out[:mood]         = filters[:mood].to_s         if filters[:mood]
           out[:process_type] = filters[:process_type].to_s if filters[:process_type]
+          out[:source_type]  = filters[:source_type].to_s  if filters[:source_type]
           out[:min_modality] = filters[:min_modality].to_f if filters.key?(:min_modality)
           out[:max_modality] = filters[:max_modality].to_f if filters.key?(:max_modality)
           out[:min_tenor]    = filters[:min_tenor].to_f    if filters.key?(:min_tenor)

@@ -179,6 +179,20 @@ RSpec.describe SFL::Compiler::API::Server do
       expect(retriever).to have_received(:retrieve)
         .with("test", limit: 10, filters: { min_modality: 0.5 })
     end
+
+    it "whitelists and forwards the source_type filter" do
+      retriever = instance_double(SFL::Compiler::HybridRetriever)
+      allow(SFL::Compiler::HybridRetriever).to receive(:new).and_return(retriever)
+      allow(retriever).to receive(:retrieve).and_return([])
+
+      post "/retrieve",
+        JSON.dump(query: "test", filters: { source_type: "vault_markdown" }),
+        "CONTENT_TYPE" => "application/json"
+
+      expect(last_response.status).to eq(200)
+      expect(retriever).to have_received(:retrieve)
+        .with("test", limit: 10, filters: { source_type: "vault_markdown" })
+    end
   end
 
   # ── POST /synthesize ─────────────────────────────────────────────────────────

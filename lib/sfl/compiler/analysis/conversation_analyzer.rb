@@ -318,7 +318,7 @@ module SFL
 
         private def compile_clauses(text, document_id, semantic_coherence_score: nil, topic: nil)
           unless @pass_one_only
-            kwargs = { document_id:, store: false, embed: false, resume: @resume }
+            kwargs = { document_id:, store: false, embed: false, resume: @resume, source_type: "chat_native" }
             kwargs[:topic] = topic unless topic.nil?
             kwargs[:semantic_coherence_score] = semantic_coherence_score unless semantic_coherence_score.nil?
             return @pipeline.compile(text, **kwargs)

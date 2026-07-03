@@ -54,7 +54,7 @@ module SFL
       # dependency calls Pipeline#compile exactly as it did before this
       # job supported topic modeling at all.
       private def compile_kwargs(turn_id, pre_turn)
-        kwargs = { document_id: "turn-#{turn_id}", store: false, embed: false, resume: false }
+        kwargs = { document_id: "turn-#{turn_id}", store: false, embed: false, resume: false, source_type: "chat_native" }
         topic = topic_info_for(pre_turn)
         kwargs[:topic] = topic unless topic.nil?
         score = pre_turn&.[](:semantic_coherence_score)

@@ -48,7 +48,7 @@ module SFL
       end
 
       private def compile_kwargs(datum, store, pre_turn)
-        kwargs = { document_id: datum[:document_id], store:, embed: store, resume: false }
+        kwargs = { document_id: datum[:document_id], store:, embed: store, resume: false, source_type: "doc_markdown" }
         topic = topic_info_for(pre_turn)
         kwargs[:topic] = topic unless topic.nil?
         score = pre_turn&.[](:semantic_coherence_score)

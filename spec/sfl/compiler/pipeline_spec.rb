@@ -105,7 +105,7 @@ RSpec.describe SFL::Compiler::Pipeline do
 
       it "stores each annotated clause by default" do
         pipeline.compile("Hello world", document_id: "doc-1")
-        expect(clause_repo).to have_received(:store).with(annotated_clause, topic: nil).once
+        expect(clause_repo).to have_received(:store).with(annotated_clause, topic: nil, source_type: nil).once
       end
 
       it "does not embed when no embedder is set" do

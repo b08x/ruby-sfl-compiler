@@ -32,6 +32,8 @@ module SFL
       #   - :min_tenor [Float] Minimum formality
       #   - :max_tenor [Float] Maximum formality
       #   - :process_type [String] Ideational process type filter
+      #   - :source_type [String] Provenance filter (e.g. "chat_native",
+      #     "vault_markdown") — see ClauseRepository#store
       # @return [Array<Hash>] Ranked results with scores
       def retrieve(query, limit: 10, filters: {})
         start_time = Time.now
@@ -175,6 +177,12 @@ module SFL
           .where(clause_id: clause_ids)
           .as_hash(:clause_id)
 
+        # source_type lives on clauses itself (external_id), not a
+        # separate payload table.
+        source_type_map = @db[:clauses]
+          .where(external_id: clause_ids)
+          .as_hash(:external_id, :source_type)
+
         results.select do |row|
           clause_id = row[:clause_id]
           interpersonal = interpersonal_map[clause_id]
@@ -193,6 +201,8 @@ module SFL
           next false if filters[:max_tenor] && interpersonal[:tenor] > filters[:max_tenor]
 
           next false if filters[:process_type] && ideational && ideational[:process_type] != filters[:process_type]
+
+          next false if filters[:source_type] && source_type_map[clause_id] != filters[:source_type]
 
           true
         end

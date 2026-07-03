@@ -40,8 +40,11 @@ module SFL
       # @param resume [Boolean] Use cached Pass 2 results from previous runs
       # @param topic [Hash, nil] { id:, label: } from a pre-pass TopicModeler
       #   fit, attached to every clause stored from this call
+      # @param source_type [String, nil] provenance tag for every clause
+      #   stored from this call (see ClauseRepository#store) — nil defers
+      #   to the clauses table's own "unspecified" default
       # @return [Array<Types::AnnotatedClause>]
-      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil, semantic_coherence_score: nil, on_chunk_done: nil)
+      def compile(text, document_id: nil, store: true, embed: true, resume: false, topic: nil, source_type: nil, semantic_coherence_score: nil, on_chunk_done: nil)
         start_time = Time.now
         correlation_id = SecureRandom.uuid
 
@@ -90,7 +93,7 @@ module SFL
         # === Storage ===
         if store
           annotated.each do |ac|
-            @clause_repo.store(ac, topic:)
+            @clause_repo.store(ac, topic:, source_type:)
           end
         end
 
