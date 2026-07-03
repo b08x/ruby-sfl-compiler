@@ -39,7 +39,7 @@ module SFL
           [primary, *extras].filter_map do |provider|
             lm = build_lm(provider, env, gen_params)
             ProviderEntry.new(provider:, lm:)
-          rescue Bootstrap::BootstrapError => e
+          rescue BootstrapError => e
             warn "[WARN] ProviderFallback: skipping #{provider} — #{e.message}"
             nil
           end
