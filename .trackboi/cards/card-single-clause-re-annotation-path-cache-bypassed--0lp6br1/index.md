@@ -5,13 +5,13 @@ title: "Single-clause re-annotation path: cache-bypassed Pass 2 + targeted repos
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-human-in-the-loop-annotation-review-0fn8s9p"
-column: "backlog"
-rank: "yx"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:29:39.077Z"
-updatedAt: "2026-07-03T05:29:39.077Z"
+updatedAt: "2026-07-03T11:04:22.876Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
