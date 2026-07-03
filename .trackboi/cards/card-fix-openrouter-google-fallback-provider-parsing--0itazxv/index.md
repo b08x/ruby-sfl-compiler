@@ -5,13 +5,13 @@ title: "Fix \"openrouter/google/...\" fallback provider parsing (DSPy::LM::Unsup
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: null
-column: "backlog"
-rank: "yyr"
+column: "done"
+rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T10:08:40.521Z"
-updatedAt: "2026-07-03T10:08:40.521Z"
+updatedAt: "2026-07-03T10:32:11.054Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

@@ -5,13 +5,13 @@ title: "Design review data model: review state, \"human\" annotation_source, aud
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-human-in-the-loop-annotation-review-0fn8s9p"
-column: "backlog"
-rank: "yr"
+column: "doing"
+rank: "U"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:29:29.750Z"
-updatedAt: "2026-07-03T05:29:29.750Z"
+updatedAt: "2026-07-03T10:33:45.910Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---
