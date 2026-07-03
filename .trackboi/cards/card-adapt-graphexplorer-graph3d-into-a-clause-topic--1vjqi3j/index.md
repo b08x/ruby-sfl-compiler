@@ -5,13 +5,13 @@ title: "Adapt GraphExplorer/Graph3D into a clause/topic/document Corpus Browser 
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: "track-phase-2-react-frontend-google-ai-studio-024lr42"
-column: "backlog"
-rank: "yyU"
+column: "doing"
+rank: "U"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T05:41:43.987Z"
-updatedAt: "2026-07-03T06:31:36.033Z"
+updatedAt: "2026-07-03T07:37:45.814Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

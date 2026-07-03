@@ -17,6 +17,7 @@ module SFL
       #   POST /synthesize              → SynthesisResult
       #   POST /workflows               → {workflow_id:, status: "running"}
       #   GET  /workflows/:id/status    → {status:, jobs:[], output?:}
+      #   GET  /clauses                 → {clauses:[], total:, limit:, offset:}
       class Server
         CONTENT_JSON       = { "content-type" => "application/json" }.freeze
         WORKFLOW_STATUS_RE = /\A\/workflows\/(.+)\/status\z/.freeze
@@ -72,6 +73,8 @@ module SFL
           in ["GET", WORKFLOW_STATUS_RE]
             wf_id = req.path_info.match(WORKFLOW_STATUS_RE)[1]
             workflow_status(wf_id)
+          in ["GET", "/clauses"]
+            list_clauses(req)
           else
             json(404, { error: "Not Found", path: req.path_info })
           end
@@ -180,6 +183,47 @@ module SFL
           json(200, payload)
         rescue Gush::WorkflowNotFound
           json(404, { error: "workflow not found", id: wf_id })
+        end
+
+        # GET /clauses
+        #
+        # Query params: document_id, source_type, annotation_source, mood,
+        # process_type, min_modality, max_modality, min_tenor, max_tenor,
+        # limit (default 50), offset (default 0). Paginated scan for the
+        # Corpus Browser — no query string, no ranking, unlike /retrieve.
+        def list_clauses(req)
+          p = req.params
+          limit  = [p.fetch("limit", 50).to_i, 1].max
+          offset = [p.fetch("offset", 0).to_i, 0].max
+          filters = clauses_filters(p)
+
+          result = ClauseRepository.new(@ctx.db).find_all(filters:, limit:, offset:)
+
+          json(200, result.merge(limit:, offset:))
+        end
+
+        STRING_CLAUSE_FILTERS  = %w[document_id source_type annotation_source mood process_type].freeze
+        NUMERIC_CLAUSE_FILTERS = %w[min_modality max_modality min_tenor max_tenor].freeze
+
+        def clauses_filters(params)
+          out = {}
+          STRING_CLAUSE_FILTERS.each do |key|
+            value = presence(params[key])
+            out[key.to_sym] = value if value
+          end
+          NUMERIC_CLAUSE_FILTERS.each do |key|
+            value = numeric(params[key])
+            out[key.to_sym] = value if value
+          end
+          out
+        end
+
+        def presence(value)
+          value.to_s.strip.empty? ? nil : value
+        end
+
+        def numeric(value)
+          value.nil? || value.to_s.strip.empty? ? nil : value.to_f
         end
 
         def preflight(origin)

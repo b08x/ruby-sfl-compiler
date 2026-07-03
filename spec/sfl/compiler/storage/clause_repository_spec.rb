@@ -106,4 +106,76 @@ RSpec.describe SFL::Compiler::ClauseRepository do
       expect(described_class.new(db).delete_by_document("missing")).to eq(0)
     end
   end
+
+  # find_all's actual SQL correctness (the double-join column-ambiguity
+  # risk called out in its docstring) was verified live against a real
+  # Postgres DB before this method was written, not just asserted here —
+  # this spec covers this method's own logic (which filter keys get
+  # applied, pagination shape) with a chainable fake scope, not Sequel's
+  # join semantics.
+  describe "#find_all" do
+    # Records every #where call it receives; every other chain method
+    # (join/order/limit/select) returns self so the whole chain is
+    # inspectable at the end via #where_calls.
+    class FakeScope
+      include Enumerable
+
+      attr_reader :where_calls
+
+      def initialize(rows: [], total: nil)
+        @rows = rows
+        @total = total || rows.size
+        @where_calls = []
+      end
+
+      def join(*) = self
+      def order(*) = self
+      def limit(*) = self
+      def select(*) = self
+      def where(condition) = tap { @where_calls << condition }
+      def count = @total
+      def all = @rows
+      def each(&) = @rows.each(&)
+    end
+
+    it "applies only the filter keys present in FIND_ALL_FILTERS, ignoring unknown/nil ones" do
+      scope = FakeScope.new
+      db = double("db", :[] => scope)
+
+      described_class.new(db).find_all(
+        filters: { mood: "declarative", source_type: nil, bogus_key: "x" }
+      )
+
+      expect(scope.where_calls.size).to eq(1)
+      expect(scope.where_calls.first).to eq({ Sequel[:interpersonal_payloads][:mood] => "declarative" })
+    end
+
+    it "builds range conditions (not equality hashes) for min/max filters" do
+      scope = FakeScope.new
+      db = double("db", :[] => scope)
+
+      described_class.new(db).find_all(filters: { min_tenor: 0.6 })
+
+      expect(scope.where_calls.first).to be_a(Sequel::SQL::BooleanExpression)
+    end
+
+    it "returns clauses and total from the scope's #all and #count" do
+      rows = [{ id: "c1" }, { id: "c2" }]
+      scope = FakeScope.new(rows:, total: 42)
+      db = double("db", :[] => scope)
+
+      result = described_class.new(db).find_all
+
+      expect(result).to eq(clauses: rows, total: 42)
+    end
+
+    it "runs with no filters at all (browse-everything case)" do
+      scope = FakeScope.new
+      db = double("db", :[] => scope)
+
+      described_class.new(db).find_all
+
+      expect(scope.where_calls).to be_empty
+    end
+  end
 end

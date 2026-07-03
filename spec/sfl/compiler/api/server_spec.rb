@@ -365,4 +365,57 @@ RSpec.describe SFL::Compiler::API::Server do
       expect(JSON.parse(last_response.body)["error"]).to match(/Invalid JSON/i)
     end
   end
+
+  # ── GET /clauses ─────────────────────────────────────────────────────────────
+
+  describe "GET /clauses" do
+    it "delegates to ClauseRepository#find_all with defaults and returns pagination metadata" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:find_all).and_return(clauses: [{ id: "c1" }], total: 1)
+
+      get "/clauses"
+
+      expect(last_response.status).to eq(200)
+      body = JSON.parse(last_response.body)
+      expect(body["clauses"]).to eq([{ "id" => "c1" }])
+      expect(body["total"]).to eq(1)
+      expect(body["limit"]).to eq(50)
+      expect(body["offset"]).to eq(0)
+      expect(repo).to have_received(:find_all).with(filters: {}, limit: 50, offset: 0)
+    end
+
+    it "parses string and numeric filters, and custom limit/offset, from the query string" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:find_all).and_return(clauses: [], total: 0)
+
+      get "/clauses?source_type=vault_pdf&mood=declarative&min_tenor=0.5&limit=10&offset=20"
+
+      expect(repo).to have_received(:find_all).with(
+        filters: { source_type: "vault_pdf", mood: "declarative", min_tenor: 0.5 },
+        limit: 10, offset: 20
+      )
+    end
+
+    it "treats blank filter params as absent rather than empty-string filters" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:find_all).and_return(clauses: [], total: 0)
+
+      get "/clauses?document_id=&mood=declarative"
+
+      expect(repo).to have_received(:find_all).with(filters: { mood: "declarative" }, limit: 50, offset: 0)
+    end
+
+    it "floors limit at 1 and offset at 0 for out-of-range values" do
+      repo = instance_double(SFL::Compiler::ClauseRepository)
+      allow(SFL::Compiler::ClauseRepository).to receive(:new).and_return(repo)
+      allow(repo).to receive(:find_all).and_return(clauses: [], total: 0)
+
+      get "/clauses?limit=0&offset=-5"
+
+      expect(repo).to have_received(:find_all).with(filters: {}, limit: 1, offset: 0)
+    end
+  end
 end

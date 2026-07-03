@@ -8,6 +8,23 @@ module SFL
   module Compiler
     # Clause repository — CRUD for annotated clauses with payload separation.
     class ClauseRepository
+      CLAUSE_LISTING_COLUMNS = [
+        Sequel[:clauses][:external_id].as(:id),
+        Sequel[:clauses][:text],
+        Sequel[:clauses][:document_id],
+        Sequel[:clauses][:source_type],
+        Sequel[:clauses][:topic_id],
+        Sequel[:clauses][:topic_label],
+        Sequel[:ideational_payloads][:process_type],
+        Sequel[:ideational_payloads][:participants],
+        Sequel[:ideational_payloads][:circumstances],
+        Sequel[:interpersonal_payloads][:mood],
+        Sequel[:interpersonal_payloads][:modality_weight],
+        Sequel[:interpersonal_payloads][:tenor],
+        Sequel[:interpersonal_payloads][:speaker_attitude],
+        Sequel[:interpersonal_payloads][:annotation_source],
+      ].freeze
+
       def initialize(db)
         @db = db
         @logger = Journald::Logger.new("sfl-compiler-repo")
@@ -165,6 +182,65 @@ module SFL
           .where(process_type:)
           .limit(limit)
           .all
+      end
+
+      # Scalar filter => how to apply it against the joined scope. Each
+      # value is a 1-arity proc: given the raw filter value, returns
+      # something #where can consume (a Hash-style equality condition or
+      # a block-friendly Sequel expression). Table-qualified throughout
+      # since both payload tables are joined into the same query.
+      FIND_ALL_FILTERS = {
+        document_id: ->(v) { { Sequel[:clauses][:document_id] => v } },
+        source_type: ->(v) { { Sequel[:clauses][:source_type] => v } },
+        annotation_source: ->(v) { { Sequel[:interpersonal_payloads][:annotation_source] => v } },
+        mood: ->(v) { { Sequel[:interpersonal_payloads][:mood] => v } },
+        process_type: ->(v) { { Sequel[:ideational_payloads][:process_type] => v } },
+        min_modality: ->(v) { Sequel[:interpersonal_payloads][:modality_weight] >= v },
+        max_modality: ->(v) { Sequel[:interpersonal_payloads][:modality_weight] <= v },
+        min_tenor: ->(v) { Sequel[:interpersonal_payloads][:tenor] >= v },
+        max_tenor: ->(v) { Sequel[:interpersonal_payloads][:tenor] <= v },
+      }.freeze
+
+      # Paginated, multi-filter clause listing for the Corpus Browser —
+      # unlike HybridRetriever#retrieve (a ranked search result over a
+      # query string), this is a plain filtered scan with no ranking, for
+      # browsing a document's clauses page by page. Joins both payload
+      # tables in one query (verified against a real DB before writing
+      # this — Sequel's join-condition hash needs each new table's join
+      # explicitly qualified against Sequel[:clauses][:external_id],
+      # otherwise "clause_id"/"external_id" are ambiguous once two
+      # payload tables are both in the FROM clause).
+      #
+      # @param filters [Hash] any of FIND_ALL_FILTERS.keys => value
+      # @param limit [Integer]
+      # @param offset [Integer]
+      # @return [Hash] { clauses: Array<Hash>, total: Integer }
+      def find_all(filters: {}, limit: 50, offset: 0)
+        scope = filtered_scope(filters)
+
+        total = scope.count
+        rows = scope
+          .order(Sequel[:clauses][:created_at])
+          .limit(limit, offset)
+          .select(*CLAUSE_LISTING_COLUMNS)
+          .all
+
+        { clauses: rows, total: }
+      end
+
+      private def filtered_scope(filters)
+        scope = @db[:clauses]
+          .join(:ideational_payloads, clause_id: Sequel[:clauses][:external_id])
+          .join(:interpersonal_payloads, clause_id: Sequel[:clauses][:external_id])
+
+        filters.each do |key, value|
+          build = FIND_ALL_FILTERS[key]
+          next unless build && value
+
+          scope = scope.where(build.call(value))
+        end
+
+        scope
       end
     end
   end
