@@ -5,13 +5,13 @@ title: "Fix Bootstrap::BootstrapError constant resolution bug in provider_fallba
 parentId: null
 scope: {"kind":"project","ref":"global"}
 trackId: null
-column: "backlog"
+column: "done"
 rank: "yyj"
 labels: []
 assignee: null
 fieldValues: {}
 createdAt: "2026-07-03T06:55:03.480Z"
-updatedAt: "2026-07-03T06:55:03.480Z"
+updatedAt: "2026-07-03T10:08:32.838Z"
 createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
 ---

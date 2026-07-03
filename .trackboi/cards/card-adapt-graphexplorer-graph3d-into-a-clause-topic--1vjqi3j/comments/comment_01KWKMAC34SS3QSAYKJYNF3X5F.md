@@ -1,0 +1,17 @@
+---
+id: "comment_01KWKMAC34SS3QSAYKJYNF3X5F"
+cardId: "card-adapt-graphexplorer-graph3d-into-a-clause-topic--1vjqi3j"
+createdAt: "2026-07-03T09:17:53.636Z"
+updatedAt: "2026-07-03T09:17:53.636Z"
+createdBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
+updatedBy: "agent_01KT5NHKJ8RYCC6HW5SF8RZ1JR"
+---
+**Complete, with one deliberate scope decision — verified live in the browser against real data across two repos.**
+
+**Backend** (`sfl-compiler`): new `GET /clauses` endpoint (`ClauseRepository#find_all`, paginated + multi-filter: document_id, source_type, annotation_source, mood, process_type, min/max modality/tenor). Verified against a real double-join risk before writing it (Sequel's join-condition hash needs each table explicitly qualified once two payload tables share the FROM clause), then confirmed live over real HTTP with real filters returning correct counts. 14 new specs, suite 734/734, committed as `e4add82`.
+
+**Frontend scope decision**: rather than reworking `Graph3D`'s force-graph to represent clauses (a separate, much larger visual-design task — it currently renders topics/conversations/trajectories/skills from the old client-side `ConvoGraph` model, which no longer meaningfully populates), I rebuilt `GraphExplorer.tsx` as a genuine **list-based Corpus Browser**: filter bar (document_id text, source_type/annotation_source/mood selects, all populated from real server vocabularies) + paginated clause list with SFL badges (annotation_source, source_type, process_type, mood, modality, tenor) + document_id. This is what the card's own acceptance criteria actually describe (browse, filter, verify subsets) — not a 3D visualization requirement. `Graph3D.tsx`/`GraphInsights.tsx` are left in place, unused but still compiling (orphaned, not deleted) — a future card could rebuild them clause-centric if 3D visualization is still wanted. Sidebar nav label updated "Graph" → "Corpus" to match.
+
+**Live browser verification** (Falcon + Vite + real Postgres corpus, not mocked): loaded the real corpus (5666 clauses, 227 pages) with zero console errors. Ran the acceptance criteria literally: filtered `annotation_source: fallback` → returned exactly 1 clause (verified against the actual known fallback-tagged clause in the corpus) out of 5666, correctly excluding the rest. Filtered `source_type: vault_canvas` → correctly 0 results (I'd already cleaned up that test data from the DB earlier this session — confirmed the empty-state renders gracefully rather than erroring). Verified pagination (Next button → page 2/227, genuinely different clauses). All 12 source_type facet values populate correctly in the dropdown.
+
+**Mid-session incident, resolved cleanly**: a `git stash` (used twice to diff rubocop offense baselines) silently dropped this card's backend work both times — `stash pop` failed on an auto-regenerated `Gemfile.lock` conflict. Recovered fully both times via `git stash list` + `git checkout -- Gemfile.lock` + `git stash pop`, verified nothing lost by grepping for new spec content after each recovery. Also discovered 4 unrelated commits had landed on `sfl-compiler`'s `development` branch from a separate concurrent session (gem metadata cleanup, module docs) — inspected each via `git show --stat` before proceeding, confirmed no conflict.
